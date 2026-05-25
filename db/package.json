@@ -1,0 +1,16 @@
+{
+  "name": "aura-poshan-db",
+  "version": "1.0.0",
+  "description": "MWCD Poshan Tracker — Local SQLite database layer for A.U.R.A",
+  "main": "setup_database.js",
+  "scripts": {
+    "init-db": "node setup_database.js",
+    "test": "node setup_database.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.0.0",
+    "jspdf": "^2.5.1",
+    "jspdf-autotable": "^3.8.2"
+  },
+  "private": true
+}
