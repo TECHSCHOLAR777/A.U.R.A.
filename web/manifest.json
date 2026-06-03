@@ -1,0 +1,55 @@
+{
+  "name": "A.U.R.A. — Anganwadi Unified Resource Assistant",
+  "short_name": "AURA",
+  "description": "Offline-first voice assistant for Anganwadi frontline workers. No password, works in tribal dialects, updates 17 registers from one sentence.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#1B3A2D",
+  "theme_color": "#1B3A2D",
+  "lang": "hi-IN",
+  "categories": ["health", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Morning Attendance",
+      "short_name": "Attendance",
+      "url": "/?screen=att",
+      "description": "Start morning attendance"
+    },
+    {
+      "name": "Voice Entry",
+      "short_name": "Voice",
+      "url": "/?screen=voice",
+      "description": "Quick voice register entry"
+    },
+    {
+      "name": "Health Check",
+      "short_name": "Health",
+      "url": "/?screen=health",
+      "description": "Child health dashboard"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "form_factor": "narrow"
+    }
+  ]
+}
