@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+  <rect width="192" height="192" rx="40" fill="#1B3A2D"/>
+  <circle cx="96" cy="96" r="52" fill="#11261C"/>
+  <circle cx="96" cy="96" r="44" fill="#11261C" opacity="0.5"/>
+  <!-- mic body -->
+  <rect x="84" y="60" width="24" height="44" rx="12" fill="none" stroke="white" stroke-width="5"/>
+  <!-- mic stand -->
+  <path d="M72 96 C72 116 120 116 120 96" fill="none" stroke="white" stroke-width="5" stroke-linecap="round"/>
+  <!-- mic stem -->
+  <line x1="96" y1="118" x2="96" y2="132" stroke="white" stroke-width="5" stroke-linecap="round"/>
+  <line x1="82" y1="132" x2="110" y2="132" stroke="white" stroke-width="5" stroke-linecap="round"/>
+</svg>
