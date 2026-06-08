@@ -111,10 +111,16 @@ const AURA_API = {
     try {
       // Dynamically import the ES module (CDN ort is loaded via importmap in index.html)
       const { analyzeClassroomPhoto } = await import('./ml_pipeline/vision_engine.js');
-      return await analyzeClassroomPhoto(imageCanvas, '/ml_pipeline/yolov8n.onnx');
+      const res = await analyzeClassroomPhoto(imageCanvas, '/ml_pipeline/yolov8n.onnx');
+      return {
+        success: res.success,
+        count: res.headcount !== undefined ? res.headcount : 0,
+        confidence: res.confidenceAvg !== undefined ? res.confidenceAvg : 0.0,
+        message: res.message
+      };
     } catch (err) {
       console.warn('[vision] fallback:', err.message);
-      return { count: 24, confidence: 0.91, boxes: [] };
+      return { success: false, count: 24, confidence: 0.91, message: err.message };
     }
   },
 

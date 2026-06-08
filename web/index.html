@@ -18,7 +18,7 @@
 <script type="importmap">
 {
   "imports": {
-    "onnxruntime-web": "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.18.0/dist/ort.min.js"
+    "onnxruntime-web": "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.18.0/dist/esm/ort.all.min.js"
   }
 }
 </script>
@@ -799,16 +799,50 @@ const screens = {
       <div class="ic" style="background:var(--rl);color:var(--red)">✕</div>
       <div class="info"><div class="nm">${k[0]}</div><div class="ag">${k[1]}${t.absTag}</div></div>
     </div>`).join('');
+
+    const photoCount = window.SESSION.photoCount !== undefined ? window.SESSION.photoCount : null;
+    const registeredCount = window.SESSION.presentCount || 24;
+
+    let camLineText = t.camLine;
+    let camMatchText = t.camMatch;
+    let camStyle = '';
+
+    if (photoCount !== null) {
+      camLineText = lang === 'hi'
+        ? `फोटो से गिना: ${photoCount} बच्चे दिखे`
+        : `Counted by photo: ${photoCount} seen`;
+
+      const confPct = Math.round((window.SESSION.photoConfidence || 0.91) * 100);
+      if (photoCount === registeredCount) {
+        camMatchText = lang === 'hi'
+          ? `रजिस्टर से मेल खाता है (सटीकता: ${confPct}%)`
+          : `Matches register (confidence: ${confPct}%)`;
+        camStyle = 'background:#1e5235;border-color:#2a704a';
+      } else {
+        camMatchText = lang === 'hi'
+          ? `अंतर: फोटो में ${photoCount} vs रजिस्टर में ${registeredCount} (सटीकता: ${confPct}%)`
+          : `Mismatch: ${photoCount} in photo vs ${registeredCount} in register (confidence: ${confPct}%)`;
+        camStyle = 'background:#854c1d;border-color:#ad662b';
+      }
+    } else {
+      camLineText = lang === 'hi'
+        ? `📷 फोटो से उपस्थिति सत्यापित करें (YOLOv8)`
+        : `📷 Verify Attendance with Photo (YOLOv8)`;
+      camMatchText = lang === 'hi'
+        ? `यहाँ क्लिक करके कक्षा की फोटो लें`
+        : `Click to capture / load classroom photo`;
+    }
+
     return `<div class="screen active">${statusbar()}${header(true)}<div class="scroll"><div class="body">
       ${kw(t.attKw,'--green')}
       <div class="hero" style="background:var(--green);margin-top:6px">
         <h2>${t.allHere}</h2><p>${t.allCount}</p>
         <p style="font-size:10px;margin-top:6px;opacity:.85">${t.allTime}</p>
       </div>
-      <div class="camline">
+      <div class="camline" id="camline-btn" style="cursor:pointer;${camStyle}" onclick="handleAttendanceCameraCapture()">
         <span class="ci">${SVG.cam}</span>
-        <div><div style="color:#cdeede;font-size:11px;font-weight:600">${t.camLine}</div>
-          <div style="color:#7fae97;font-size:9px">${t.camMatch}</div></div>
+        <div><div style="color:#cdeede;font-size:11px;font-weight:600" id="camline-title">${camLineText}</div>
+          <div style="color:#7fae97;font-size:9px" id="camline-subtitle">${camMatchText}</div></div>
       </div>
       <div class="sectionlabel">${t.absent}</div>${kids}
       <button class="btn ghost" style="display:flex;gap:8px;align-items:center;justify-content:center"
@@ -1004,9 +1038,108 @@ async function handleSubmitAttendance(){
     centreId: 'AWC_04',
     present: window.SESSION.presentIds,
     absent: window.SESSION.absentIds,
-    photoCount: 24
+    photoCount: window.SESSION.photoCount || 24
   });
   if(result?.success){ updateSyncPill(); go('audit'); }
+}
+
+async function handleAttendanceCameraCapture() {
+  let input = document.getElementById('attendance-photo-input');
+  if (!input) {
+    input = document.createElement('input');
+    input.id = 'attendance-photo-input';
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.capture = 'environment';
+    input.style.display = 'none';
+    document.body.appendChild(input);
+  }
+
+  input.onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Update UI to processing state
+    const titleEl = document.getElementById('camline-title');
+    const subtitleEl = document.getElementById('camline-subtitle');
+    const btnEl = document.getElementById('camline-btn');
+
+    if (titleEl) titleEl.textContent = lang === 'hi' ? 'तस्वीर लोड हो रही है...' : 'Loading photo...';
+    if (subtitleEl) subtitleEl.textContent = lang === 'hi' ? 'कृपया प्रतीक्षा करें' : 'Please wait';
+
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.src = url;
+
+    img.onload = async () => {
+      URL.revokeObjectURL(url);
+
+      const canvas = document.createElement('canvas');
+      const maxDim = 640;
+      let w = img.width;
+      let h = img.height;
+      if (w > maxDim || h > maxDim) {
+        if (w > h) {
+          h = Math.round(h * maxDim / w);
+          w = maxDim;
+        } else {
+          w = Math.round(w * maxDim / h);
+          h = maxDim;
+        }
+      }
+      canvas.width = w;
+      canvas.height = h;
+
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+
+      if (titleEl) titleEl.textContent = lang === 'hi' ? 'YOLOv8 मॉडल चल रहा है...' : 'Running YOLOv8 model...';
+      if (subtitleEl) subtitleEl.textContent = lang === 'hi' ? 'बच्चों की गणना की जा रही है' : 'Detecting children...';
+
+      try {
+        const result = await AURA_API.countHeadsByCamera(canvas);
+        console.log('[YOLOv8 Headcount]', result);
+
+        window.SESSION.photoCount = result.count;
+        window.SESSION.photoConfidence = result.confidence;
+
+        const registeredCount = window.SESSION.presentCount || 24;
+
+        if (titleEl) {
+          titleEl.textContent = lang === 'hi'
+            ? `फोटो से गिना: ${result.count} बच्चे दिखे`
+            : `Counted by photo: ${result.count} seen`;
+        }
+        if (subtitleEl) {
+          const confPct = Math.round(result.confidence * 100);
+          if (result.count === registeredCount) {
+            subtitleEl.textContent = lang === 'hi'
+              ? `रजिस्टर से मेल खाता है (सटीकता: ${confPct}%)`
+              : `Matches register (confidence: ${confPct}%)`;
+          } else {
+            subtitleEl.textContent = lang === 'hi'
+              ? `अंतर: फोटो में ${result.count} vs रजिस्टर में ${registeredCount} (सटीकता: ${confPct}%)`
+              : `Mismatch: ${result.count} in photo vs ${registeredCount} in register (confidence: ${confPct}%)`;
+          }
+        }
+        if (btnEl) {
+          if (result.count === registeredCount) {
+            btnEl.style.background = '#1e5235';
+            btnEl.style.borderColor = '#2a704a';
+          } else {
+            btnEl.style.background = '#854c1d';
+            btnEl.style.borderColor = '#ad662b';
+          }
+        }
+      } catch (err) {
+        console.error('[YOLOv8 Error]', err);
+        if (titleEl) titleEl.textContent = lang === 'hi' ? 'गणना विफल रही' : 'Verification failed';
+        if (subtitleEl) subtitleEl.textContent = err.message;
+      }
+    };
+  };
+
+  input.click();
 }
 async function handleLogMeal(){
   // Update session state
@@ -1330,9 +1463,35 @@ if('serviceWorker' in navigator){
   });
 }
 
-// Handle deep-link from URL ?screen=xxx
-const urlScreen = new URLSearchParams(location.search).get('screen');
-if(urlScreen && screens[urlScreen]) stack = [urlScreen];
+// Automated testing hooks for YOLOv8 headcount verification
+if (new URLSearchParams(location.search).has('test_yolo')) {
+  window.addEventListener('load', async () => {
+    console.log('[Test YOLO] Test mode active. Navigating to att screen...');
+    jump('att');
+    try {
+      console.log('[Test YOLO] Fetching test image /test_classroom.png...');
+      const response = await fetch('/test_classroom.png');
+      const blob = await response.blob();
+      const file = new File([blob], 'test_classroom.png', { type: 'image/png' });
+      
+      console.log('[Test YOLO] Initializing file input...');
+      let input = document.getElementById('attendance-photo-input');
+      if (!input) {
+        await handleAttendanceCameraCapture();
+        input = document.getElementById('attendance-photo-input');
+      }
+      
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(file);
+      input.files = dataTransfer.files;
+      
+      console.log('[Test YOLO] Triggering YOLOv8 change handler...');
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+    } catch (err) {
+      console.error('[Test YOLO] Failure running test yolo auto-load:', err);
+    }
+  });
+}
 
 // Init
 render();
