@@ -121,7 +121,7 @@ const AURA_API = {
   /* ── [SERVER] submit attendance ──────────────────────────────────────────
      POST /api/attendance */
   submitAttendance: async ({ centreId, present, absent, photoCount }) => {
-    AURA_DB.queue({ op: 'attendance', centreId, present: present.length, absent: absent.length, ts: Date.now() });
+    AURA_DB.queue({ op: 'attendance', centreId, present, absent, photoCount, ts: Date.now() });
     try {
       return await _apiFetch('/api/attendance', {
         method: 'POST',
@@ -163,7 +163,7 @@ const AURA_API = {
   /* ── [SERVER] log meal count ──────────────────────────────────────────────
      POST /api/meal */
   logMeal: async ({ centreId, fedCount, totalPresent }) => {
-    AURA_DB.queue({ op: 'meal', centreId, fedCount, ts: Date.now() });
+    AURA_DB.queue({ op: 'meal', centreId, fedCount, totalPresent, ts: Date.now() });
     try {
       return await _apiFetch('/api/meal', {
         method: 'POST',
@@ -192,7 +192,7 @@ const AURA_API = {
      POST /api/audit/commit */
   commitAudit: async ({ centreId, approvedItems }) => {
     AURA_DB.set('lastAuditTs', Date.now());
-    AURA_DB.queue({ op: 'audit_commit', centreId, items: approvedItems.length, ts: Date.now() });
+    AURA_DB.queue({ op: 'audit_commit', centreId, approvedItems, ts: Date.now() });
     try {
       return await _apiFetch('/api/audit/commit', {
         method: 'POST',
@@ -200,6 +200,40 @@ const AURA_API = {
       });
     } catch {
       return { success: true, pdfUrl: null, syncStatus: 'queued' };
+    }
+  },
+
+  /* ── [SERVER] generate register PDF ──────────────────────────────────────*/
+  generatePDF: async ({ registerType, month, year }) => {
+    try {
+      return await _apiFetch('/api/pdf/generate', {
+        method: 'POST',
+        body: JSON.stringify({ registerType, month, year })
+      });
+    } catch {
+      return { success: false, error: 'Offline / Server Down' };
+    }
+  },
+
+  /* ── [SERVER] list generated PDFs ────────────────────────────────────────*/
+  listPDFs: async () => {
+    try {
+      return await _apiFetch('/api/pdf/list');
+    } catch {
+      return [];
+    }
+  },
+
+  /* ── [SERVER] file infrastructure grievance ──────────────────────────────*/
+  fileGrievance: async ({ centreId, issueType, description, photoData }) => {
+    AURA_DB.queue({ op: 'grievance', centreId, issueType, description, photoData, ts: Date.now() });
+    try {
+      return await _apiFetch('/api/grievance', {
+        method: 'POST',
+        body: JSON.stringify({ centreId, issueType, description, photoData })
+      });
+    } catch {
+      return { success: true, syncStatus: 'queued' };
     }
   },
 
@@ -218,9 +252,10 @@ const AURA_API = {
     let synced = 0, failed = 0;
     for (const op of pending) {
       try {
-        const path = op.op === 'attendance' ? '/api/attendance'
-                   : op.op === 'meal'       ? '/api/meal'
+        const path = op.op === 'attendance'   ? '/api/attendance'
+                   : op.op === 'meal'         ? '/api/meal'
                    : op.op === 'audit_commit' ? '/api/audit/commit'
+                   : op.op === 'grievance'    ? '/api/grievance'
                    : null;
         if (path) {
           await _apiFetch(path, { method: 'POST', body: JSON.stringify(op) });
@@ -264,7 +299,7 @@ const MOCK = {
   sarrResult: [
     { name: 'Attendance', nameHi: 'हाज़िरी', value: 'Rahul: absent', valueHi: 'राहुल: नहीं आया', confidence: 0.97, tier: 1 },
     { name: 'Ration',     nameHi: 'राशन',   value: 'Priya: double ration', valueHi: 'प्रिया: दुगना राशन', confidence: 0.91, tier: 2 },
-    { name: 'Health',     nameHi: 'सेहत',   value: 'Meera: weigh pending', valueHi: 'मीरा: वज़न नापना बाकी', confidence: 0.85, tier: 2 }
+    { name: 'Health',     nameHi: 'सेहत',   value: 'Meera: weigh pending', valueHi: 'मीरा: वज़न नापना बाकी', confidence: 0.85, tier: 3 }
   ],
   healthRisk: {
     name: 'Suresh Oraon', nameHi: 'सुरेश उरांव',
@@ -295,7 +330,7 @@ const MOCK = {
    ============================================================================ */
 const WORKERS = [
   {
-    id: 'AWW_KH_04', av: 'म',
+    id: 'AWW_KH_04', av: { en: 'M', hi: 'म' },
     name: { en: 'Meera Devi', hi: 'मीरा देवी' },
     centre: 'AWC 04', block: { en: 'Khunti, Jharkhand', hi: 'खूंटी, झारखंड' },
     childCount: 26,
@@ -309,14 +344,14 @@ const WORKERS = [
       vitals: { weight: '7.8 kg', height: '89 cm', arm: '10.8 cm', attendance: '12/22' }
     },
     triage: [
-      { tier:'critical', name:{en:'Meera Sharma',hi:'मीरा शर्मा'}, age:'3 yrs', ds:{en:'Weight dropping 3 weeks. Measure today.',hi:'वज़न 3 हफ़्ते से घट रहा। आज नापो।'}, tag:{en:'Very weak',hi:'बहुत कमज़ोर'} },
-      { tier:'critical', name:{en:'Ravi Das',hi:'रवि दास'}, age:'2 yrs', ds:{en:'Arm very thin. Send to hospital.',hi:'बाँह बहुत पतली। अस्पताल भेजो।'}, tag:{en:'Very weak',hi:'बहुत कमज़ोर'} },
-      { tier:'pending',  name:{en:'Rahul Murmu',hi:'राहुल मुर्मू'}, age:'2 yrs', ds:{en:'Absent 5 days. Back today.',hi:'5 दिन नहीं आया। आज लौटा।'}, tag:{en:'Back today',hi:'आज लौटा'} },
-      { tier:'remaining',name:{en:'Suresh Yadav',hi:'सुरेश यादव'}, age:'3 yrs', ds:{en:'Vitamin A vaccine due today.',hi:'विटामिन A का टीका आज बाकी।'}, tag:null }
+      { tier:'critical', name:{en:'Meera Sharma',hi:'मीरा शर्मा'}, age:{en:'3 yrs',hi:'3 साल'}, ds:{en:'Weight dropping 3 weeks. Measure today.',hi:'वज़न 3 हफ़्ते से घट रहा। आज नापो।'}, tag:{en:'Very weak',hi:'बहुत कमज़ोर'} },
+      { tier:'critical', name:{en:'Ravi Das',hi:'रवि दास'}, age:{en:'2 yrs',hi:'2 साल'}, ds:{en:'Arm very thin. Send to hospital.',hi:'बाँह बहुत पतली। अस्पताल भेजो।'}, tag:{en:'Very weak',hi:'बहुत कमज़ोर'} },
+      { tier:'pending',  name:{en:'Rahul Murmu',hi:'राहुल मुर्मू'}, age:{en:'2 yrs',hi:'2 साल'}, ds:{en:'Absent 5 days. Back today.',hi:'5 दिन नहीं आया। आज लौटा।'}, tag:{en:'Back today',hi:'आज लौटा'} },
+      { tier:'remaining',name:{en:'Suresh Yadav',hi:'सुरेश यादव'}, age:{en:'3 yrs',hi:'3 साल'}, ds:{en:'Vitamin A vaccine due today.',hi:'विटामिन A का टीका आज बाकी।'}, tag:null }
     ]
   },
   {
-    id: 'AWW_MU_12', av: 'सु',
+    id: 'AWW_MU_12', av: { en: 'S', hi: 'सु' },
     name: { en: 'Sunita Kumari', hi: 'सुनीता कुमारी' },
     centre: 'AWC 12', block: { en: 'Murhu, Jharkhand', hi: 'मुरहू, झारखंड' },
     childCount: 31,
@@ -330,14 +365,14 @@ const WORKERS = [
       vitals: { weight: '8.4 kg', height: '84 cm', arm: '11.1 cm', attendance: '15/22' }
     },
     triage: [
-      { tier:'critical', name:{en:'Anil Munda',hi:'अनिल मुंडा'}, age:'2 yrs', ds:{en:'Diarrhoea twice. Home visit needed.',hi:'दो बार दस्त। घर जाकर देखो।'}, tag:{en:'Very weak',hi:'बहुत कमज़ोर'} },
-      { tier:'pending',  name:{en:'Geeta Oraon',hi:'गीता उरांव'}, age:'4 yrs', ds:{en:'No info for 4 days.',hi:'4 दिन से कुछ दर्ज नहीं।'}, tag:null },
-      { tier:'pending',  name:{en:'Mahesh Munda',hi:'महेश मुंडा'}, age:'3 yrs', ds:{en:'Missed weighing twice.',hi:'दो बार वज़न नहीं हुआ।'}, tag:null },
-      { tier:'remaining',name:{en:'Pooja Devi',hi:'पूजा देवी'}, age:'5 yrs', ds:{en:'Deworming pill due.',hi:'पेट के कीड़े की दवा बाकी।'}, tag:null }
+      { tier:'critical', name:{en:'Anil Munda',hi:'अनिल मुंडा'}, age:{en:'2 yrs',hi:'2 साल'}, ds:{en:'Diarrhoea twice. Home visit needed.',hi:'दो बार दस्त। घर जाकर देखो।'}, tag:{en:'Very weak',hi:'बहुत कमज़ोर'} },
+      { tier:'pending',  name:{en:'Geeta Oraon',hi:'गीता उरांव'}, age:{en:'4 yrs',hi:'4 साल'}, ds:{en:'No info for 4 days.',hi:'4 दिन से कुछ दर्ज नहीं।'}, tag:null },
+      { tier:'pending',  name:{en:'Mahesh Munda',hi:'महेश मुंडा'}, age:{en:'3 yrs',hi:'3 साल'}, ds:{en:'Missed weighing twice.',hi:'दो बार वज़न नहीं हुआ।'}, tag:null },
+      { tier:'remaining',name:{en:'Pooja Devi',hi:'पूजा देवी'}, age:{en:'5 yrs',hi:'5 साल'}, ds:{en:'Deworming pill due.',hi:'पेट के कीड़े की दवा बाकी।'}, tag:null }
     ]
   },
   {
-    id: 'AWW_KA_07', av: 'फू',
+    id: 'AWW_KA_07', av: { en: 'P', hi: 'फू' },
     name: { en: 'Phoolmani Devi', hi: 'फूलमणि देवी' },
     centre: 'AWC 07', block: { en: 'Karra, Jharkhand', hi: 'कर्रा, झारखंड' },
     childCount: 19,
@@ -351,13 +386,13 @@ const WORKERS = [
       vitals: { weight: '12.1 kg', height: '98 cm', arm: '12.4 cm', attendance: '18/22' }
     },
     triage: [
-      { tier:'critical', name:{en:'Lakshmi Oraon',hi:'लक्ष्मी उरांव'}, age:'4 yrs', ds:{en:'Slipped to weak this month. Watch.',hi:'इस महीने कमज़ोर हुई। ध्यान दो।'}, tag:{en:'Weak',hi:'कमज़ोर'} },
-      { tier:'pending',  name:{en:'Sanjay Munda',hi:'संजय मुंडा'}, age:'3 yrs', ds:{en:'No info for 3 days.',hi:'3 दिन से कुछ दर्ज नहीं।'}, tag:null },
-      { tier:'remaining',name:{en:'Kiran Devi',hi:'किरण देवी'}, age:'2 yrs', ds:{en:'Vitamin A vaccine due.',hi:'विटामिन A का टीका बाकी।'}, tag:null }
+      { tier:'critical', name:{en:'Lakshmi Oraon',hi:'लक्ष्मी उरांव'}, age:{en:'4 yrs',hi:'4 साल'}, ds:{en:'Slipped to weak this month. Watch.',hi:'इस महीने कमज़ोर हुई। ध्यान दो।'}, tag:{en:'Weak',hi:'कमज़ोर'} },
+      { tier:'pending',  name:{en:'Sanjay Munda',hi:'संजय मुंडा'}, age:{en:'3 yrs',hi:'3 साल'}, ds:{en:'No info for 3 days.',hi:'3 दिन से कुछ दर्ज नहीं।'}, tag:null },
+      { tier:'remaining',name:{en:'Kiran Devi',hi:'किरण देवी'}, age:{en:'2 yrs',hi:'2 साल'}, ds:{en:'Vitamin A vaccine due.',hi:'विटामिन A का टीका बाकी।'}, tag:null }
     ]
   },
   {
-    id: 'AWW_TO_21', av: 'रे',
+    id: 'AWW_TO_21', av: { en: 'R', hi: 'रे' },
     name: { en: 'Rekha Devi', hi: 'रेखा देवी' },
     centre: 'AWC 21', block: { en: 'Torpa, Jharkhand', hi: 'तोरपा, झारखंड' },
     childCount: 24,
@@ -371,10 +406,10 @@ const WORKERS = [
       vitals: { weight: '9.0 kg', height: '92 cm', arm: '10.5 cm', attendance: '9/22' }
     },
     triage: [
-      { tier:'critical', name:{en:'Budhan Singh',hi:'बुधन सिंह'}, age:'3 yrs', ds:{en:'Lowest weight. Family migrating. Refer.',hi:'सबसे कम वज़न। परिवार जा रहा। रेफर करो।'}, tag:{en:'Very weak',hi:'बहुत कमज़ोर'} },
-      { tier:'critical', name:{en:'Sita Kumari',hi:'सीता कुमारी'}, age:'2 yrs', ds:{en:'Arm thin. Weigh today.',hi:'बाँह पतली। आज वज़न नापो।'}, tag:{en:'Weak',hi:'कमज़ोर'} },
-      { tier:'pending',  name:{en:'Vikash Munda',hi:'विकाश मुंडा'}, age:'4 yrs', ds:{en:'Absent 6 days.',hi:'6 दिन नहीं आया।'}, tag:{en:'Absent',hi:'गैरहाज़िर'} },
-      { tier:'remaining',name:{en:'Anjali Devi',hi:'अंजली देवी'}, age:'5 yrs', ds:{en:'Deworming pill due.',hi:'पेट के कीड़े की दवा बाकी।'}, tag:null }
+      { tier:'critical', name:{en:'Budhan Singh',hi:'बुधन सिंह'}, age:{en:'3 yrs',hi:'3 साल'}, ds:{en:'Lowest weight. Family migrating. Refer.',hi:'सबसे कम वज़न। परिवार जा रहा। रेफर करो।'}, tag:{en:'Very weak',hi:'बहुत कमज़ोर'} },
+      { tier:'critical', name:{en:'Sita Kumari',hi:'सीता कुमारी'}, age:{en:'2 yrs',hi:'2 साल'}, ds:{en:'Arm thin. Weigh today.',hi:'बाँह पतली। आज वज़न नापो।'}, tag:{en:'Weak',hi:'कमज़ोर'} },
+      { tier:'pending',  name:{en:'Vikash Munda',hi:'विकाश मुंडा'}, age:{en:'4 yrs',hi:'4 साल'}, ds:{en:'Absent 6 days.',hi:'6 दिन नहीं आया।'}, tag:{en:'Absent',hi:'गैरहाज़िर'} },
+      { tier:'remaining',name:{en:'Anjali Devi',hi:'अंजली देवी'}, age:{en:'5 yrs',hi:'5 साल'}, ds:{en:'Deworming pill due.',hi:'पेट के कीड़े की दवा बाकी।'}, tag:null }
     ]
   }
 ];

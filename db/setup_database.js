@@ -108,6 +108,26 @@ function setupDatabase() {
             referred_to_chc BOOLEAN DEFAULT 0,
             FOREIGN KEY (beneficiary_id) REFERENCES beneficiary_directory(beneficiary_id) ON DELETE CASCADE ON UPDATE CASCADE
         );
+
+        CREATE TABLE IF NOT EXISTS audit_logs (
+            id TEXT PRIMARY KEY,
+            record_date DATE NOT NULL,
+            centre_id TEXT NOT NULL,
+            present_count INTEGER NOT NULL,
+            absent_count INTEGER NOT NULL,
+            fed_count INTEGER NOT NULL,
+            committed_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+
+        CREATE TABLE IF NOT EXISTS grievances (
+            id TEXT PRIMARY KEY,
+            centre_id TEXT NOT NULL,
+            issue_type TEXT NOT NULL,
+            description TEXT NOT NULL,
+            photo_data TEXT,
+            status TEXT DEFAULT 'pending',
+            created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
     `);
 
     // Verify FK enforcement is active

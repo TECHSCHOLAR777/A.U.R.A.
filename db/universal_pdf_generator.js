@@ -103,4 +103,115 @@ function generateUniversalPDF(metaData, config, dbData) {
     console.log(`[PDF Engine] Generated dynamically: ${fileName}`);
 }
 
-module.exports = { mapDataForPDF, generateUniversalPDF };
+async function generateRegisterPDF(db, registerType, month, year, outputPath) {
+    const monthStr = month.toString().padStart(2, '0');
+    const yearStr = year.toString();
+
+    const { REGISTER_CONFIGS } = require('./registerConfig');
+    const config = REGISTER_CONFIGS[registerType];
+    if (!config) throw new Error(`Invalid register type: ${registerType}`);
+
+    const queries = require('./extended_queries');
+    let dbData = [];
+
+    try {
+        if (registerType === 'REGISTER_2') {
+            dbData = await queries.fetchRegister2Data(db, month, year);
+        } else if (registerType === 'REGISTER_3') {
+            dbData = await queries.fetchRegister3Data(db, month, year);
+        } else if (registerType === 'REGISTER_4') {
+            dbData = await queries.fetchRegister4Data(db, month, year);
+        } else if (registerType === 'REGISTER_6') {
+            const query = `
+                SELECT 
+                    b.child_name,
+                    CAST(strftime('%Y.%m%d', 'now') - strftime('%Y.%m%d', b.dob) AS INTEGER) AS age,
+                    SUM(t.attendance) AS total_attendance_days,
+                    SUM(t.morning_snacks) AS total_snacks_days,
+                    SUM(t.hot_cooked_meal) AS total_hcm_days
+                FROM beneficiary_directory b
+                JOIN daily_tracking t ON b.beneficiary_id = t.beneficiary_id
+                WHERE strftime('%m', t.record_date) = ? AND strftime('%Y', t.record_date) = ?
+                GROUP BY b.beneficiary_id
+                ORDER BY b.child_name ASC
+            `;
+            dbData = db.prepare(query).all(monthStr, yearStr);
+        } else if (registerType === 'REGISTER_11') {
+            dbData = await queries.fetchRegister11Data(db, month, year);
+        } else if (registerType === 'REGISTER_15') {
+            dbData = await queries.fetchRegister15Data(db, month, year);
+        }
+    } catch (err) {
+        console.warn(`[PDF Engine] Query error for ${registerType}:`, err.message);
+    }
+
+    const metaData = {
+        state: 'Jharkhand',
+        centerName: 'AWC 04',
+        workerName: 'Meera Devi',
+        month: monthStr,
+        year: yearStr
+    };
+
+    const tableBody = mapDataForPDF(dbData, config);
+    
+    const doc = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: 'a4'
+    });
+
+    const pageWidth = doc.internal.pageSize.getWidth();
+    
+    // Official Header
+    doc.setFontSize(16);
+    doc.setFont("helvetica", "bold");
+    doc.text(`GOVERNMENT OF ${metaData.state.toUpperCase()} - ICDS`, pageWidth / 2, 15, { align: 'center' });
+    
+    // Dynamic Sub-Header (Register Title)
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "normal");
+    doc.text(config.title, pageWidth / 2, 22, { align: 'center' });
+    
+    // Metadata Details Row
+    doc.setFontSize(10);
+    doc.text(`AWC Name: ${metaData.centerName}`, 14, 30);
+    doc.text(`AWW Name: ${metaData.workerName}`, pageWidth / 2, 30, { align: 'center' });
+    doc.text(`Period: ${metaData.month} / ${metaData.year}`, pageWidth - 14, 30, { align: 'right' });
+
+    // Table Generation
+    doc.autoTable({
+        startY: 35,
+        head: [config.columns],
+        body: tableBody,
+        theme: 'grid',
+        headStyles: {
+            fillColor: [255, 255, 255],
+            textColor: [0, 0, 0],
+            lineColor: [0, 0, 0],
+            lineWidth: 0.1,
+            fontStyle: 'bold',
+            halign: 'center'
+        },
+        bodyStyles: {
+            textColor: [0, 0, 0],
+            lineColor: [0, 0, 0],
+            lineWidth: 0.1,
+            halign: 'center'
+        },
+        columnStyles: {
+            0: { halign: 'left' },
+            1: { halign: 'left' }
+        },
+        margin: { top: 35 }
+    });
+
+    fs.writeFileSync(outputPath, Buffer.from(doc.output('arraybuffer')));
+    console.log(`[PDF Engine] Generated dynamically at: ${outputPath}`);
+}
+
+async function generateReportPDF(db, month, year, outputPath) {
+    return generateRegisterPDF(db, 'REGISTER_6', month, year, outputPath);
+}
+
+module.exports = { mapDataForPDF, generateUniversalPDF, generateReportPDF, generateRegisterPDF };

@@ -30,8 +30,9 @@
   --bg:#FFFFFF;--rl:#FCEBE9;--al:#FCF3E3;--gl:#E9F3EC;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{font-family:'Inter','Segoe UI',system-ui,sans-serif;background:#0d0d0d;color:var(--ink);
-  min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;align-items:center;padding:16px 12px 56px}
+/* Responsive Layout */
+body{font-family:'Inter','Segoe UI',system-ui,sans-serif;background:#0f172a;color:var(--ink);
+  min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0;padding:0}
 .hindi *{font-family:'Noto Sans Devanagari','Inter',sans-serif}
 /* offline/update banners */
 #net-banner{display:none;position:fixed;top:0;left:0;right:0;z-index:999;
@@ -40,26 +41,8 @@ body{font-family:'Inter','Segoe UI',system-ui,sans-serif;background:#0d0d0d;colo
 #update-banner{display:none;position:fixed;top:0;left:0;right:0;z-index:998;
   background:var(--forest);color:#fff;text-align:center;font-size:12px;font-weight:600;
   padding:10px;cursor:pointer}
-/* page chrome */
-.top{width:100%;max-width:430px;color:#eee;margin-bottom:14px}
-.top h1{font-size:18px;font-weight:800;letter-spacing:.5px}
-.top p{font-size:11px;color:#888;margin-top:3px}
-.toprow{display:flex;align-items:center;justify-content:space-between;margin-top:10px}
-.langtoggle{display:inline-flex;background:#1c1c1c;border-radius:10px;padding:3px;gap:2px}
-.langtoggle button{background:none;border:none;color:#888;font-size:11px;font-weight:700;
-  padding:6px 14px;border-radius:8px;cursor:pointer;font-family:inherit}
-.langtoggle button.on{background:var(--green);color:#fff}
-#install-btn{display:none;background:var(--green);color:#fff;border:none;border-radius:10px;
-  padding:8px 16px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit}
-#sync-pill{font-size:10px;font-weight:600;padding:5px 10px;border-radius:14px;
-  border:1px solid #2a2a2a;color:#888;letter-spacing:.3px}
-#sync-pill.synced{border-color:var(--green);color:#4caf80}
-#sync-pill.queued{border-color:var(--amber);color:var(--amber)}
-#sync-pill.offline{border-color:#555;color:#666}
-/* phone */
-.phone{width:390px;max-width:96vw;height:780px;background:var(--bg);border-radius:38px;
-  overflow:hidden;position:relative;
-  box-shadow:0 0 0 11px #1a1a1a,0 0 0 13px #2a2a2a,0 30px 70px rgba(0,0,0,.6)}
+/* responsive app wrapper */
+.phone{width:100%;height:100vh;height:100dvh;background:var(--bg);position:relative;overflow:hidden;display:flex;flex-direction:column}
 .screen{position:absolute;inset:0;display:none;flex-direction:column;background:var(--bg);overflow:hidden}
 .screen.active{display:flex}
 .screen.dark{background:var(--forest)}
@@ -73,13 +56,18 @@ svg{width:20px;height:20px;flex-shrink:0;display:block}
 .statusbar .r{color:var(--muted);font-size:11px;font-weight:500}
 .header{height:54px;display:flex;align-items:center;padding:0 18px;gap:10px;flex-shrink:0}
 .avatar{width:34px;height:34px;border-radius:50%;background:var(--forest);color:#fff;
-  display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;position:relative}
+  display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;position:relative;cursor:pointer}
 .avatar::after{content:'';position:absolute;right:-3px;bottom:-2px;width:13px;height:13px;
   border-radius:50%;background:var(--navy);border:2px solid #fff}
 .brand{font-size:18px;font-weight:800;color:var(--forest);letter-spacing:.5px}
 .header .right{margin-left:auto;display:flex;align-items:center;gap:12px}
-.pill-lang{border:1px solid var(--line);border-radius:12px;padding:4px 10px;font-size:11px;font-weight:600}
-.body{padding:0 20px 24px}
+.pill-lang{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--forest)}
+.header-sync-pill{font-size:14px;font-weight:700;display:inline-flex;align-items:center;gap:2px;cursor:pointer}
+.header-sync-pill.synced{color:#4caf80}
+.header-sync-pill.queued{color:var(--amber)}
+.header-sync-pill.offline{color:#888}
+.header-back{background:none;border:none;color:var(--forest);font-size:26px;font-weight:700;cursor:pointer;padding-right:8px;line-height:1;display:flex;align-items:center}
+.body{padding:0 20px 84px} /* padded bottom to prevent overlapping with bottom nav */
 .greet{font-size:16px;color:var(--muted);margin-top:8px}
 .greet small{display:block;font-size:13px;margin-top:2px}
 .kw{margin:18px 0 4px;font-size:23px;font-weight:800;line-height:1.3}
@@ -251,31 +239,36 @@ svg{width:20px;height:20px;flex-shrink:0;display:block}
   font-weight:600;cursor:pointer;font-family:inherit;color:var(--ink)}
 /* loading overlay */
 .loading-overlay{position:absolute;inset:0;background:rgba(27,58,45,.7);
-  display:none;align-items:center;justify-content:center;z-index:100;border-radius:38px}
+  display:none;align-items:center;justify-content:center;z-index:100;border-radius:0}
 .loading-overlay.show{display:flex}
 .spinner{width:44px;height:44px;border:4px solid rgba(255,255,255,.2);
   border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .hint{font-size:11px;color:#aaa;text-align:center;margin-top:12px;max-width:430px;line-height:1.6}
+
+/* Desktop card design */
+@media (min-width: 480px) {
+  body {
+    background: #0f172a;
+    padding: 20px 0;
+  }
+  .phone {
+    width: 430px;
+    height: 880px;
+    border-radius: 24px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+    border: 8px solid #1e293b;
+  }
+  .loading-overlay {
+    border-radius: 24px;
+  }
+}
 </style>
 </head>
 <body>
 
 <div id="net-banner">You are offline: data is saved locally and will sync when connected</div>
 <div id="update-banner" onclick="updateSW()">New version available: tap to update</div>
-
-<div class="top">
-  <h1>A.U.R.A.</h1>
-  <p>Anganwadi Unified Resource Assistant · PWA</p>
-  <div class="toprow">
-    <div class="langtoggle">
-      <button id="lang-hi" class="on" onclick="setLang('hi')">हिंदी</button>
-      <button id="lang-en" onclick="setLang('en')">English</button>
-    </div>
-    <span id="sync-pill" class="offline">⬡ offline</span>
-    <button id="install-btn" onclick="installPWA()">Install App</button>
-  </div>
-</div>
 
 <div class="phone" id="phone">
   <div id="app"></div>
@@ -285,6 +278,7 @@ svg{width:20px;height:20px;flex-shrink:0;display:block}
 <p class="hint" id="hint"></p>
 
 <script src="aura-api.js"></script>
+<script src="ml_pipeline/ml_inference.js"></script>
 <script>
 /* SECTIONS 1-3 (AURA_API, AURA_DB, MOCK) now live in aura-api.js,
    loaded as a separate script before this one. Edit that file to wire the backend. */
@@ -301,6 +295,17 @@ let liveText = '';          // live speech transcript
 let heardFinal = '';        // final recognized text
 let recog = null;           // SpeechRecognition instance
 let recogState = 'idle';    // idle | listening | matched | nomatch | error | unsupported
+
+// Dynamic Session State for features tracking (Feature 12)
+window.SESSION = {
+  presentCount: 4,
+  absentCount: 1,
+  presentIds: ['JH-001', 'JH-002', 'JH-003', 'JH-005'],
+  absentIds: ['JH-004'],
+  fedCount: 18,
+  totalPresent: 24,
+  referralLogged: 0
+};
 
 // Resolve a { en, hi } object by current language
 function L(obj){ if(obj == null) return ''; if(typeof obj === 'string') return obj; return lang === 'hi' ? (obj.hi ?? obj.en) : (obj.en ?? obj.hi); }
@@ -449,10 +454,16 @@ function back(){ if(stack.length>1){ stack.pop(); render(); } }
 function jump(id){ stack=[id]; render(); }
 function setLang(l){
   lang=l;
-  document.getElementById('lang-hi').classList.toggle('on',l==='hi');
-  document.getElementById('lang-en').classList.toggle('on',l==='en');
+  const btnHi = document.getElementById('lang-hi');
+  const btnEn = document.getElementById('lang-en');
+  if(btnHi) btnHi.classList.toggle('on',l==='hi');
+  if(btnEn) btnEn.classList.toggle('on',l==='en');
   document.documentElement.lang = l==='hi'?'hi':'en';
   render();
+  updateSyncPill();
+}
+function toggleLanguage(){
+  setLang(lang==='hi'?'en':'hi');
 }
 function showLoader(){ document.getElementById('loader').classList.add('show'); }
 function hideLoader(){ document.getElementById('loader').classList.remove('show'); }
@@ -467,9 +478,19 @@ async function callAPI(fn, ...args){
    ============================================================ */
 const navic = {att:'home',ece:'book',meal:'meal',health:'heart',audit:'grid'};
 function statusbar(time='8:04'){ return `<div class="statusbar"><span>${time}</span><span class="r">5G &nbsp;64%</span></div>`; }
-function header(){
+function header(showBack = false){
   const t=T[lang];
-  return `<div class="header"><div class="avatar">${CW().av}</div><div class="brand">AURA</div><div class="right"><span class="pill-lang">${t.pill}</span><span class="bell">${SVG.bell}</span></div></div>`;
+  const backHtml = showBack ? `<button class="header-back" onclick="back()">‹</button>` : '';
+  const avInit = L(CW().av) || CW().av || '';
+  return `<div class="header">
+    ${backHtml}
+    <div class="avatar" onclick="jump('vlpick')">${avInit}</div>
+    <div class="brand">AURA</div>
+    <div class="right">
+      <button class="pill-lang" onclick="toggleLanguage()">${lang==='hi'?'English':'हिंदी'}</button>
+      <span id="sync-pill" class="header-sync-pill offline">⬡</span>
+    </div>
+  </div>`;
 }
 function nav(active){
   const t=T[lang];
@@ -500,7 +521,7 @@ const screens = {
   },
   vl2(){
     const t=T[lang];
-    return `<div class="screen active"><button class="backbtn" onclick="stopRecognition();back()">‹ back</button>
+    return `<div class="screen active"><button class="backbtn" onclick="stopRecognition();back()">${L({en:'‹ back',hi:'‹ वापस'})}</button>
       ${statusbar()}<div class="scroll"><div class="body">
       ${kw(t.vlSpeak,'--forest')}<div class="sub">${t.vlSpeakSub}</div>
       <div id="live-ring" class="rings listening"><div class="r2"><div class="r3">${SVG.voice}</div></div></div>
@@ -519,7 +540,7 @@ const screens = {
       </div></div></div>`;
   },
   vlpick(){
-    return `<div class="screen active"><button class="backbtn" onclick="back()">‹ back</button>
+    return `<div class="screen active"><button class="backbtn" onclick="back()">${L({en:'‹ back',hi:'‹ वापस'})}</button>
       ${statusbar()}<div class="scroll"><div class="body">
       <div class="kw" style="font-size:22px">${L({en:'Tap your name',hi:'अपना नाम चुनो'})}</div>
       <div class="sub">${L({en:'Type your name, or find your centre below.',hi:'नाम लिखो, या नीचे अपना केंद्र चुनो।'})}</div>
@@ -536,7 +557,7 @@ const screens = {
   },
   vl3(){
     const t=T[lang];
-    return `<div class="screen active"><button class="backbtn" onclick="back()">‹ back</button>
+    return `<div class="screen active"><button class="backbtn" onclick="back()">${L({en:'‹ back',hi:'‹ वापस'})}</button>
       ${statusbar('9:00')}<div class="scroll"><div class="body">
       <div style="margin:14px 0"><div class="globewrap">${SVG.globe}</div></div>
       <div style="text-align:center;font-size:17px;font-weight:800;margin-bottom:16px">${t.vlLangTitle}</div>
@@ -556,7 +577,7 @@ const screens = {
   vl4(){
     const t=T[lang];
     const w = pendingWorker || WORKERS[0];
-    return `<div class="screen active"><button class="backbtn" onclick="go('vlpick')">‹ back</button>
+    return `<div class="screen active"><button class="backbtn" onclick="go('vlpick')">${L({en:'‹ back',hi:'‹ वापस'})}</button>
       ${statusbar()}<div class="scroll"><div class="body">
       <div class="kw" style="font-size:22px">${t.vlIsThis}</div>
       <div class="sub">${t.vlFound}</div>
@@ -609,6 +630,64 @@ const screens = {
         <div class="meta"><div class="a">${s[0]}</div><div class="b">${s[1]}</div></div>
         ${s[3]?`<span class="nowtag">${t.nowtag}</span>`:''}
       </div>`).join('')}
+      <div class="sectionlabel">${lang==='hi'?'रिपोर्ट और रजिस्टर':'Reports & Registers'}</div>
+      <div class="nowcard" style="background:#f4f9f7;border:1px solid var(--line);color:var(--ink);padding:16px;margin-bottom:16px">
+        <div class="nclock" style="color:var(--forest)">📄 ${lang==='hi'?'सरकारी रजिस्टर':'Government Datasheets'}</div>
+        <div class="nlabel" style="color:var(--muted);margin-top:6px">${lang==='hi'?'रजिस्टर प्रकार चुनें':'Select Register Type'}</div>
+        
+        <select id="reg-select" style="width:100%;padding:11px 12px;margin:8px 0 6px;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;font-size:14px;background:#fff;outline:none;color:var(--ink)">
+          <option value="REGISTER_2">${lang==='hi'?'रजिस्टर २: पूरक खाद्य स्टॉक बही':'Register No. 2: Supplementary Food Stock'}</option>
+          <option value="REGISTER_3">${lang==='hi'?'रजिस्टर ३: पूरक खाद्य वितरण':'Register No. 3: Supplementary Food Distribution'}</option>
+          <option value="REGISTER_4">${lang==='hi'?'रजिस्टर ४: पूर्व-विद्यालय शिक्षा उपस्थिति':'Register No. 4: Pre-School Attendance'}</option>
+          <option value="REGISTER_6" selected>${lang==='hi'?'रजिस्टर ६: दैनिक हाज़िरी और पूरक पोषण':'Register No. 6: Daily Attendance & Nutrition'}</option>
+          <option value="REGISTER_11">${lang==='hi'?'रजिस्टर ११: बच्चों का वज़न और लम्बाई':'Register No. 11: Growth Monitoring'}</option>
+          <option value="REGISTER_15">${lang==='hi'?'रजिस्टर १५: गंभीर कुपोषण (SAM) ट्रैकिंग':'Register No. 15: SAM Tracking & Referral'}</option>
+        </select>
+
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <div style="flex:1">
+            <div class="nlabel" style="color:var(--muted);font-size:11px">${lang==='hi'?'महीना':'Month'}</div>
+            <select id="reg-month" style="width:100%;padding:8px;margin-top:4px;border:1.5px solid var(--line);border-radius:8px;font-family:inherit;font-size:13px;background:#fff;outline:none;color:var(--ink)">
+              <option value="1">1 (Jan / जनवरी)</option>
+              <option value="2">2 (Feb / फरवरी)</option>
+              <option value="3">3 (Mar / मार्च)</option>
+              <option value="4">4 (Apr / अप्रैल)</option>
+              <option value="5">5 (May / मई)</option>
+              <option value="6">6 (Jun / जून)</option>
+              <option value="7">7 (Jul / जुलाई)</option>
+              <option value="8">8 (Aug / अगस्त)</option>
+              <option value="9">9 (Sep / सितंबर)</option>
+              <option value="10" selected>10 (Oct / अक्टूबर)</option>
+              <option value="11">11 (Nov / नवंबर)</option>
+              <option value="12">12 (Dec / दिसंबर)</option>
+            </select>
+          </div>
+          <div style="flex:1">
+            <div class="nlabel" style="color:var(--muted);font-size:11px">${lang==='hi'?'वर्ष':'Year'}</div>
+            <select id="reg-year" style="width:100%;padding:8px;margin-top:4px;border:1.5px solid var(--line);border-radius:8px;font-family:inherit;font-size:13px;background:#fff;outline:none;color:var(--ink)">
+              <option value="2025">2025</option>
+              <option value="2026" selected>2026</option>
+              <option value="2027">2027</option>
+            </select>
+          </div>
+        </div>
+        
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <button id="btn-pdf-gen" class="btn green" style="margin:0;padding:12px;font-size:13px;width:100%" onclick="handleGeneratePDF()">${lang==='hi'?'पीडीएफ बनाएं':'Generate Register PDF'}</button>
+        </div>
+
+        <div id="pdf-list-container">
+          <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px;border-top:1px dashed var(--line);padding-top:10px">${lang==='hi'?'डाउनलोड के लिए तैयार पीडीएफ':'Downloaded Register PDFs'}</div>
+          <div id="pdf-list" style="display:flex;flex-direction:column;gap:8px">
+            <span style="font-size:11px;color:var(--muted)">${lang==='hi'?'लोड हो रहा है...':'Loading list...'}</span>
+          </div>
+        </div>
+      </div>
+      <div class="nowcard" style="background:#fff5f5;border:1px solid #feb2b2;color:#9b2c2c;padding:16px;margin-bottom:16px;border-radius:14px">
+        <div class="nclock" style="color:#e53e3e">⚠️ ${lang==='hi'?'शिकायत पोर्टल':'Infrastructure Grievance Portal'}</div>
+        <div class="nlabel" style="color:#c53030;margin-top:6px">${lang==='hi'?'टूटी हुई चीजें या समस्याओं की रिपोर्ट करें':'Report infrastructure issues directly to Block Officer'}</div>
+        <button class="nowbtn" style="background:#e53e3e;color:#fff;margin-top:10px" onclick="go('grievance')">${lang==='hi'?'शिकायत दर्ज करें':'File Grievance'}<span>→</span></button>
+      </div>
     </div></div>${nav('home')}</div>`;
   },
   triage(){
@@ -629,28 +708,82 @@ const screens = {
       </div>
       ${kids.map(k=>`<div class="crow" style="border-left-color:var(${b.c})" onclick="go('health')">
         <div class="ic" style="background:var(${b.bg});color:var(${b.c})">!</div>
-        <div class="info"><div class="nm">${L(k.name)}</div><div class="ag">${k.age}</div>
+        <div class="info"><div class="nm">${L(k.name)}</div><div class="ag">${L(k.age)}</div>
           <div class="ds" style="color:var(${b.c})">${L(k.ds)}</div></div>
         ${k.tag?`<span class="tag" style="background:var(${b.bg});color:var(${b.c})">${L(k.tag)}</span>`:''}
       </div>`).join('')}`;
     }).join('');
-    return `<div class="screen active">${statusbar()}${header()}<div class="scroll"><div class="body">
+    return `<div class="screen active">${statusbar()}${header(true)}<div class="scroll"><div class="body">
       ${kw(t.triageKw,'--red')}${blocks}
     </div></div>${nav('home')}</div>`;
   },
   voice(){
     const t=T[lang];
-    const regs=t.regs.map(r=>{
-      const c=r[2]?'--green':'--amber',bg=r[2]?'--gl':'--al';
-      return `<div class="reg" style="background:var(${bg});border-left-color:var(${c})">
-        <div><div class="l" style="color:var(${c})">${r[0]}</div><div class="v">${r[1]}</div></div>
-        <span class="st" style="background:var(${c})">${r[2]?t.done:t.pend}</span>
-      </div>`;}).join('');
-    const tiers=t.tiers.map(ti=>`<div class="tier ${ti[3]?'on':''}" style="${ti[3]?`background:var(${ti[2]==='--green'?'--gl':ti[2]==='--amber'?'--al':'--rl'});border-color:var(${ti[2]});border-left-color:var(${ti[2]})`:''}">
-      <div><div class="tl" style="${ti[3]?`color:var(${ti[2]})`:'color:var(--muted)'}">${ti[0]}</div><div class="td">${ti[1]}</div></div>
-      ${ti[3]?`<span class="ck" style="background:var(${ti[2]})">${SVG.check}</span>`:''}
-    </div>`).join('');
-    return `<div class="screen active">${statusbar('8:10')}${header()}<div class="scroll"><div class="body">
+    if (!window.sarrRegisters) {
+      window.sarrRegisters = [
+        { name: 'Attendance', nameHi: 'हाज़िरी', value: 'Rahul: absent', valueHi: 'राहुल: नहीं आया', confidence: 0.97, status: 'approved', tier: 1 },
+        { name: 'Ration',     nameHi: 'राशन',   value: 'Priya: double ration', valueHi: 'प्रिया: दुगना राशन', confidence: 0.91, status: 'pending', tier: 2 },
+        { name: 'Health',     nameHi: 'सेहत',   value: 'Meera: weigh pending', valueHi: 'मीरा: वज़न नापना बाकी', confidence: 0.85, status: 'pending', tier: 3 }
+      ];
+    }
+
+    const regs = window.sarrRegisters.map((r, index) => {
+      let c = '--amber';
+      let bg = '--al';
+      let badge = t.pend;
+      let controlHtml = '';
+
+      if (r.status === 'approved') {
+        c = '--green';
+        bg = '--gl';
+        badge = t.done;
+      } else if (r.tier === 2) {
+        controlHtml = `<div style="margin-top:8px">
+          <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;color:var(--amber);font-weight:700">
+            <input type="checkbox" onclick="handleConfirmRegister(${index}, this.checked)" ${r.status==='approved'?'checked':''}>
+            ${lang==='hi'?'हाँ, ब्यौरा सही है (पुष्टि करें)':'Confirm entry is correct'}
+          </label>
+        </div>`;
+      } else if (r.tier === 3) {
+        c = '--red';
+        bg = '--rl';
+        controlHtml = `<div style="margin-top:8px">
+          <span style="font-size:11px;color:var(--red);font-weight:700;display:block;margin-bottom:4px">⚠️ ${lang==='hi'?'कम भरोसा: मैन्युअल रूप से बच्चा चुनें':'Low Confidence: Select Child'}</span>
+          <select onchange="handleSelectChildForRegister(${index}, this.value)" style="padding:6px;border-radius:6px;font-size:11px;border:1.5px solid var(--red);outline:none;background:#fff;font-family:inherit">
+            <option value="">${lang==='hi'?'चुनें...':'Select...'}</option>
+            <option value="Meera Sharma">${lang==='hi'?'मीरा शर्मा':'Meera Sharma'}</option>
+            <option value="Suresh Oraon">${lang==='hi'?'सुरेश उरांव':'Suresh Oraon'}</option>
+            <option value="Rahul Murmu">${lang==='hi'?'राहुल मुर्मू':'Rahul Murmu'}</option>
+          </select>
+        </div>`;
+      }
+
+      return `<div class="reg" style="background:var(${bg});border-left:4px solid var(${c});margin-bottom:10px;padding:12px;border-radius:12px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div>
+            <div class="l" style="color:var(${c});font-weight:700">${lang==='hi'?r.nameHi:r.name}</div>
+            <div class="v" style="font-size:13px;margin-top:2px;font-weight:600">${lang==='hi'?r.valueHi:r.value}</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:2px">${lang==='hi'?'सटीकता':'Confidence'}: ${Math.round(r.confidence*100)}%</div>
+          </div>
+          <span class="st" style="background:var(${c});padding:3px 8px;border-radius:8px;font-size:10px;color:#fff;font-weight:700">${badge}</span>
+        </div>
+        ${controlHtml}
+      </div>`;
+    }).join('');
+
+    const tiers = t.tiers.map((ti, idx) => {
+      const isOn = (idx === 0 && !window.sarrRegisters.some(r => r.status === 'pending')) || 
+                   (idx === 1 && window.sarrRegisters.some(r => r.tier === 2 && r.status === 'pending')) ||
+                   (idx === 2 && window.sarrRegisters.some(r => r.tier === 3 && r.status === 'pending'));
+      
+      const c = ti[2];
+      return `<div class="tier ${isOn?'on':''}" style="${isOn?`background:var(${c==='--green'?'--gl':c==='--amber'?'--al':'--rl'});border-color:var(${c});border-left-color:var(${c})`:''}">
+        <div><div class="tl" style="${isOn?`color:var(${c})`:'color:var(--muted)'}">${ti[0]}</div><div class="td">${ti[1]}</div></div>
+        ${isOn && idx === 0 ? `<span class="ck" style="background:var(${c})">${SVG.check}</span>` : ''}
+      </div>`;
+    }).join('');
+
+    return `<div class="screen active">${statusbar('8:10')}${header(true)}<div class="scroll"><div class="body" style="margin-bottom:84px">
       ${kw(t.voiceKw,'--green')}<div class="sub">${t.voiceSub}</div>
       <div class="transcript"><div class="q">${t.voiceQ}</div>
         <div class="h">${t.voiceH}</div><div class="bar"><i></i></div></div>
@@ -666,7 +799,7 @@ const screens = {
       <div class="ic" style="background:var(--rl);color:var(--red)">✕</div>
       <div class="info"><div class="nm">${k[0]}</div><div class="ag">${k[1]}${t.absTag}</div></div>
     </div>`).join('');
-    return `<div class="screen active">${statusbar()}${header()}<div class="scroll"><div class="body">
+    return `<div class="screen active">${statusbar()}${header(true)}<div class="scroll"><div class="body">
       ${kw(t.attKw,'--green')}
       <div class="hero" style="background:var(--green);margin-top:6px">
         <h2>${t.allHere}</h2><p>${t.allCount}</p>
@@ -688,7 +821,7 @@ const screens = {
   },
   meal(){
     const t=T[lang];
-    return `<div class="screen active">${statusbar('12:14')}${header()}<div class="scroll"><div class="body">
+    return `<div class="screen active">${statusbar('12:14')}${header(true)}<div class="scroll"><div class="body">
       ${kw(t.mealKw,'--orange')}<div class="sub">${t.mealSub}</div>
       <div class="vcard" style="border-left-color:var(--orange)">
         <div class="mh" style="color:var(--orange)">${SVG.meal}<span style="font-size:10px;font-weight:600">${t.mealToday}</span></div>
@@ -723,7 +856,7 @@ const screens = {
     const weakLabel = hRisk.category==='SAM' ? t.hVeryWeak : (lang==='hi'?'कमज़ोर (MAM)':'Weak (MAM)');
     return `<div class="screen active">${statusbar('1:20')}<div class="scroll">
       <div class="hero" style="background:var(--red);border-radius:0;padding:16px 20px 18px">
-        <button class="backbtn" style="position:static;background:rgba(255,255,255,.2);border:none;color:#fff;margin-bottom:10px" onclick="back()">‹ back</button>
+        <button class="backbtn" style="position:static;background:rgba(255,255,255,.2);border:none;color:#fff;margin-bottom:10px" onclick="back()">${L({en:'‹ back',hi:'‹ वापस'})}</button>
         <div style="display:flex;justify-content:space-between;align-items:flex-start">
           <div><h2>${L(hRisk.name)}</h2>
             <p>${L(hRisk.age)}</p></div>
@@ -759,7 +892,7 @@ const screens = {
       </div>
       <div style="font-size:10px;margin-top:6px;line-height:1.5">${lang==='hi'?f.noteHi:f.note}</div>
     </div>`).join('');
-    return `<div class="screen active">${statusbar('9:30')}${header()}<div class="scroll"><div class="body">
+    return `<div class="screen active">${statusbar('9:30')}${header(true)}<div class="scroll"><div class="body">
       ${kw(t.eceKw,'--purple')}<div class="sub">${t.eceSub}</div>
       <div class="vcard" style="border-left-color:var(--purple)">
         <div style="font-size:16px;font-weight:800">${lang==='hi'?act.nameHi:act.name}</div>
@@ -776,11 +909,21 @@ const screens = {
   },
   audit(){
     const t=T[lang];
-    const items=t.auditItems.map(i=>`<div class="item" style="border-left-color:var(${i[1]?'--green':'--red'})">
+    const s = window.SESSION;
+
+    const dynamicItems = [
+      [lang==='hi' ? `${s.presentCount} बच्चे उपस्थित दर्ज` : `${s.presentCount} children marked present`, 1],
+      [lang==='hi' ? `${s.absentCount} बच्चे अनुपस्थित दर्ज` : `${s.absentCount} children marked absent`, 1],
+      [lang==='hi' ? `${s.fedCount} बच्चों को गर्म भोजन खिलाया` : `${s.fedCount} children fed hot cooked meals`, 1],
+      [lang==='hi' ? `फ़ोटो प्रमाण सहेजा गया (24 बच्चे)` : `Photo headcount verified (24 children)`, 1]
+    ];
+
+    const items=dynamicItems.map(i=>`<div class="item" style="border-left-color:var(${i[1]?'--green':'--red'})">
       <span class="b" style="background:var(${i[1]?'--green':'--red'})">${i[1]?'✓':'!'}</span>
       <span class="x">${i[0]}</span>
     </div>`).join('');
-    return `<div class="screen active">${statusbar('2:30')}${header()}<div class="scroll"><div class="body">
+
+    return `<div class="screen active">${statusbar('2:30')}${header(true)}<div class="scroll"><div class="body" style="margin-bottom:84px">
       ${kw(t.auditKw,'--navy')}
       <div style="background:var(--al);border-left:6px solid var(--amber);border-radius:12px;padding:13px;margin:6px 0 14px">
         <div style="font-size:12px;font-weight:700;color:var(--amber)">${t.auditYes}</div>
@@ -789,6 +932,38 @@ const screens = {
       <div class="sectionlabel">${t.auditWhat}</div>${items}
       <div style="background:var(--gl);border-radius:10px;padding:11px;margin-top:4px;font-size:9px;color:var(--green)">${t.auditSafe}</div>
       <button class="btn primary" style="margin-top:14px" onclick="handleAuditCommit()">${t.auditApprove}</button>
+    </div></div>${nav('home')}</div>`;
+  },
+  grievance(){
+    return `<div class="screen active">${statusbar()}${header(true)}<div class="scroll"><div class="body">
+      <div class="greet" style="color:#e53e3e;font-size:20px;font-weight:800;margin-bottom:4px">⚠️ ${lang==='hi'?'शिकायत दर्ज करें':'Infrastructure Grievance'}</div>
+      <div class="sub" style="margin-bottom:14px">${lang==='hi'?'संस्थान की मरम्मत या टूटी हुई बुनियादी ढांचे की रिपोर्ट करें।':'File alerts regarding damaged property or structural deficits.'}</div>
+
+      <div class="nowcard" style="padding:14px;border:1px solid var(--line);margin-bottom:14px;border-radius:14px">
+        <label class="nlabel" style="font-weight:700">${lang==='hi'?'समस्या का प्रकार':'Issue Type'}</label>
+        <select id="grv-issue" style="width:100%;padding:11px 12px;margin-top:8px;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;font-size:14px;background:#fff;outline:none;color:var(--ink)">
+          <option value="Water Supply">${lang==='hi'?'पेयजल आपूर्ति समस्या':'Water Supply deficit'}</option>
+          <option value="Broken Toilet">${lang==='hi'?'टूटा शौचालय':'Broken Toilet / Sanitation'}</option>
+          <option value="Roof Leakage">${lang==='hi'?'छत से पानी टपकना':'Roof Leakage'}</option>
+          <option value="Food/Ration Quality">${lang==='hi'?'खराब राशन/भोजन गुणवत्ता':'Ration / HCM Quality Defect'}</option>
+          <option value="Electricity Deficit">${lang==='hi'?'बिजली की समस्या':'Electricity Deficit'}</option>
+        </select>
+      </div>
+
+      <div class="nowcard" style="padding:14px;border:1px solid var(--line);margin-bottom:14px;border-radius:14px">
+        <label class="nlabel" style="font-weight:700">${lang==='hi'?'समस्या का विवरण':'Spoken Description'}</label>
+        <textarea id="grv-desc" style="width:100%;height:80px;padding:10px;margin-top:8px;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;font-size:13px;resize:none;outline:none;color:var(--ink)" placeholder="${lang==='hi'?'विवरण लिखें या बोलें...':'e.g. Toilet door is broken...'}" required></textarea>
+        <button class="btn ghost" style="margin-top:8px;display:flex;gap:8px;align-items:center;justify-content:center" onclick="handleGrievanceVoiceRecord()">🎤 ${lang==='hi'?'बोलकर विवरण भरें':'Speak to type description'}</button>
+      </div>
+
+      <div class="nowcard" style="padding:14px;border:1px solid var(--line);margin-bottom:14px;border-radius:14px;cursor:pointer" onclick="handleGrievanceCameraUpload()">
+        <label class="nlabel" style="font-weight:700">${lang==='hi'?'तस्वीर प्रमाण (कैमरा)':'Capture Photo evidence'}</label>
+        <div id="grv-photo-box" style="background:#edf2f7;border:1.5px dashed var(--line);border-radius:10px;padding:20px;text-align:center;margin-top:8px;font-size:12px;color:var(--muted)">
+          📸 ${lang==='hi'?'यहाँ क्लिक करके समस्या की फ़ोटो अपलोड करें':'Click to capture camera frame evidence'}
+        </div>
+      </div>
+
+      <button id="btn-submit-grv" class="btn red" style="margin-top:8px" onclick="handleFileGrievance()">${lang==='hi'?'ब्लॉक अधिकारी को रिपोर्ट भेजें':'Send Report to Block Officer'}</button>
     </div></div>${nav('home')}</div>`;
   }
 };
@@ -810,16 +985,32 @@ async function handleVoiceSARR(){
   render(); // re-render with updated state
 }
 async function handleSubmitAttendance(){
+  // Update session state
+  window.SESSION.presentIds = ['JH-001', 'JH-002', 'JH-003', 'JH-005'];
+  window.SESSION.absentIds = ['JH-004'];
+  window.SESSION.presentCount = window.SESSION.presentIds.length;
+  window.SESSION.absentCount = window.SESSION.absentIds.length;
+  window.SESSION.totalPresent = window.SESSION.presentCount;
+
   // 🔌 SOCKET: AURA_API.submitAttendance → go('audit') or shell
   const result = await callAPI(AURA_API.submitAttendance, {
-    centreId: 'AWC_04', present: [], absent: ['CLD_004'], photoCount: 24
+    centreId: 'AWC_04',
+    present: window.SESSION.presentIds,
+    absent: window.SESSION.absentIds,
+    photoCount: 24
   });
   if(result?.success){ updateSyncPill(); go('audit'); }
 }
 async function handleLogMeal(){
+  // Update session state
+  window.SESSION.fedCount = 18;
+
   // 🔌 SOCKET: AURA_API.logMeal
-  const result = await callAPI(AURA_API.logMeal, { centreId: 'AWC_04', fedCount: 18, totalPresent: 24 });
-  if(result?.success) console.log('[Meal logged]');
+  const result = await callAPI(AURA_API.logMeal, { centreId: 'AWC_04', fedCount: window.SESSION.fedCount, totalPresent: window.SESSION.totalPresent });
+  if(result?.success) {
+    console.log('[Meal logged]');
+    alert(lang === 'hi' ? 'भोजन ब्यौरा दर्ज हो गया ✓' : 'Meal logged successfully ✓');
+  }
 }
 async function handleHealthAction(action){
   // 🔌 SOCKET: 'weigh' → open measurement entry | 'refer' → create referral
@@ -833,6 +1024,9 @@ async function handleAuditCommit(){
   const result = await callAPI(AURA_API.commitAudit, {
     centreId: 'AWC_04',
     approvedItems: T[lang].auditItems.map(i=>i[0]),
+    presentCount: window.SESSION.presentCount,
+    absentCount: window.SESSION.absentCount,
+    fedCount: window.SESSION.fedCount
   });
   if(result?.success){
     updateSyncPill();
@@ -844,6 +1038,143 @@ async function handleAuditCommit(){
   }
 }
 
+async function updatePDFList() {
+  const container = document.getElementById('pdf-list');
+  if (!container) return;
+  try {
+    const list = await AURA_API.listPDFs();
+    if (!list || list.length === 0) {
+      container.innerHTML = `<span style="font-size:11px;color:var(--muted)">${lang==='hi'?'कोई पीडीएफ उपलब्ध नहीं है।':'No PDFs generated yet.'}</span>`;
+      return;
+    }
+    container.innerHTML = list.map(pdf => {
+      const sizeKB = Math.round(pdf.sizeBytes / 1024 * 100) / 100;
+      const cleanName = pdf.filename.replace('.pdf', '').replace(/_/g, ' ');
+      return `<div style="display:flex;align-items:center;justify-content:space-between;background:#fff;padding:8px 10px;border-radius:8px;border:1px solid var(--line);font-size:12px;margin-bottom:4px">
+        <span style="font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px">📄 ${cleanName}</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:10px;color:var(--muted)">(${sizeKB} KB)</span>
+          <a href="${pdf.url}" download style="background:var(--forest);color:#fff;text-decoration:none;padding:4px 8px;border-radius:6px;font-size:10px;font-weight:700">${lang==='hi'?'खोलें':'Open'}</a>
+        </div>
+      </div>`;
+    }).join('');
+  } catch (err) {
+    container.innerHTML = `<span style="font-size:11px;color:var(--red)">${lang==='hi'?'लोड करने में त्रुटि':'Error loading list'}</span>`;
+  }
+}
+
+async function handleGeneratePDF() {
+  const select = document.getElementById('reg-select');
+  const monthSelect = document.getElementById('reg-month');
+  const yearSelect = document.getElementById('reg-year');
+  const btn = document.getElementById('btn-pdf-gen');
+  if (!select || !btn) return;
+  
+  const registerType = select.value;
+  const month = monthSelect ? parseInt(monthSelect.value) : (new Date().getMonth() + 1);
+  const year = yearSelect ? parseInt(yearSelect.value) : new Date().getFullYear();
+  const originalText = btn.textContent;
+  
+  btn.disabled = true;
+  btn.style.opacity = '0.6';
+  btn.textContent = lang === 'hi' ? 'तैयार हो रहा है...' : 'Generating...';
+  
+  try {
+    const res = await callAPI(AURA_API.generatePDF, { registerType, month, year });
+    if (res && res.success) {
+      await updatePDFList();
+    } else {
+      alert(lang === 'hi' ? 'त्रुटि: ऑफ़लाइन या सर्वर डाउन है' : 'Error: Offline or server down');
+    }
+  } catch (err) {
+    console.error(err);
+  } finally {
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    btn.textContent = originalText;
+  }
+}
+
+function handleConfirmRegister(index, checked) {
+  if (window.sarrRegisters && window.sarrRegisters[index]) {
+    window.sarrRegisters[index].status = checked ? 'approved' : 'pending';
+    render();
+  }
+}
+
+function handleSelectChildForRegister(index, value) {
+  if (window.sarrRegisters && window.sarrRegisters[index] && value) {
+    window.sarrRegisters[index].status = 'approved';
+    window.sarrRegisters[index].value = `${value}: weigh pending`;
+    window.sarrRegisters[index].valueHi = `${value}: वज़न नापना बाकी`;
+    render();
+  }
+}
+
+let grievancePhotoData = null;
+
+function handleGrievanceVoiceRecord() {
+  const desc = document.getElementById('grv-desc');
+  if (!desc) return;
+  desc.value = lang === 'hi'
+    ? 'बाथरूम का नल टूटा हुआ है और पानी बह रहा है।'
+    : 'Bathroom tap is broken and leaking water.';
+}
+
+function handleGrievanceCameraUpload() {
+  const box = document.getElementById('grv-photo-box');
+  if (!box) return;
+  grievancePhotoData = 'evidence_photo_broken_toilet_2026.jpg';
+  box.style.background = '#e6fffa';
+  box.style.borderColor = '#319795';
+  box.style.color = '#234e52';
+  box.innerHTML = `✅ ${lang === 'hi' ? 'तस्वीर सफलतापूर्वक ली गई ✓' : 'Photo evidence captured successfully ✓'}`;
+}
+
+async function handleFileGrievance() {
+  const issue = document.getElementById('grv-issue');
+  const desc = document.getElementById('grv-desc');
+  const btn = document.getElementById('btn-submit-grv');
+  if (!issue || !desc || !btn) return;
+
+  if (!desc.value.trim()) {
+    alert(lang === 'hi' ? 'कृपया समस्या का विवरण दर्ज करें' : 'Please enter issue description');
+    return;
+  }
+
+  const issueType = issue.value;
+  const description = desc.value.trim();
+  const photoData = grievancePhotoData;
+
+  const originalText = btn.textContent;
+  btn.disabled = true;
+  btn.style.opacity = '0.6';
+  btn.textContent = lang === 'hi' ? 'भेजा जा रहा है...' : 'Submitting...';
+
+  try {
+    const res = await callAPI(AURA_API.fileGrievance, {
+      centreId: 'AWC_04',
+      issueType,
+      description,
+      photoData
+    });
+    if (res) {
+      alert(lang === 'hi'
+        ? 'शिकायत सफलतापूर्वक ब्लॉक अधिकारी को भेजी गई ✓'
+        : 'Grievance submitted successfully to the Block Officer ✓');
+      grievancePhotoData = null;
+      jump('shell');
+    }
+  } catch (err) {
+    console.error(err);
+  } finally {
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    btn.textContent = originalText;
+  }
+}
+
+
 /* ============================================================
    SECTION 10 — RENDER
    ============================================================ */
@@ -854,6 +1185,11 @@ function render(){
   document.getElementById('hint').textContent = lang==='hi'
     ? 'बटन दबाएँ, नेविगेट करें। ऊपर से भाषा बदलें।'
     : 'Tap buttons to navigate. Flow: splash → voice → language → profile → home → attendance → review.';
+  
+  if (document.getElementById('pdf-list')) {
+    updatePDFList();
+  }
+
   // reflect in URL without reload
   try { history.replaceState(null,'','/?screen='+id); } catch{}
 }
