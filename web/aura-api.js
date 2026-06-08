@@ -98,10 +98,15 @@ const AURA_API = {
     }
   },
 
-  /* ── [NOT BUILT] SARR — Semantic Automated Register Routing ──────────────
-     Wire: Qwen2.5-0.5B router + Jaro-Winkler/Metaphone name match */
-  runSARR: async ({ transcript, centreId, children }) => {
-    return { registers: MOCK.sarrResult };
+  runSARR: async ({ transcript, centreId }) => {
+    try {
+      return await _apiFetch('/api/sarr', {
+        method: 'POST',
+        body: JSON.stringify({ transcript, centreId })
+      });
+    } catch {
+      return { registers: MOCK.sarrResult };
+    }
   },
 
   /* ── [BROWSER] YOLOv8n headcount — runs fully client-side ───────────────

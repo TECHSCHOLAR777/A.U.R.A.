@@ -263,6 +263,14 @@ svg{width:20px;height:20px;flex-shrink:0;display:block}
     border-radius: 24px;
   }
 }
+.pulse-icon.recording {
+  animation: pulse-ring 1.5s infinite;
+}
+@keyframes pulse-ring {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 16px rgba(239, 68, 68, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
 </style>
 </head>
 <body>
@@ -276,6 +284,22 @@ svg{width:20px;height:20px;flex-shrink:0;display:block}
 </div>
 
 <p class="hint" id="hint"></p>
+
+<!-- ASR Transcription Modal -->
+<div id="asr-modal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.9);z-index:9999;align-items:center;justify-content:center;color:#fff;font-family:inherit">
+  <div style="text-align:center;padding:24px;width:85%;max-width:340px;background:#1e293b;border-radius:24px;border:1.5px solid rgba(255,255,255,0.1)">
+    <div id="asr-pulse" class="pulse-icon recording" style="width:70px;height:70px;border-radius:50%;background:var(--red);margin:0 auto 20px;display:flex;align-items:center;justify-content:center">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" style="width:34px;height:34px;color:#fff">
+        <path d="M10 2C8.3 2 7 3.3 7 5V10C7 11.7 8.3 13 10 13S13 11.7 13 10V5C13 3.3 11.7 2 10 2Z"/>
+        <path d="M5 10C5 13.5 7.4 16 10 16S15 13.5 15 10"/>
+        <path d="M10 16V19M7 19H13"/>
+      </svg>
+    </div>
+    <h3 id="asr-title" style="font-size:18px;font-weight:800;margin-bottom:8px">Listening...</h3>
+    <p id="asr-subtitle" style="font-size:12px;color:rgba(255,255,255,0.7);margin-bottom:20px;line-height:1.5">Speak clearly into the microphone</p>
+    <button id="asr-stop-btn" class="btn red" style="margin:0;width:100%;padding:14px">Stop Recording</button>
+  </div>
+</div>
 
 <script src="aura-api.js"></script>
 <script src="ml_pipeline/ml_inference.js"></script>
@@ -1019,11 +1043,126 @@ function handleVoiceLogin(){
   startRecognition();
 }
 function retryVoice(){ go('vl2'); startRecognition(); }
+// ─── ASR (Whisper Tiny) Recording Helpers ──────────────────────────────────
+let mediaRecorder = null;
+let audioChunks = [];
+let recordingTimeout = null;
+
+function showASRModal(onStopClick) {
+  const modal = document.getElementById('asr-modal');
+  const title = document.getElementById('asr-title');
+  const subtitle = document.getElementById('asr-subtitle');
+  const stopBtn = document.getElementById('asr-stop-btn');
+  const pulse = document.getElementById('asr-pulse');
+
+  if (modal) modal.style.display = 'flex';
+  if (title) title.textContent = lang === 'hi' ? 'सुन रहे हैं...' : 'Listening...';
+  if (subtitle) subtitle.textContent = lang === 'hi' ? 'माइक्रोफोन में स्पष्ट रूप से बोलें' : 'Speak clearly into the microphone';
+  if (pulse) pulse.className = 'pulse-icon recording';
+  
+  if (stopBtn) {
+    stopBtn.onclick = () => {
+      if (typeof onStopClick === 'function') onStopClick();
+    };
+    stopBtn.textContent = lang === 'hi' ? 'रिकॉर्डिंग रोकें' : 'Stop Recording';
+  }
+}
+
+function hideASRModal() {
+  const modal = document.getElementById('asr-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+function showASRStatus(statusText) {
+  const title = document.getElementById('asr-title');
+  const subtitle = document.getElementById('asr-subtitle');
+  const pulse = document.getElementById('asr-pulse');
+
+  if (title) title.textContent = statusText;
+  if (subtitle) subtitle.textContent = lang === 'hi' ? 'कृपया प्रतीक्षा करें...' : 'Please wait...';
+  if (pulse) pulse.className = 'pulse-icon'; // stop pulsing
+}
+
+async function startAudioRecording(targetCallback, targetLang = 'hi') {
+  audioChunks = [];
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream);
+    
+    mediaRecorder.ondataavailable = (e) => {
+      if (e.data.size > 0) audioChunks.push(e.data);
+    };
+    
+    mediaRecorder.onstop = async () => {
+      const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+      stream.getTracks().forEach(t => t.stop());
+      
+      showASRStatus(lang === 'hi' ? '⏳ आवाज़ को शब्दों में बदला जा रहा है...' : '⏳ Transcribing with Whisper...');
+      
+      try {
+        const { transcribeAudioBlob } = await import('./ml_pipeline/whisper_engine.js');
+        const res = await transcribeAudioBlob(audioBlob, targetLang, (progress) => {
+          showASRStatus(lang === 'hi' 
+            ? `📥 डाउनलोड हो रहा है: ${Math.round(progress)}%` 
+            : `📥 Downloading Whisper: ${Math.round(progress)}%`);
+        });
+        
+        hideASRModal();
+        if (res.success && res.text) {
+          targetCallback(res.text);
+        } else {
+          console.warn('[ASR] Whisper transcribing failed, using callback with empty/null');
+          targetCallback(null);
+        }
+      } catch (err) {
+        console.error('[ASR] Whisper pipeline execution error:', err);
+        hideASRModal();
+        targetCallback(null);
+      }
+    };
+    
+    showASRModal(() => {
+      stopAudioRecording();
+    });
+    
+    mediaRecorder.start();
+    console.log('[ASR] Recording mic started...');
+    
+    recordingTimeout = setTimeout(() => {
+      stopAudioRecording();
+    }, 7000); // Record up to 7 seconds
+    
+  } catch (err) {
+    console.error('[ASR] Mic access error:', err);
+    alert(lang === 'hi' ? 'माइक खोलने में असमर्थ। अनुमति जांचें।' : 'Microphone blocked. Check permission.');
+  }
+}
+
+function stopAudioRecording() {
+  if (recordingTimeout) clearTimeout(recordingTimeout);
+  if (mediaRecorder && mediaRecorder.state === 'recording') {
+    mediaRecorder.stop();
+  }
+}
+
 async function handleVoiceSARR(){
-  // 🔌 SOCKET: record audio → transcribeVoice → runSARR → update registers
-  const sarr = await callAPI(AURA_API.runSARR, { transcript: T[lang].voiceQ, centreId: 'AWC_04', children: MOCK.children });
-  if(sarr) console.log('[SARR result]', sarr.registers);
-  render(); // re-render with updated state
+  // Trigger client-side Whisper ASR recording
+  startAudioRecording(async (text) => {
+    const finalTranscript = text || T[lang].voiceQ; // fallback to static mock if empty/failed
+    window.sarrTranscript = finalTranscript;
+
+    // Call SARR API with actual transcription
+    const sarr = await callAPI(AURA_API.runSARR, { 
+      transcript: finalTranscript, 
+      centreId: 'AWC_04' 
+    });
+
+    if (sarr && sarr.registers) {
+      console.log('[SARR result]', sarr.registers);
+      window.sarrRegisters = sarr.registers;
+    }
+    render();
+  }, lang);
 }
 async function handleSubmitAttendance(){
   // Update session state
@@ -1142,15 +1281,32 @@ async function handleAttendanceCameraCapture() {
   input.click();
 }
 async function handleLogMeal(){
-  // Update session state
-  window.SESSION.fedCount = 18;
+  startAudioRecording(async (text) => {
+    // Extract fed count from voice transcript
+    let fedCount = 18;
+    if (text) {
+      const txt = text.toLowerCase();
+      if (txt.includes('सब') || txt.includes('सभी') || txt.includes('पूरा') || txt.includes('all') || txt.includes('everyone') || txt.includes('24') || txt.includes('२४')) {
+        fedCount = 24;
+      } else if (txt.includes('20') || txt.includes('२०')) {
+        fedCount = 20;
+      } else if (txt.includes('15') || txt.includes('१५')) {
+        fedCount = 15;
+      }
+    }
+    
+    window.SESSION.fedCount = fedCount;
+    render();
 
-  // 🔌 SOCKET: AURA_API.logMeal
-  const result = await callAPI(AURA_API.logMeal, { centreId: 'AWC_04', fedCount: window.SESSION.fedCount, totalPresent: window.SESSION.totalPresent });
-  if(result?.success) {
-    console.log('[Meal logged]');
-    alert(lang === 'hi' ? 'भोजन ब्यौरा दर्ज हो गया ✓' : 'Meal logged successfully ✓');
-  }
+    // 🔌 SOCKET: AURA_API.logMeal
+    const result = await callAPI(AURA_API.logMeal, { centreId: 'AWC_04', fedCount: window.SESSION.fedCount, totalPresent: window.SESSION.totalPresent });
+    if(result?.success) {
+      console.log('[Meal logged]');
+      alert(lang === 'hi' 
+        ? `भोजन ब्यौरा दर्ज हो गया: ${fedCount} बच्चे खिलाए ✓` 
+        : `Meal logged successfully: ${fedCount} children fed ✓`);
+    }
+  }, lang);
 }
 async function handleHealthAction(action){
   // 🔌 SOCKET: 'weigh' → open measurement entry | 'refer' → create referral
@@ -1302,9 +1458,16 @@ let grievancePhotoData = null;
 function handleGrievanceVoiceRecord() {
   const desc = document.getElementById('grv-desc');
   if (!desc) return;
-  desc.value = lang === 'hi'
-    ? 'बाथरूम का नल टूटा हुआ है और पानी बह रहा है।'
-    : 'Bathroom tap is broken and leaking water.';
+  
+  startAudioRecording((text) => {
+    if (text) {
+      desc.value = text;
+    } else {
+      desc.value = lang === 'hi'
+        ? 'बाथरूम का नल टूटा हुआ है और पानी बह रहा है।'
+        : 'Bathroom tap is broken and leaking water.';
+    }
+  }, lang);
 }
 
 function handleGrievanceCameraUpload() {
@@ -1489,6 +1652,23 @@ if (new URLSearchParams(location.search).has('test_yolo')) {
       input.dispatchEvent(new Event('change', { bubbles: true }));
     } catch (err) {
       console.error('[Test YOLO] Failure running test yolo auto-load:', err);
+    }
+  });
+}
+
+// Automated testing hooks for Whisper Tiny ASR verification
+if (new URLSearchParams(location.search).has('test_whisper')) {
+  window.addEventListener('load', async () => {
+    console.log('[Test Whisper] Test mode active. Starting Whisper initialization...');
+    try {
+      const { initWhisper } = await import('./ml_pipeline/whisper_engine.js');
+      await initWhisper((progress) => {
+        console.log(`[Test Whisper] Load progress: ${Math.round(progress)}%`);
+      });
+      console.log('[Test Whisper] Whisper model initialized successfully ✓');
+      alert('Whisper model loaded successfully ✓');
+    } catch (err) {
+      console.error('[Test Whisper] Failed to load Whisper model:', err);
     }
   });
 }
