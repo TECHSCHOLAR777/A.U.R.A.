@@ -84,12 +84,24 @@ The database registers are seeded with 20 days of historical tracking for **Octo
   node -e "const db = new (require('better-sqlite3'))('./db/aura_local.db'); console.log(db.prepare('SELECT * FROM audit_logs').all());"
   ```
 
-### 6. Clinical Calculations & Explainable SAM Risk Alerts (Features 8 & 10)
+### 6. Clinical Calculations & Explainable SAM Risk Alerts (Features 8, 9 & 10)
 - View the children triage lists. Children flagged with severe acute malnutrition (SAM) are identified mathematically using deterministic WHO Z-score calculations.
-- Tap a child flagged as high risk (e.g., Suresh Oraon). Verify the dynamic explainable reasoning statement generated (e.g., `High Risk: critical wasting detected (Z-Score: -3.5)`).
+- Tap a child flagged as high risk (e.g., **Suresh Oraon**). 
+- Verify the **LightGBM Early Warning System** running client-side. The Express server computes 8 dynamic ML features (Z-score velocity, acceleration, rolling min, attendance rate, missed vaccine streak, migrant flag) over the last 10 days of database logs and returns them.
+- The browser runs the LightGBM tree-inference engine using `aura_sam_predictor_80kb.txt` to calculate risk probabilities.
+- Verify the **Explainable AI (XAI)** plain-language reason generated dynamically in Hindi or English (e.g., listing critical wasting, declining weight velocity, low attendance, and migrant status).
 
 ### 7. Headcount Verification (Feature 14)
-- Test the visual headcount scanner which uses the co-located **YOLOv8n ONNX model** and a **Zero-DCE light-enhancement WebGL canvas pipeline** to count children and match them against voice attendance entries under low-light rural classroom environments.
+- Click the camera verification box (📷) on the **Today's Attendance (आज की हाज़िरी)** screen.
+- Upload a classroom photo to trigger the client-side **YOLOv8 ONNX model** and **Zero-DCE light-enhancement WebGL canvas pipeline**.
+- The app detects children, compares the headcount against registered attendance, and displays a mismatch warning in amber/orange if they differ, or a green success box if they match.
+- **E2E Test Hook:** Navigate to `http://localhost:3000/?test_yolo=1` to auto-load a mock classroom photo (`/test_classroom.png`) containing 8 children, run YOLOv8, and view the visual result.
+
+### 8. Whisper Tiny Voice Engine (ASR & SARR)
+- Speak instructions into any microphone button (e.g. SARR voice screen, Grievance voice description, or Meal voice logging).
+- The app displays an animated pulsing recording modal, records mic audio, and runs **Whisper Tiny** fully client-side using `transformers.js` to transcribe speech.
+- The transcription is sent to the server `/api/sarr` endpoint, which matches name tokens phonetically against real SQLite records and routes commands to appropriate registers.
+- **E2E Test Hook:** Navigate to `http://localhost:3000/?test_whisper=1` to test loading, compiling, and initializing the Whisper Tiny model on your device.
 
 ---
 
@@ -100,6 +112,9 @@ The database registers are seeded with 20 days of historical tracking for **Octo
 │   ├── setup_database.js         # SQLite schema configuration & seeding logic
 │   ├── universal_pdf_generator.js# Border grid and tables PDF generation logic
 │   └── aura_local.db             # Generated SQLite database file
+├── ml_pipeline/
+│   ├── whisper_engine.js         # Core Whisper ASR transcription logic
+│   └── vision_engine.js          # Core YOLOv8 headcount logic
 ├── web/
 │   ├── index.html                # Frontend PWA dashboard, router, and screen layouts
 │   ├── aura-api.js               # Client API sockets, queuing, and sync methods
@@ -108,7 +123,8 @@ The database registers are seeded with 20 days of historical tracking for **Octo
 │   │   ├── yolov8n.onnx          # YOLOv8 target weight file
 │   │   ├── who_standards.json    # Deterministic Z-score WHO database
 │   │   ├── vision_engine.js      # Zero-DCE + YOLO visual headcount module
-│   │   └── ml_inference.js       # LightGBM malnutrition predictor & XAI engine
+│   │   ├── ml_inference.js       # LightGBM malnutrition predictor & XAI engine
+│   │   └── whisper_engine.js     # Transformers.js client-side Whisper ASR engine
 │   └── sw.js                     # Offline asset caching & sync service worker
 ├── server.js                     # Node/Express backend routing and SQLite APIs
 ├── plan.md                       # A.U.R.A implementation roadmap
