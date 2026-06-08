@@ -706,7 +706,7 @@ const screens = {
         <span class="ti" style="color:var(${b.c})">${L(b.ti)}</span>
         <span class="su" style="color:var(${b.c})">${L(b.su)}</span>
       </div>
-      ${kids.map(k=>`<div class="crow" style="border-left-color:var(${b.c})" onclick="go('health')">
+      ${kids.map(k=>`<div class="crow" style="border-left-color:var(${b.c})" onclick="openHealthScreen('${k.childId || ''}')">
         <div class="ic" style="background:var(${b.bg});color:var(${b.c})">!</div>
         <div class="info"><div class="nm">${L(k.name)}</div><div class="ag">${L(k.age)}</div>
           <div class="ds" style="color:var(${b.c})">${L(k.ds)}</div></div>
@@ -846,7 +846,7 @@ const screens = {
   },
   health(){
     const t=T[lang];
-    const hRisk = CW().critical;
+    const hRisk = window._activeHealthChild || CW().critical;
     const cv = hRisk.vitals;
     const vvals = [cv.weight, cv.height, cv.arm, cv.attendance + (lang==='hi'?' दिन':' days')];
     const vit=t.hVitals.map((v,i)=>`<div class="vital">
@@ -854,6 +854,12 @@ const screens = {
       <div class="d" style="color:var(${v[3]?'--red':'--green'})">${v[2]}</div>
     </div>`).join('');
     const weakLabel = hRisk.category==='SAM' ? t.hVeryWeak : (lang==='hi'?'कमज़ोर (MAM)':'Weak (MAM)');
+    // Dynamic warning: supports both string and {en,hi} object (from XAI engine)
+    const warningText = hRisk.reason ? L(hRisk.reason) : L(hRisk.warning);
+    // Dynamic risk score display
+    const riskScoreHtml = hRisk.riskScore !== undefined
+      ? `<div style="font-size:9px;color:var(--amber);margin-top:4px">ML Risk Score: ${(hRisk.riskScore * 100).toFixed(1)}%</div>`
+      : '';
     return `<div class="screen active">${statusbar('1:20')}<div class="scroll">
       <div class="hero" style="background:var(--red);border-radius:0;padding:16px 20px 18px">
         <button class="backbtn" style="position:static;background:rgba(255,255,255,.2);border:none;color:#fff;margin-bottom:10px" onclick="back()">${L({en:'‹ back',hi:'‹ वापस'})}</button>
@@ -864,10 +870,11 @@ const screens = {
         </div>
       </div>
       <div class="body">
-        <div style="background:var(--rl);border:1px solid var(--red);border-left:4px solid var(--red);border-radius:12px;padding:13px;display:flex;gap:10px;margin-top:14px">
+        <div id="health-warning-box" style="background:var(--rl);border:1px solid var(--red);border-left:4px solid var(--red);border-radius:12px;padding:13px;display:flex;gap:10px;margin-top:14px">
           <span style="color:var(--red);width:20px;height:20px;flex-shrink:0">${SVG.warn}</span>
           <div><div style="font-size:12px;font-weight:700;color:var(--red)">${t.hSignal}</div>
-            <div style="font-size:10px;color:var(--red);line-height:1.5;margin-top:4px">${L(hRisk.warning)}</div>
+            <div id="health-warning-text" style="font-size:10px;color:var(--red);line-height:1.5;margin-top:4px">${warningText}</div>
+            <div id="health-risk-score">${riskScoreHtml}</div>
           </div>
         </div>
         <div class="grid2" style="margin-top:14px">${vit}</div>
@@ -1018,6 +1025,52 @@ async function handleHealthAction(action){
   alert(lang==='hi'
     ? (action==='weigh'?'वज़न नापने की स्क्रीन: जल्द आएगी':'अस्पताल रेफरल बन गया ✓')
     : (action==='weigh'?'Weight entry screen: coming soon':'Hospital referral created ✓'));
+}
+
+// ─── Open Health Screen with real DB-driven early warning ──────────────────
+async function openHealthScreen(childId){
+  // Start by showing the default static view immediately
+  window._activeHealthChild = CW().critical;
+  go('health');
+
+  if(!childId) return; // no DB child → stay with static mock
+
+  try {
+    const data = await AURA_API.getHealthRisk(childId);
+    if(!data) return;
+
+    // Build the updated health child object with API + ML data merged
+    window._activeHealthChild = {
+      childId: childId,
+      name: { en: data.name || L(CW().critical.name), hi: data.nameHi || L(CW().critical.name) },
+      age:  { en: data.age || '', hi: data.ageHi || '' },
+      zscore: data.zscore ?? CW().critical.zscore,
+      category: data.category || CW().critical.category,
+      warning: data.earlyWarning
+        ? { en: data.earlyWarning, hi: data.earlyWarningHi || data.earlyWarning }
+        : CW().critical.warning,
+      reason: data.reason || null,  // XAI reason {en, hi} from predictMalnutritionRisk
+      riskScore: data.riskScore,    // probability 0-1 from LightGBM
+      isHighRisk: data.isHighRisk,
+      vitals: data.vitals || CW().critical.vitals
+    };
+
+    // Dynamically update the warning text and risk score if the screen is still active
+    const warnEl = document.getElementById('health-warning-text');
+    const scoreEl = document.getElementById('health-risk-score');
+
+    if(warnEl) {
+      const reasonText = data.reason ? L(data.reason) : L(window._activeHealthChild.warning);
+      warnEl.textContent = reasonText;
+    }
+    if(scoreEl && data.riskScore !== undefined) {
+      scoreEl.innerHTML = `<div style="font-size:9px;color:var(--amber);margin-top:4px">ML Risk Score: ${(data.riskScore * 100).toFixed(1)}%</div>`;
+    }
+
+    console.log(`[Early Warning] childId=${childId} risk=${data.riskScore?.toFixed(3)} highRisk=${data.isHighRisk} reason=${data.reason ? L(data.reason) : 'n/a'}`);
+  } catch(err) {
+    console.warn('[Early Warning] API fetch failed, staying with static data', err);
+  }
 }
 async function handleAuditCommit(){
   // 🔌 SOCKET: AURA_API.commitAudit → PDF gen → CRDT sync → jump('shell')

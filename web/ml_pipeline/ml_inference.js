@@ -102,52 +102,66 @@ function sigmoid(x) {
  * @returns {string} Dynamic human-readable reason string.
  */
 function generateXAIReason(childData) {
-    const concerns = [];
+    const concernsEn = [];
+    const concernsHi = [];
 
     // 1. Z-Score (wasting status)
     if (childData.zwfl < -3.0) {
-        concerns.push(`critical wasting detected (Z-Score: ${childData.zwfl.toFixed(2)})`);
+        concernsEn.push(`critical wasting detected (Z-Score: ${childData.zwfl.toFixed(2)})`);
+        concernsHi.push(`गंभीर कुपोषण (Z-Score: ${childData.zwfl.toFixed(2)})`);
     } else if (childData.zwfl < -2.0) {
-        concerns.push(`moderate wasting detected (Z-Score: ${childData.zwfl.toFixed(2)})`);
+        concernsEn.push(`moderate wasting detected (Z-Score: ${childData.zwfl.toFixed(2)})`);
+        concernsHi.push(`सामान्य कुपोषण (Z-Score: ${childData.zwfl.toFixed(2)})`);
     }
 
     // 2. Velocity drop
     if (childData.z_velocity < -0.3) {
-        concerns.push("Z-Score dropping rapidly");
+        concernsEn.push("Z-Score dropping rapidly");
+        concernsHi.push("Z-Score तेजी से गिर रहा है");
     } else if (childData.z_velocity < -0.15) {
-        concerns.push("declining growth trajectory");
+        concernsEn.push("declining growth trajectory");
+        concernsHi.push("विकास की गति कम हो रही है");
     }
 
     // 3. Attendance Rate
     if (childData.attendance_rate < 0.5) {
-        concerns.push(`attendance is below 50% (currently ${(childData.attendance_rate * 100).toFixed(0)}%)`);
+        concernsEn.push(`attendance is below 50% (currently ${(childData.attendance_rate * 100).toFixed(0)}%)`);
+        concernsHi.push(`हाज़िरी 50% से कम है (अभी ${(childData.attendance_rate * 100).toFixed(0)}%)`);
     } else if (childData.attendance_rate < 0.7) {
-        concerns.push(`low Anganwadi attendance (${(childData.attendance_rate * 100).toFixed(0)}%)`);
+        concernsEn.push(`low Anganwadi attendance (${(childData.attendance_rate * 100).toFixed(0)}%)`);
+        concernsHi.push(`कम हाज़िरी (${(childData.attendance_rate * 100).toFixed(0)}%)`);
     }
 
     // 4. Immunization Streak
     if (childData.missed_vaccine_streak >= 2) {
-        concerns.push(`missed vaccine streak (${childData.missed_vaccine_streak} missed)`);
+        concernsEn.push(`missed vaccine streak (${childData.missed_vaccine_streak} missed)`);
+        concernsHi.push(`टीके छूटे हैं (${childData.missed_vaccine_streak} छूटे)`);
     }
 
     // 5. Migrant Status
     if (childData.migrant_flag === 1) {
-        concerns.push("vulnerable migrant status");
+        concernsEn.push("vulnerable migrant status");
+        concernsHi.push("संवेदनशील प्रवासी स्थिति");
     }
 
-    if (concerns.length > 0) {
-        // Format sentence-style: capitalize first letter, join list grammatically
+    function buildSentence(concerns, prefix, suffix, andWord) {
+        if (concerns.length === 0) return "";
         const formatted = concerns.map((c, idx) => idx === 0 ? c.charAt(0).toUpperCase() + c.slice(1) : c);
+        let body = "";
         if (formatted.length === 1) {
-            return `High Risk: ${formatted[0]}.`;
+            body = formatted[0];
         } else if (formatted.length === 2) {
-            return `High Risk: ${formatted[0]} and ${formatted[1]}.`;
+            body = `${formatted[0]} ${andWord} ${formatted[1]}`;
         } else {
-            return `High Risk: ${formatted.slice(0, -1).join(", ")}, and ${formatted[formatted.length - 1]}.`;
+            body = `${formatted.slice(0, -1).join(", ")}, ${andWord} ${formatted[formatted.length - 1]}`;
         }
+        return `${prefix}${body}${suffix}`;
     }
 
-    return "High Risk: Multiple marginal indicators suggest declining growth trajectory.";
+    const enStr = buildSentence(concernsEn, "High Risk: ", ".", "and") || "High Risk: Multiple marginal indicators suggest declining growth trajectory.";
+    const hiStr = buildSentence(concernsHi, "उच्च जोखिम: ", "।", "और") || "उच्च जोखिम: विकास की गति में गिरावट के संकेत।";
+
+    return { en: enStr, hi: hiStr };
 }
 
 /**

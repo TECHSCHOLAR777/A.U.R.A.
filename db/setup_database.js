@@ -31,6 +31,8 @@ function setupDatabase() {
             dob             DATE    NOT NULL,
             family_id       TEXT,
             type            TEXT    DEFAULT 'child' CHECK (type IN ('child', 'pregnant', 'lactating', 'adolescent')),
+            migrant_flag    INTEGER DEFAULT 0 CHECK (migrant_flag IN (0, 1)),
+            missed_vaccine_streak INTEGER DEFAULT 0,
             created_at      TEXT    NOT NULL DEFAULT (datetime('now')),
             updated_at      TEXT    NOT NULL DEFAULT (datetime('now')),
             PRIMARY KEY (beneficiary_id)
@@ -141,15 +143,15 @@ function setupDatabase() {
     // ========================================================================
     const seedTransaction = db.transaction(() => {
         // --- Beneficiaries ---
-        const insertBeneficiary = db.prepare(`INSERT OR IGNORE INTO beneficiary_directory (beneficiary_id, child_name, gender, dob, type) VALUES (?, ?, ?, ?, ?)`);
-        insertBeneficiary.run('JH-001', 'Rahul Munda',   'M', '2020-04-12', 'child');
-        insertBeneficiary.run('JH-002', 'Priya Soren',   'F', '2021-08-25', 'child');
-        insertBeneficiary.run('JH-003', 'Suresh Oraon',  'M', '2022-01-10', 'child');
-        insertBeneficiary.run('JH-004', 'Anita Toppo',   'F', '2022-11-05', 'child');
-        insertBeneficiary.run('JH-005', 'Kavita Hansda', 'F', '2023-05-20', 'child');
-        insertBeneficiary.run('JH-006', 'Sunita Munda',  'F', '1998-05-10', 'pregnant');
-        insertBeneficiary.run('JH-007', 'Malti Murmu',   'F', '1995-11-20', 'lactating');
-        insertBeneficiary.run('JH-008', 'Rupa Kujur',    'F', '2010-02-15', 'adolescent');
+        const insertBeneficiary = db.prepare(`INSERT OR IGNORE INTO beneficiary_directory (beneficiary_id, child_name, gender, dob, type, migrant_flag, missed_vaccine_streak) VALUES (?, ?, ?, ?, ?, ?, ?)`);
+        insertBeneficiary.run('JH-001', 'Rahul Munda',   'M', '2020-04-12', 'child', 0, 0);
+        insertBeneficiary.run('JH-002', 'Priya Soren',   'F', '2021-08-25', 'child', 0, 0);
+        insertBeneficiary.run('JH-003', 'Suresh Oraon',  'M', '2022-01-10', 'child', 1, 3); // SAM risk child, migrant & vaccine-defaulting
+        insertBeneficiary.run('JH-004', 'Anita Toppo',   'F', '2022-11-05', 'child', 0, 1);
+        insertBeneficiary.run('JH-005', 'Kavita Hansda', 'F', '2023-05-20', 'child', 0, 0);
+        insertBeneficiary.run('JH-006', 'Sunita Munda',  'F', '1998-05-10', 'pregnant', 0, 0);
+        insertBeneficiary.run('JH-007', 'Malti Murmu',   'F', '1995-11-20', 'lactating', 0, 0);
+        insertBeneficiary.run('JH-008', 'Rupa Kujur',    'F', '2010-02-15', 'adolescent', 0, 0);
 
         // --- Daily Tracking (October 2026, 20 Days for 5 children) ---
         const insertTracking = db.prepare(`INSERT OR IGNORE INTO daily_tracking (tracking_id, beneficiary_id, record_date, attendance, morning_snacks, hot_cooked_meal, activity_participated) VALUES (?, ?, ?, ?, ?, ?, ?)`);
@@ -161,7 +163,9 @@ function setupDatabase() {
                 const dateStr = `2026-10-${day.toString().padStart(2, '0')}`;
                 const trackingId = `TRK-${childId}-${dateStr.replace(/-/g, '')}`;
                 
-                const attendance = chance(0.9);
+                // JH-003 (SAM child) has lower attendance (e.g. 50% attendance chance)
+                const attProb = (childId === 'JH-003') ? 0.50 : 0.90;
+                const attendance = chance(attProb);
                 let snacks = 0, hcm = 0, activity = 0;
                 
                 if (attendance) {
@@ -174,13 +178,34 @@ function setupDatabase() {
             }
         }
 
-        // --- Growth Monitoring ---
+        // --- Growth Monitoring (3 Months of Longitudinal Data per Child) ---
         const insertGrowth = db.prepare(`INSERT OR IGNORE INTO growth_monitoring (id, beneficiary_id, date, weight_kg, height_cm, z_score, sam_mam_status) VALUES (?, ?, ?, ?, ?, ?, ?)`);
-        insertGrowth.run('GM-001', 'JH-001', '2026-10-05', 18.5, 110.2, -0.5, 'Normal');
-        insertGrowth.run('GM-002', 'JH-002', '2026-10-05', 15.2, 105.0, -1.0, 'Normal');
-        insertGrowth.run('GM-003', 'JH-003', '2026-10-05', 10.1, 95.5, -3.5, 'SAM'); // SAM child
-        insertGrowth.run('GM-004', 'JH-004', '2026-10-05', 14.8, 102.1, -1.2, 'Normal');
-        insertGrowth.run('GM-005', 'JH-005', '2026-10-05', 13.5, 98.0, -0.8, 'Normal');
+        
+        // JH-001 (Rahul Munda) - Stable Normal
+        insertGrowth.run('GM-001-Aug', 'JH-001', '2026-08-05', 18.2, 109.0, -0.4, 'Normal');
+        insertGrowth.run('GM-001-Sep', 'JH-001', '2026-09-05', 18.4, 109.8, -0.5, 'Normal');
+        insertGrowth.run('GM-001-Oct', 'JH-001', '2026-10-05', 18.5, 110.2, -0.5, 'Normal');
+
+        // JH-002 (Priya Soren) - Stable Normal
+        insertGrowth.run('GM-002-Aug', 'JH-002', '2026-08-05', 15.0, 104.0, -0.8, 'Normal');
+        insertGrowth.run('GM-002-Sep', 'JH-002', '2026-09-05', 15.1, 104.5, -0.9, 'Normal');
+        insertGrowth.run('GM-002-Oct', 'JH-002', '2026-10-05', 15.2, 105.0, -1.0, 'Normal');
+
+        // JH-003 (Suresh Oraon) - Declining Growth Trajectory (Normal -> MAM -> SAM)
+        insertGrowth.run('GM-003-Aug', 'JH-003', '2026-08-05', 11.5, 94.0, -1.8, 'Normal');
+        insertGrowth.run('GM-003-Sep', 'JH-003', '2026-09-05', 10.8, 94.8, -2.7, 'MAM');
+        insertGrowth.run('GM-003-Oct', 'JH-003', '2026-10-05', 10.1, 95.5, -3.5, 'SAM');
+
+        // JH-004 (Anita Toppo) - Stable / Mild decline
+        insertGrowth.run('GM-004-Aug', 'JH-004', '2026-08-05', 15.0, 101.0, -0.8, 'Normal');
+        insertGrowth.run('GM-004-Sep', 'JH-004', '2026-09-05', 14.9, 101.5, -1.0, 'Normal');
+        insertGrowth.run('GM-004-Oct', 'JH-004', '2026-10-05', 14.8, 102.1, -1.2, 'Normal');
+
+        // JH-005 (Kavita Hansda) - Stable Normal
+        insertGrowth.run('GM-005-Aug', 'JH-005', '2026-08-05', 13.7, 97.0, -0.5, 'Normal');
+        insertGrowth.run('GM-005-Sep', 'JH-005', '2026-09-05', 13.6, 97.5, -0.7, 'Normal');
+        insertGrowth.run('GM-005-Oct', 'JH-005', '2026-10-05', 13.5, 98.0, -0.8, 'Normal');
+
 
         // --- Health & Vaccines ---
         const insertHealth = db.prepare(`INSERT OR IGNORE INTO health_and_vaccines (id, beneficiary_id, date, vaccine_type, vitamin_a_dose, deworming_pill) VALUES (?, ?, ?, ?, ?, ?)`);

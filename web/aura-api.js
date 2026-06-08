@@ -148,7 +148,18 @@ const AURA_API = {
         if (!isNaN(w) && !isNaN(h)) {
           const z   = _calculateWHOZScore(w, h, serverData.zscore < 0 ? 'girls' : 'girls', whoStd);
           const cat = _getClinicalDiagnosis(z);
-          const cd  = { zwfl: z ?? serverData.zscore, z_velocity: -0.2, attendance_rate: 0.55, missed_vaccine_streak: 1, migrant_flag: 0 };
+          // Use real DB-computed features from server mlFeatures, fallback to safe defaults
+          const mf  = serverData.mlFeatures || {};
+          const cd  = {
+            zwfl: z ?? serverData.zscore,
+            z_velocity: mf.z_velocity !== undefined ? mf.z_velocity : 0.0,
+            attendance_rate: mf.attendance_rate !== undefined ? mf.attendance_rate : 1.0,
+            missed_vaccine_streak: mf.missed_vaccine_streak !== undefined ? mf.missed_vaccine_streak : 0,
+            migrant_flag: mf.migrant_flag !== undefined ? mf.migrant_flag : 0,
+            z_acceleration: mf.z_acceleration !== undefined ? mf.z_acceleration : 0.0,
+            zwfl_min_3: mf.zwfl_min_3 !== undefined ? mf.zwfl_min_3 : (z ?? serverData.zscore),
+            cumulative_low_visits: mf.cumulative_low_visits !== undefined ? mf.cumulative_low_visits : 0
+          };
           const risk = predictMalnutritionRisk(cd, modelTxt);
           return { ...serverData, zscore: z ?? serverData.zscore, category: cat, ...risk };
         }
@@ -336,18 +347,19 @@ const WORKERS = [
     childCount: 26,
     match: ['meera', 'मीरा', '04', 'char', 'chaar', 'चार'],
     critical: {
-      name: { en: 'Meera Sharma', hi: 'मीरा शर्मा' },
-      age:  { en: 'Girl, age 3 years 2 months', hi: 'बच्ची, उम्र 3 साल 2 महीने' },
-      zscore: -3.2, category: 'SAM',
+      childId: 'JH-003',
+      name: { en: 'Suresh Oraon', hi: 'सुरेश उरांव' },
+      age:  { en: 'Boy, age 4 years', hi: 'बच्चा, उम्र 4 साल' },
+      zscore: -3.5, category: 'SAM',
       warning: { en: 'Weight falling 3 months. Attendance under half. Could worsen in 6 weeks.',
                  hi: 'वज़न 3 महीने से घट रहा। हाज़िरी आधी से कम। 6 हफ़्ते में बिगड़ सकती है।' },
-      vitals: { weight: '7.8 kg', height: '89 cm', arm: '10.8 cm', attendance: '12/22' }
+      vitals: { weight: '10.1 kg', height: '95.5 cm', arm: '10.8 cm', attendance: '5/20' }
     },
     triage: [
-      { tier:'critical', name:{en:'Meera Sharma',hi:'मीरा शर्मा'}, age:{en:'3 yrs',hi:'3 साल'}, ds:{en:'Weight dropping 3 weeks. Measure today.',hi:'वज़न 3 हफ़्ते से घट रहा। आज नापो।'}, tag:{en:'Very weak',hi:'बहुत कमज़ोर'} },
-      { tier:'critical', name:{en:'Ravi Das',hi:'रवि दास'}, age:{en:'2 yrs',hi:'2 साल'}, ds:{en:'Arm very thin. Send to hospital.',hi:'बाँह बहुत पतली। अस्पताल भेजो।'}, tag:{en:'Very weak',hi:'बहुत कमज़ोर'} },
-      { tier:'pending',  name:{en:'Rahul Murmu',hi:'राहुल मुर्मू'}, age:{en:'2 yrs',hi:'2 साल'}, ds:{en:'Absent 5 days. Back today.',hi:'5 दिन नहीं आया। आज लौटा।'}, tag:{en:'Back today',hi:'आज लौटा'} },
-      { tier:'remaining',name:{en:'Suresh Yadav',hi:'सुरेश यादव'}, age:{en:'3 yrs',hi:'3 साल'}, ds:{en:'Vitamin A vaccine due today.',hi:'विटामिन A का टीका आज बाकी।'}, tag:null }
+      { childId:'JH-003', tier:'critical', name:{en:'Suresh Oraon',hi:'सुरेश उरांव'}, age:{en:'4 yrs',hi:'4 साल'}, ds:{en:'Weight dropping 3 months. Measure today.',hi:'वज़न 3 महीने से घट रहा। आज नापो।'}, tag:{en:'Very weak',hi:'बहुत कमज़ोर'} },
+      { childId:'JH-004', tier:'critical', name:{en:'Anita Toppo',hi:'अनीता टोप्पो'}, age:{en:'3 yrs',hi:'3 साल'}, ds:{en:'Mild decline detected. Watch closely.',hi:'हल्की गिरावट। ध्यान दो।'}, tag:{en:'Weak',hi:'कमज़ोर'} },
+      { childId:'JH-001', tier:'pending',  name:{en:'Rahul Munda',hi:'राहुल मुंडा'}, age:{en:'6 yrs',hi:'6 साल'}, ds:{en:'Absent 5 days. Back today.',hi:'5 दिन नहीं आया। आज लौटा।'}, tag:{en:'Back today',hi:'आज लौटा'} },
+      { childId:'JH-002', tier:'remaining',name:{en:'Priya Soren',hi:'प्रिया सोरेन'}, age:{en:'5 yrs',hi:'5 साल'}, ds:{en:'Vitamin A vaccine due today.',hi:'विटामिन A का टीका आज बाकी।'}, tag:null }
     ]
   },
   {

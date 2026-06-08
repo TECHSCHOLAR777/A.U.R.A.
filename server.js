@@ -197,7 +197,7 @@ app.post('/api/meal', (req, res) => {
 app.get('/api/health/:childId', (req, res) => {
   const { childId } = req.params;
   try {
-    const child = db.prepare(`SELECT child_name AS name, dob, gender FROM beneficiary_directory WHERE beneficiary_id = ?`).get(childId);
+    const child = db.prepare(`SELECT child_name AS name, dob, gender, migrant_flag, missed_vaccine_streak FROM beneficiary_directory WHERE beneficiary_id = ?`).get(childId);
     if (!child) return res.status(404).json({ error: 'Child not found' });
 
     const growth = db.prepare(`
@@ -211,6 +211,51 @@ app.get('/api/health/:childId', (req, res) => {
     const height = growth ? growth.height_cm : 92.0;
     const zscore = growth ? growth.z_score : -1.0;
     const status = growth ? growth.sam_mam_status : 'Normal';
+
+    // Query latest 3 growth records to compute velocity, acceleration, and rolling min
+    const growthHistory = db.prepare(`
+      SELECT z_score, date FROM growth_monitoring 
+      WHERE beneficiary_id = ? 
+      ORDER BY date DESC LIMIT 3
+    `).all(childId);
+
+    let zVelocity = 0.0;
+    let zAcceleration = 0.0;
+    let zwflMin3 = zscore;
+
+    if (growthHistory.length >= 1) {
+      zwflMin3 = Math.min(...growthHistory.map(g => g.z_score));
+    }
+    if (growthHistory.length >= 2) {
+      zVelocity = growthHistory[0].z_score - growthHistory[1].z_score;
+    }
+    if (growthHistory.length >= 3) {
+      const velPrev = growthHistory[1].z_score - growthHistory[2].z_score;
+      zAcceleration = zVelocity - velPrev;
+    }
+
+    // Query cumulative low visits (< -2.0) excluding the current latest measurement
+    const latestDate = growthHistory[0] ? growthHistory[0].date : '1970-01-01';
+    const cumulativeLowVisits = db.prepare(`
+      SELECT COUNT(*) as count FROM growth_monitoring 
+      WHERE beneficiary_id = ? AND z_score < -2.0 AND date < ?
+    `).get(childId, latestDate).count;
+
+    // Query recent tracking logs (last 10 days) to compute attendance rate
+    const recentTracking = db.prepare(`
+      SELECT attendance FROM daily_tracking 
+      WHERE beneficiary_id = ? 
+      ORDER BY record_date DESC LIMIT 10
+    `).all(childId);
+
+    let attendanceRate = 1.0;
+    if (recentTracking.length > 0) {
+      const presentCount = recentTracking.filter(t => t.attendance === 1).length;
+      attendanceRate = presentCount / recentTracking.length;
+    }
+
+    const migrantFlag = child.migrant_flag || 0;
+    const missedVaccineStreak = child.missed_vaccine_streak || 0;
 
     // Simple attendance streak calculation
     const totalDays = db.prepare(`SELECT COUNT(*) as count FROM daily_tracking WHERE beneficiary_id = ?`).get(childId).count;
@@ -236,6 +281,16 @@ app.get('/api/health/:childId', (req, res) => {
         height: `${height} cm`,
         arm: status === 'SAM' ? '10.8 cm' : '12.5 cm',
         attendance: attendanceStr
+      },
+      mlFeatures: {
+        zwfl: zscore,
+        z_velocity: parseFloat(zVelocity.toFixed(4)),
+        attendance_rate: parseFloat(attendanceRate.toFixed(4)),
+        missed_vaccine_streak: missedVaccineStreak,
+        migrant_flag: migrantFlag,
+        z_acceleration: parseFloat(zAcceleration.toFixed(4)),
+        zwfl_min_3: parseFloat(zwflMin3.toFixed(4)),
+        cumulative_low_visits: cumulativeLowVisits
       }
     };
     res.json(response);
