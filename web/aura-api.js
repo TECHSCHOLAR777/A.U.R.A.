@@ -364,7 +364,7 @@ const WORKERS = [
     name: { en: 'Meera Devi', hi: 'मीरा देवी' },
     centre: 'AWC 04', block: { en: 'Khunti, Jharkhand', hi: 'खूंटी, झारखंड' },
     childCount: 26,
-    match: ['meera', 'मीरा', '04', 'char', 'chaar', 'चार'],
+    match: ['meera', 'मीरा', '04', 'char', 'chaar', 'चार', 'میرا', 'char', 'मीरा देवी', 'मीरादेवी', 'मिर', 'चार'],
     critical: {
       childId: 'JH-003',
       name: { en: 'Suresh Oraon', hi: 'सुरेश उरांव' },
@@ -386,7 +386,7 @@ const WORKERS = [
     name: { en: 'Sunita Kumari', hi: 'सुनीता कुमारी' },
     centre: 'AWC 12', block: { en: 'Murhu, Jharkhand', hi: 'मुरहू, झारखंड' },
     childCount: 31,
-    match: ['sunita', 'सुनीता', '12', 'barah', 'बारह'],
+    match: ['sunita', 'सुनीता', '12', 'barah', 'बारह', 'سنیتا', 'सुनिता', 'सनिता', 'सनीता', 'बारह'],
     critical: {
       name: { en: 'Anil Munda', hi: 'अनिल मुंडा' },
       age:  { en: 'Boy, age 2 years 8 months', hi: 'बच्चा, उम्र 2 साल 8 महीने' },
@@ -407,7 +407,7 @@ const WORKERS = [
     name: { en: 'Phoolmani Devi', hi: 'फूलमणि देवी' },
     centre: 'AWC 07', block: { en: 'Karra, Jharkhand', hi: 'कर्रा, झारखंड' },
     childCount: 19,
-    match: ['phoolmani', 'phulmani', 'फूलमणि', '07', 'saat', 'सात'],
+    match: ['phoolmani', 'phulmani', 'फूलमणि', '07', 'saat', 'सात', 'پھولمنی', 'फूलमनी', 'फुलमनी', 'फूलनी', 'सात'],
     critical: {
       name: { en: 'Lakshmi Oraon', hi: 'लक्ष्मी उरांव' },
       age:  { en: 'Girl, age 4 years 1 month', hi: 'बच्ची, उम्र 4 साल 1 महीना' },
@@ -427,7 +427,7 @@ const WORKERS = [
     name: { en: 'Rekha Devi', hi: 'रेखा देवी' },
     centre: 'AWC 21', block: { en: 'Torpa, Jharkhand', hi: 'तोरपा, झारखंड' },
     childCount: 24,
-    match: ['rekha', 'रेखा', '21', 'ikkis', 'इक्कीस'],
+    match: ['rekha', 'रेखा', '21', 'ikkis', 'इक्कीस', 'ریکھا', 'रीखा', 'रेका', 'इक्कीस'],
     critical: {
       name: { en: 'Budhan Singh', hi: 'बुधन सिंह' },
       age:  { en: 'Boy, age 3 years 5 months', hi: 'बच्चा, उम्र 3 साल 5 महीने' },
