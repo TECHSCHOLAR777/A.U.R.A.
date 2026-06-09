@@ -47,6 +47,16 @@ db.exec(`
 
 app.use(express.json());
 
+// Enable cross-origin isolation for SharedArrayBuffer (required by ONNX Runtime WASM threads).
+// The ort-wasm-simd-threaded.jsep.wasm binary bundled in transformers.js v3
+// crashes with "RuntimeError: null function" without these headers.
+// Using 'credentialless' for COEP so CDN imports (jsdelivr, etc.) load without CORP headers.
+app.use((req, res, next) => {
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+  res.setHeader('Cross-Origin-Embedder-Policy', 'credentialless');
+  next();
+});
+
 // Serve PWA Static Files
 app.use(express.static(path.join(__dirname, 'web')));
 
