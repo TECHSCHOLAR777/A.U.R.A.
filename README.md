@@ -19,18 +19,25 @@ Clone the repository and install the dependencies:
 git clone https://github.com/TECHSCHOLAR777/A.U.R.A..git
 cd A.U.R.A.
 
-# Install dependencies (Express, Better-SQLite3, etc.)
+# Install dependencies (Express, Better-SQLite3, jsPDF, etc. at root)
 npm install
 ```
 
-### 3. Initialize the Local Database
+### 3. Whisper Tiny Offline Model Setup (ASR)
+To run and test speech recognition 100% offline without remote network requests:
+- Ensure the Whisper Tiny ONNX model files are pre-downloaded to the local cache:
+  `web/ml_pipeline/models/Xenova/whisper-tiny/`
+  *(If missing, run the download script: `powershell -File ml_pipeline/download_whisper.ps1`)*
+- The app's transformers.js pipeline is locked to `env.allowLocalModels = true` and `env.allowRemoteModels = false` to run fully offline.
+
+### 4. Initialize the Local Database
 A.U.R.A. runs a highly normalized 8-table SQLite relational database. Initialize and seed it with realistic historical test data (dated for **October 2026**):
 ```bash
 node db/setup_database.js
 ```
 *Note: This creates the local database file `db/aura_local.db`.*
 
-### 4. Run the Server
+### 5. Run the Server
 Launch the Node.js Express server backend:
 ```bash
 npm start
@@ -47,61 +54,57 @@ Open your browser and navigate to **`http://localhost:3001`** (or the port shown
 - Select the first profile **Meera Devi (AWC 04)**.
 - Tap **शुरू करें (Start Day)** to initialize the session and enter the main dashboard.
 - Toggle between Hindi/English using the selector in the header chrome.
+- **Dynamic Bindings:** Notice that the triage alerts count on the dashboard card is dynamically calculated based on the actual SAM/MAM children currently in the database.
 
-### 2. On-Demand Government Registers (Feature 16)
-The database registers are seeded with 20 days of historical tracking for **October 2026**.
-- Scroll to the **📄 Government Datasheets** card widget.
-- Select the **Month** as **10 (Oct / अक्टूबर)** and **Year** as **2026**.
-- Select a register type (e.g. `Register No. 11: Growth Monitoring`).
-- Click **Generate Register PDF**.
-- Verify that a file named `REGISTER_11_2026_10.pdf` appears in your list. Click **Open** to download/print. 
-- *Note: Look at the size difference! October PDFs are fully populated (~12 KB), whereas June PDFs are empty (~5 KB).*
+### 2. Dynamic Triage Screen (Feature 11)
+- Click on the dashboard triage alert card.
+- Children are dynamically fetched from the SQLite database and sorted into tiers in real time:
+  - **Critical (See Now):** Children flagged with `'SAM'` or `'MAM'`.
+  - **Pending:** Children who have not yet been marked present/absent today.
+  - **Remaining:** All other children.
+- Clicking any child loads their clinical details dynamically from the database.
 
-### 3. Last-Mile Infrastructure Grievance Portal (Feature 15)
+### 3. Interactive Morning Attendance Checklist
+- Navigate to **Today's Attendance (आज की हाज़िरी)**.
+- The screen dynamically lists **all** children from the database.
+- By default, all children start as present (`✓` green).
+- Tap on any child to toggle them to absent (`✕` red). All headers, progress counts, absent tags, and attendance percentages update in real time.
+- Clicking **Review & send** submits these dynamic present/absent lists to the backend SQLite store.
+
+### 4. Headcount Verification (Feature 14)
+- Click the camera verification box (📷) on the **Today's Attendance** screen.
+- Upload a classroom photo to trigger the client-side **YOLOv8 ONNX model** and **Zero-DCE light-enhancement WebGL canvas pipeline**.
+- The app detects children, compares the headcount against the active attendance count, and displays a mismatch warning if they differ, or a green success box if they match.
+- **E2E Test Hook:** Navigate to `http://localhost:3001/?test_yolo=1` to auto-load a mock classroom photo (`/test_classroom.png`) containing 8 children, run YOLOv8, and view the visual result.
+
+### 5. Hot Meals (meal) & Audit Review (Feature 12)
+- Feed counts and progress bars on the **Hot Meal (गरम खाना)** screen render dynamically relative to today's active attendance session.
+- The **Day Review (Audit)** screen dynamically lists and submits the final attendance totals and photo verification headcounts before finalizing the day.
+
+### 6. Last-Mile Infrastructure Grievance Portal (Feature 15)
 - Scroll down to the red **Infrastructure Grievance Portal** card.
 - Click **File Grievance** (शिकायत दर्ज करें).
 - Select **Broken Toilet / Sanitation** as the issue type.
-- Enter a description (e.g. `"The toilet door lock is broken and toilet bowl needs repair."`) and select **Send Report to Block Officer**.
+- Tap **Capture Photo evidence (तस्वीर प्रमाण)**. This triggers the native camera/file-picker, reads the image as a Base64 string, and shows a thumbnail preview in the card.
+- Enter a description (e.g. `"The toilet door lock is broken and needs repair."`) and select **Send Report to Block Officer**.
 - To verify it saved, check the database records:
   ```bash
   node -e "const db = new (require('better-sqlite3'))('./db/aura_local.db'); console.log(db.prepare('SELECT * FROM grievances').all());"
   ```
 
-### 4. Spoken Input Confidence Routing (Feature 11)
-- Tap the slot for **Spoken Registers** (or equivalent voice checklist trigger).
-- Verify the three-tier confirmation logic built to validate voice inputs:
-  - **Tier 1 (>=92% confidence):** Displays a green checkmark and auto-saves.
-  - **Tier 2 (90%-91% confidence):** Displays a warning and requires the worker to toggle a confirmation checkbox.
-  - **Tier 3 (<90% confidence):** Displays in red and forces the worker to select the child's name from a manual dropdown before saving.
-
-### 5. Reflection Audit Logs (Feature 12)
-- Mark some children present or absent on the attendance checklist.
-- Navigate to the **Reflection Audit** screen at the end of the day.
-- Verify that the summary details (Attendance present/absent count, meal count) update dynamically based on the current session's activities.
-- Click **Approve**.
-- To verify the audit committed successfully, inspect the audit logs:
-  ```bash
-  node -e "const db = new (require('better-sqlite3'))('./db/aura_local.db'); console.log(db.prepare('SELECT * FROM audit_logs').all());"
-  ```
-
-### 6. Clinical Calculations & Explainable SAM Risk Alerts (Features 8, 9 & 10)
-- View the children triage lists. Children flagged with severe acute malnutrition (SAM) are identified mathematically using deterministic WHO Z-score calculations.
-- Tap a child flagged as high risk (e.g., **Suresh Oraon**). 
-- Verify the **LightGBM Early Warning System** running client-side. The Express server computes 8 dynamic ML features (Z-score velocity, acceleration, rolling min, attendance rate, missed vaccine streak, migrant flag) over the last 10 days of database logs and returns them.
-- The browser runs the LightGBM tree-inference engine using `aura_sam_predictor_80kb.txt` to calculate risk probabilities.
-- Verify the **Explainable AI (XAI)** plain-language reason generated dynamically in Hindi or English (e.g., listing critical wasting, declining weight velocity, low attendance, and migrant status).
-
-### 7. Headcount Verification (Feature 14)
-- Click the camera verification box (📷) on the **Today's Attendance (आज की हाज़िरी)** screen.
-- Upload a classroom photo to trigger the client-side **YOLOv8 ONNX model** and **Zero-DCE light-enhancement WebGL canvas pipeline**.
-- The app detects children, compares the headcount against registered attendance, and displays a mismatch warning in amber/orange if they differ, or a green success box if they match.
-- **E2E Test Hook:** Navigate to `http://localhost:3000/?test_yolo=1` to auto-load a mock classroom photo (`/test_classroom.png`) containing 8 children, run YOLOv8, and view the visual result.
+### 7. On-Demand Government Registers (Feature 16)
+- Scroll to the **📄 Government Datasheets** card widget.
+- Select the **Month** as **10 (Oct / अक्टूबर)** and **Year** as **2026**.
+- Select a register type (e.g. `Register No. 11: Growth Monitoring`).
+- Click **Generate Register PDF**.
+- Click **Open** to download/print the generated PDF. 
+- *Note: Root dependency imports of `jspdf` and `jspdf-autotable` are configured to prevent server-side crashes during PDF rendering.*
 
 ### 8. Whisper Tiny Voice Engine (ASR & SARR)
 - Speak instructions into any microphone button (e.g. SARR voice screen, Grievance voice description, or Meal voice logging).
 - The app displays an animated pulsing recording modal, records mic audio, and runs **Whisper Tiny** fully client-side using `transformers.js` to transcribe speech.
 - The transcription is sent to the server `/api/sarr` endpoint, which matches name tokens phonetically against real SQLite records and routes commands to appropriate registers.
-- **E2E Test Hook:** Navigate to `http://localhost:3000/?test_whisper=1` to test loading, compiling, and initializing the Whisper Tiny model on your device.
+- **E2E Test Hook:** Navigate to `http://localhost:3001/?test_whisper=1` to test loading, compiling, and initializing the Whisper Tiny model on your device.
 
 ---
 
@@ -124,7 +127,8 @@ The database registers are seeded with 20 days of historical tracking for **Octo
 │   │   ├── who_standards.json    # Deterministic Z-score WHO database
 │   │   ├── vision_engine.js      # Zero-DCE + YOLO visual headcount module
 │   │   ├── ml_inference.js       # LightGBM malnutrition predictor & XAI engine
-│   │   └── whisper_engine.js     # Transformers.js client-side Whisper ASR engine
+│   │   ├── whisper_engine.js     # Transformers.js client-side Whisper ASR engine
+│   │   └── models/               # Local Whisper Tiny model weights cache
 │   └── sw.js                     # Offline asset caching & sync service worker
 ├── server.js                     # Node/Express backend routing and SQLite APIs
 ├── plan.md                       # A.U.R.A implementation roadmap
