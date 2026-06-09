@@ -72,10 +72,18 @@ function _getClinicalDiagnosis(z) {
    ============================================================================ */
 const AURA_API = {
 
-  /* ── [NOT BUILT] sherpa-onnx on-device ASR ───────────────────────────────
-     Wire: load sherpa-onnx WASM, transcribe(audioBlob). */
-  transcribeVoice: async (audioBlob) => {
-    return { text: 'Rahul aaj nahi aaya, Priya ko double ration, Meera ka weight naapo', confidence: 0.94 };
+  transcribeVoice: async (audioBlob, targetLang = 'hi') => {
+    try {
+      const { transcribeAudioBlob } = await import('./ml_pipeline/whisper_engine.js');
+      const res = await transcribeAudioBlob(audioBlob, targetLang);
+      if (res.success) {
+        return { text: res.text, confidence: 0.94 };
+      }
+      throw new Error(res.message);
+    } catch (err) {
+      console.warn('[transcribeVoice] error:', err.message);
+      return { text: '', confidence: 0.0 };
+    }
   },
 
   /* ── [NOT BUILT] language + dialect detection ────────────────────────────*/

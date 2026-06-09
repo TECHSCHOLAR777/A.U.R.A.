@@ -342,45 +342,76 @@ function matchWorker(text){
   return WORKERS.find(w => w.match.some(k => t.includes(k.toLowerCase()))) || null;
 }
 
-// Real browser speech recognition (Web Speech API). No ML backend needed.
-function startRecognition(){
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  liveText = ''; heardFinal = ''; pendingWorker = null;
-  if(!SR){ recogState = 'unsupported'; go('vlpick'); return; }   // not supported -> tap to pick
-  recog = new SR();
-  recog.lang = (lang === 'hi') ? 'hi-IN' : 'en-IN';
-  recog.interimResults = true;
-  recog.maxAlternatives = 3;
-  recog.continuous = false;
+let loginRecorder = null;
+let loginAudioChunks = [];
+let loginRecordingTimeout = null;
+
+// Unified Whisper-based speech recognition for login
+async function startRecognition(){
+  liveText = '';
+  heardFinal = '';
+  pendingWorker = null;
   recogState = 'listening';
+  updateLiveTranscript();
 
-  let settled = false;
-  const safety = setTimeout(() => finish(matchWorker(heardFinal || liveText)), 8000);
-  function finish(worker){
-    if(settled) return; settled = true;
-    clearTimeout(safety);
-    stopRecognition();
-    if(worker){ pendingWorker = worker; recogState = 'matched'; updateLiveTranscript(); setTimeout(() => go('vl4'), 500); }
-    else { go('vlpick'); }   // heard something but no name match -> tap to pick (never stuck)
-  }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    loginRecorder = new MediaRecorder(stream);
+    loginAudioChunks = [];
 
-  recog.onresult = (e) => {
-    let interim = '';
-    for(let i = e.resultIndex; i < e.results.length; i++){
-      const tr = e.results[i][0].transcript;
-      if(e.results[i].isFinal) heardFinal += tr + ' '; else interim += tr;
-    }
-    liveText = (heardFinal + interim).trim();
+    loginRecorder.ondataavailable = (e) => {
+      if (e.data.size > 0) loginAudioChunks.push(e.data);
+    };
+
+    loginRecorder.onstop = async () => {
+      const audioBlob = new Blob(loginAudioChunks, { type: 'audio/wav' });
+      stream.getTracks().forEach(t => t.stop());
+
+      recogState = 'processing';
+      updateLiveTranscript();
+
+      try {
+        const res = await AURA_API.transcribeVoice(audioBlob, lang);
+        if (res && res.text) {
+          liveText = res.text;
+          const w = matchWorker(liveText);
+          if (w) {
+            pendingWorker = w;
+            recogState = 'matched';
+            updateLiveTranscript();
+            setTimeout(() => go('vl4'), 800);
+          } else {
+            recogState = 'nomatch';
+            updateLiveTranscript();
+          }
+        } else {
+          recogState = 'nomatch';
+          updateLiveTranscript();
+        }
+      } catch (err) {
+        console.error('[Login ASR] error:', err);
+        recogState = 'error';
+        updateLiveTranscript();
+      }
+    };
+
+    loginRecorder.start();
+    loginRecordingTimeout = setTimeout(() => {
+      stopRecognition();
+    }, 6000); // Record up to 6 seconds
+  } catch (err) {
+    console.error('[Login ASR] mic error:', err);
+    recogState = 'error';
     updateLiveTranscript();
-    const w = matchWorker(liveText);            // match on everything heard, interim included
-    if(w) finish(w);
-    else if(heardFinal.trim()) finish(null);    // final result with no match -> picker
-  };
-  recog.onerror = () => finish(matchWorker(heardFinal || liveText));
-  recog.onend   = () => { if(!settled) finish(matchWorker(heardFinal || liveText)); };
-  try { recog.start(); } catch(err){ recogState = 'unsupported'; go('vlpick'); }
+  }
 }
-function stopRecognition(){ try { recog && recog.stop(); } catch(e){} }
+
+function stopRecognition(){
+  if (loginRecordingTimeout) clearTimeout(loginRecordingTimeout);
+  if (loginRecorder && loginRecorder.state === 'recording') {
+    loginRecorder.stop();
+  }
+}
 
 // Update the listening screen's live text + status without re-rendering (keeps mic alive)
 function updateLiveTranscript(){
@@ -389,12 +420,13 @@ function updateLiveTranscript(){
   if(st){
     const map = {
       listening: { en:'Listening…', hi:'सुन रहे हैं…' },
+      processing: { en:'Processing voice with Whisper...', hi:'आवाज़ पहचानी जा रही है (Whisper)...' },
       matched:   { en:'Got it ✓', hi:'मिल गया ✓' },
       nomatch:   { en:'Did not catch a name. Say again, or tap your name below.', hi:'नाम समझ नहीं आया। फिर बोलो, या नीचे अपना नाम चुनो।' },
       error:     { en:'Microphone blocked. Tap your name below instead.', hi:'माइक बंद है। नीचे अपना नाम चुनो।' }
     };
     st.textContent = L(map[recogState] || map.listening);
-    st.style.color = (recogState === 'matched') ? 'var(--green)' : (recogState === 'listening' ? 'var(--forest)' : 'var(--red)');
+    st.style.color = (recogState === 'matched') ? 'var(--green)' : ((recogState === 'listening' || recogState === 'processing') ? 'var(--forest)' : 'var(--red)');
   }
   const ring = document.getElementById('live-ring');
   if(ring) ring.classList.toggle('listening', recogState === 'listening');

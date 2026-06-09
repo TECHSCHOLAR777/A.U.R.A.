@@ -591,4 +591,25 @@ app.post('/api/sarr', (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`[Server] AURA backend running on port ${PORT}`);
+
+  // Background Whisper model files verification & auto-downloader
+  const WHISPER_DIR = path.resolve(__dirname, 'web', 'ml_pipeline', 'models', 'Xenova', 'whisper-tiny');
+  const encoderPath = path.join(WHISPER_DIR, 'onnx', 'encoder_model_quantized.onnx');
+  if (!fs.existsSync(encoderPath)) {
+    console.log(`[Whisper Check] Local model files not found. Triggering automatic background download...`);
+    try {
+      const { exec } = require('child_process');
+      exec('node ml_pipeline/download_whisper.js', (err, stdout, stderr) => {
+        if (err) {
+          console.error(`[Whisper Check] Auto-download failed. Please run manually: node ml_pipeline/download_whisper.js`, err.message);
+        } else {
+          console.log(`[Whisper Check] Background download completed successfully!`);
+        }
+      });
+    } catch (err) {
+      console.warn(`[Whisper Check] Could not start auto-downloader:`, err.message);
+    }
+  } else {
+    console.log(`[Whisper Check] Local model files verified successfully.`);
+  }
 });

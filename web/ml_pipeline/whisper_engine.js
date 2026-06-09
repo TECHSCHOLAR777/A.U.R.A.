@@ -12,8 +12,10 @@
 // Import pipeline from transformers.js CDN
 import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.0';
 
-// Configure transformers.js to load WASM binaries and cache models in IndexedDB
-env.allowLocalModels = false;
+// Configure transformers.js to load WASM binaries and models locally
+env.allowLocalModels = true;
+env.allowRemoteModels = false;
+env.localModelPath = '/ml_pipeline/models/';
 env.backends.onnx.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.18.0/dist/';
 
 let transcriberInstance = null;
