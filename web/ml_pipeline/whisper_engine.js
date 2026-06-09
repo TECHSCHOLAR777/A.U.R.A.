@@ -86,13 +86,18 @@ export async function transcribeAudioBlob(audioBlob, targetLang = 'hi', onProgre
         console.log('[whisper] Resampling audio to 16kHz mono...');
         const pcmData = await resampleAudioTo16k(audioBlob);
         
-        console.log('[whisper] Running client-side Whisper inference...');
-        const result = await transcriber(pcmData, {
-            language: targetLang === 'hi' ? 'hindi' : 'english',
+        const options = {
             task: 'transcribe',
             chunk_length_s: 30,
             stride_length_s: 5
-        });
+        };
+        if (targetLang === 'hi') {
+            options.language = 'hindi';
+        } else if (targetLang === 'en') {
+            options.language = 'english';
+        }
+        
+        const result = await transcriber(pcmData, options);
         
         console.log('[whisper] Inference complete:', result);
         return {
