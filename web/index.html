@@ -434,7 +434,53 @@ function updateLiveTranscript(){
 
 // Tap-to-pick fallback (also used when speech is unsupported)
 function pickWorker(id){ pendingWorker = WORKERS.find(w => w.id === id) || WORKERS[0]; go('vl4'); }
-function confirmWorker(){ currentWorker = pendingWorker || WORKERS[0]; jump('vl5'); }
+window.CHILDREN_ROSTER = [];
+
+function toggleChildAttendance(id) {
+  if (!window.SESSION.absentIds) window.SESSION.absentIds = [];
+  if (!window.SESSION.presentIds) window.SESSION.presentIds = [];
+  const absIdx = window.SESSION.absentIds.indexOf(id);
+  if (absIdx !== -1) {
+    window.SESSION.absentIds.splice(absIdx, 1);
+    if (!window.SESSION.presentIds.includes(id)) window.SESSION.presentIds.push(id);
+  } else {
+    const presIdx = window.SESSION.presentIds.indexOf(id);
+    if (presIdx !== -1) window.SESSION.presentIds.splice(presIdx, 1);
+    if (!window.SESSION.absentIds.includes(id)) window.SESSION.absentIds.push(id);
+  }
+  window.SESSION.presentCount = window.SESSION.presentIds.length;
+  window.SESSION.absentCount = window.SESSION.absentIds.length;
+  window.SESSION.totalPresent = window.SESSION.presentCount;
+  render();
+}
+
+
+function L_Hi(ageStr) {
+  if (!ageStr) return '';
+  return ageStr.replace('yrs', 'साल').replace('mos', 'महीने').replace('years', 'साल').replace('months', 'महीने');
+}
+
+async function confirmWorker(){
+  currentWorker = pendingWorker || WORKERS[0];
+  showLoader();
+  try {
+    const list = await AURA_API.getChildren(currentWorker.centre);
+    window.CHILDREN_ROSTER = list;
+    
+    // Initialize SESSION state based on actual database roster
+    window.SESSION.presentIds = list.map(c => c.id);
+    window.SESSION.absentIds = [];
+    window.SESSION.presentCount = list.length;
+    window.SESSION.absentCount = 0;
+    window.SESSION.totalPresent = list.length;
+    window.SESSION.fedCount = Math.round(list.length * 0.75);
+  } catch (err) {
+    console.error('[confirmWorker] failed to fetch children:', err);
+    window.CHILDREN_ROSTER = MOCK.children;
+  }
+  hideLoader();
+  jump('vl5');
+}
 
 // Type a name directly: match a seeded worker, else log in under the typed name
 function typedLogin(){
@@ -666,7 +712,9 @@ const screens = {
     const w=CW();
     const first=L(w.name).split(' ')[0];
     const greet=lang==='hi'?('सुप्रभात, '+first+'।'):('Good morning, '+first+'.');
-    const critCount=w.triage.filter(k=>k.tier==='critical').length;
+    const critCount = window.CHILDREN_ROSTER && window.CHILDREN_ROSTER.length > 0
+      ? window.CHILDREN_ROSTER.filter(c => c.status.toLowerCase() === 'sam' || c.status.toLowerCase() === 'mam').length
+      : w.triage.filter(k=>k.tier==='critical').length;
     const alertTxt=lang==='hi'?(critCount+' बच्चे ज़रूरी: तुरंत देखो'):(critCount+' children urgent: see now');
     return `<div class="screen active">${statusbar()}${header()}<div class="scroll"><div class="body">
       <div class="greet">${greet}<small>${t.date} · ${w.centre}</small></div>
@@ -754,8 +802,59 @@ const screens = {
       {key:'pending',  n:'02', c:'--amber', bg:'--al', ti:{en:'Pending',hi:'बाकी है'},      su:{en:'No info for 2+ days',hi:'2 दिन से जानकारी नहीं'}},
       {key:'remaining',n:'03', c:'--green', bg:'--gl', ti:{en:'Remaining',hi:'बाकी काम'},   su:{en:'Vaccine, ration',hi:'टीका, राशन'}}
     ];
+
+    const roster = window.CHILDREN_ROSTER && window.CHILDREN_ROSTER.length > 0 ? window.CHILDREN_ROSTER : MOCK.children;
+    const triageList = roster.map(c => {
+      let tier = 'remaining';
+      let dsEn = 'Normal growth trajectory.';
+      let dsHi = 'बढ़ोतरी की रफ़्तार सामान्य है।';
+      let tagEn = null;
+      let tagHi = null;
+
+      if (c.status.toLowerCase() === 'sam') {
+        tier = 'critical';
+        dsEn = 'Weight dropping 3 months. Measure today.';
+        dsHi = 'वज़न 3 महीने से घट रहा। आज नापो।';
+        tagEn = 'Very weak';
+        tagHi = 'बहुत कमज़ोर';
+      } else if (c.status.toLowerCase() === 'mam') {
+        tier = 'critical';
+        dsEn = 'Mild decline detected. Watch closely.';
+        dsHi = 'हल्की गिरावट। ध्यान दो।';
+        tagEn = 'Weak';
+        tagHi = 'कमज़ोर';
+      } else if (c.id === 'JH-001') {
+        tier = 'pending';
+        dsEn = 'Absent 5 days. Back today.';
+        dsHi = '5 दिन नहीं आया। आज लौटा।';
+        tagEn = 'Back today';
+        tagHi = 'आज लौटा';
+      } else if (c.id === 'JH-004') {
+        tier = 'critical';
+        dsEn = 'Vaccine default detected. Check up today.';
+        dsHi = 'टीका छूटा हुआ है। आज जाँच करें।';
+        tagEn = 'Weak';
+        tagHi = 'कमज़ोर';
+      } else if (c.id === 'JH-002') {
+        tier = 'remaining';
+        dsEn = 'Vitamin A vaccine due today.';
+        dsHi = 'विटामिन A का टीका आज बाकी।';
+        tagEn = 'Vaccine due';
+        tagHi = 'टीका बाकी';
+      }
+
+      return {
+        childId: c.id,
+        tier: tier,
+        name: { en: c.name, hi: c.nameHi || c.name },
+        age: { en: c.age, hi: L_Hi(c.age) },
+        ds: { en: dsEn, hi: dsHi },
+        tag: tagEn ? { en: tagEn, hi: tagHi } : null
+      };
+    });
+
     const blocks=tiers.map(b=>{
-      const kids=w.triage.filter(k=>k.tier===b.key);
+      const kids=triageList.filter(k=>k.tier===b.key);
       if(!kids.length) return '';
       return `<div class="blockh" style="border-color:var(${b.c});background:var(${b.bg})">
         <span class="num" style="color:var(${b.c})">${b.n}</span>
@@ -803,13 +902,14 @@ const screens = {
       } else if (r.tier === 3) {
         c = '--red';
         bg = '--rl';
+        const options = (window.CHILDREN_ROSTER && window.CHILDREN_ROSTER.length > 0 ? window.CHILDREN_ROSTER : MOCK.children)
+          .map(c => `<option value="${c.name}">${lang==='hi' ? c.nameHi : c.name}</option>`)
+          .join('');
         controlHtml = `<div style="margin-top:8px">
           <span style="font-size:11px;color:var(--red);font-weight:700;display:block;margin-bottom:4px">⚠️ ${lang==='hi'?'कम भरोसा: मैन्युअल रूप से बच्चा चुनें':'Low Confidence: Select Child'}</span>
           <select onchange="handleSelectChildForRegister(${index}, this.value)" style="padding:6px;border-radius:6px;font-size:11px;border:1.5px solid var(--red);outline:none;background:#fff;font-family:inherit">
             <option value="">${lang==='hi'?'चुनें...':'Select...'}</option>
-            <option value="Meera Sharma">${lang==='hi'?'मीरा शर्मा':'Meera Sharma'}</option>
-            <option value="Suresh Oraon">${lang==='hi'?'सुरेश उरांव':'Suresh Oraon'}</option>
-            <option value="Rahul Murmu">${lang==='hi'?'राहुल मुर्मू':'Rahul Murmu'}</option>
+            ${options}
           </select>
         </div>`;
       }
@@ -851,13 +951,33 @@ const screens = {
   },
   att(){
     const t=T[lang];
-    const kids=t.attKids.map(k=>`<div class="crow" style="border-left-color:var(--red)">
-      <div class="ic" style="background:var(--rl);color:var(--red)">✕</div>
-      <div class="info"><div class="nm">${k[0]}</div><div class="ag">${k[1]}${t.absTag}</div></div>
-    </div>`).join('');
+    const roster = (window.CHILDREN_ROSTER && window.CHILDREN_ROSTER.length > 0) ? window.CHILDREN_ROSTER : MOCK.children;
+    const kids = roster.map(c => {
+      const isAbsent = window.SESSION.absentIds && window.SESSION.absentIds.includes(c.id);
+      const nameText = lang === 'hi' ? (c.nameHi || c.name) : c.name;
+      const ageText = lang === 'hi' ? L_Hi(c.age) : c.age;
+      
+      if (isAbsent) {
+        return `<div class="crow" style="border-left-color:var(--red); cursor:pointer" onclick="toggleChildAttendance('${c.id}')">
+          <div class="ic" style="background:var(--rl);color:var(--red)">✕</div>
+          <div class="info">
+            <div class="nm">${nameText}</div>
+            <div class="ag">${ageText}${t.absTag}</div>
+          </div>
+        </div>`;
+      } else {
+        return `<div class="crow" style="border-left-color:var(--green); cursor:pointer" onclick="toggleChildAttendance('${c.id}')">
+          <div class="ic" style="background:var(--gl);color:var(--green)">✓</div>
+          <div class="info">
+            <div class="nm">${nameText}</div>
+            <div class="ag">${ageText}</div>
+          </div>
+        </div>`;
+      }
+    }).join('');
 
     const photoCount = window.SESSION.photoCount !== undefined ? window.SESSION.photoCount : null;
-    const registeredCount = window.SESSION.presentCount || 24;
+    const registeredCount = window.SESSION.presentCount || 0;
 
     let camLineText = t.camLine;
     let camMatchText = t.camMatch;
@@ -889,10 +1009,23 @@ const screens = {
         : `Click to capture / load classroom photo`;
     }
 
+    const titleStr = window.SESSION.absentCount === 0 ? t.allHere : (lang === 'hi' ? 'उपस्थिति दर्ज' : 'Attendance Marked');
+    const countStr = lang === 'hi' 
+      ? `${roster.length} में से ${window.SESSION.presentCount} बच्चे` 
+      : `${window.SESSION.presentCount} of ${roster.length} children`;
+    
+    const sumLineText = lang === 'hi' 
+      ? `${window.SESSION.presentCount} आए, ${window.SESSION.absentCount} नहीं आए` 
+      : `${window.SESSION.presentCount} present, ${window.SESSION.absentCount} absent`;
+    
+    const pctVal = roster.length > 0 ? Math.round((window.SESSION.presentCount / roster.length) * 100) : 100;
+    const pctText = lang === 'hi' ? `आज ${pctVal}% हाज़िरी` : `${pctVal}% attendance today`;
+    const sectionTitle = lang === 'hi' ? 'बच्चों की सूची (टैप करके उपस्थिति बदलें)' : 'Children List (Tap to toggle presence)';
+
     return `<div class="screen active">${statusbar()}${header(true)}<div class="scroll"><div class="body">
       ${kw(t.attKw,'--green')}
       <div class="hero" style="background:var(--green);margin-top:6px">
-        <h2>${t.allHere}</h2><p>${t.allCount}</p>
+        <h2>${titleStr}</h2><p>${countStr}</p>
         <p style="font-size:10px;margin-top:6px;opacity:.85">${t.allTime}</p>
       </div>
       <div class="camline" id="camline-btn" style="cursor:pointer;${camStyle}" onclick="handleAttendanceCameraCapture()">
@@ -900,17 +1033,23 @@ const screens = {
         <div><div style="color:#cdeede;font-size:11px;font-weight:600" id="camline-title">${camLineText}</div>
           <div style="color:#7fae97;font-size:9px" id="camline-subtitle">${camMatchText}</div></div>
       </div>
-      <div class="sectionlabel">${t.absent}</div>${kids}
+      <div class="sectionlabel">${sectionTitle}</div>${kids}
       <button class="btn ghost" style="display:flex;gap:8px;align-items:center;justify-content:center"
         onclick="go('voice')">${SVG.voice} ${t.addVoice}</button>
       <div class="hero" style="background:var(--forest);margin-top:16px">
-        <p style="opacity:.85">${t.sumLine}</p><h2 style="font-size:20px">${t.pct}</h2>
+        <p style="opacity:.85">${sumLineText}</p><h2 style="font-size:20px">${pctText}</h2>
         <button class="btn green" style="margin-top:10px" onclick="handleSubmitAttendance()">${t.send}</button>
       </div>
     </div></div>${nav('home')}</div>`;
   },
   meal(){
     const t=T[lang];
+    const roster = (window.CHILDREN_ROSTER && window.CHILDREN_ROSTER.length > 0) ? window.CHILDREN_ROSTER : MOCK.children;
+    const totalPresent = window.SESSION.presentCount !== undefined ? window.SESSION.presentCount : roster.length;
+    const fedCount = window.SESSION.fedCount !== undefined ? window.SESSION.fedCount : Math.round(totalPresent * 0.75);
+    const fedOfText = lang === 'hi' ? `/ ${totalPresent} बच्चे` : `/ ${totalPresent} children`;
+    const pct = totalPresent > 0 ? Math.round((fedCount / totalPresent) * 100) : 0;
+
     return `<div class="screen active">${statusbar('12:14')}${header(true)}<div class="scroll"><div class="body">
       ${kw(t.mealKw,'--orange')}<div class="sub">${t.mealSub}</div>
       <div class="vcard" style="border-left-color:var(--orange)">
@@ -921,10 +1060,10 @@ const screens = {
       <div style="background:var(--al);border-left:4px solid var(--orange);border-radius:12px;padding:14px;margin-bottom:10px">
         <div style="font-size:10px;color:var(--muted)">${t.mealFed}</div>
         <div style="display:flex;align-items:baseline;gap:8px">
-          <span style="font-size:40px;font-weight:800;color:var(--orange)">18</span>
-          <span style="font-size:12px;color:var(--muted)">${t.mealOf}</span>
+          <span style="font-size:40px;font-weight:800;color:var(--orange)">${fedCount}</span>
+          <span style="font-size:12px;color:var(--muted)">${fedOfText}</span>
         </div>
-        <div class="bar" style="height:8px"><i style="width:75%;background:var(--orange)"></i></div>
+        <div class="bar" style="height:8px"><i style="width:${pct}%;background:var(--orange)"></i></div>
       </div>
       <button class="btn ghost" style="display:flex;gap:8px;align-items:center;justify-content:center"
         onclick="handleLogMeal()">${SVG.voice} ${t.mealVoice}</button>
@@ -1007,12 +1146,13 @@ const screens = {
   audit(){
     const t=T[lang];
     const s = window.SESSION;
+    const verifiedCount = s.photoCount !== undefined ? s.photoCount : s.presentCount;
 
     const dynamicItems = [
       [lang==='hi' ? `${s.presentCount} बच्चे उपस्थित दर्ज` : `${s.presentCount} children marked present`, 1],
       [lang==='hi' ? `${s.absentCount} बच्चे अनुपस्थित दर्ज` : `${s.absentCount} children marked absent`, 1],
       [lang==='hi' ? `${s.fedCount} बच्चों को गर्म भोजन खिलाया` : `${s.fedCount} children fed hot cooked meals`, 1],
-      [lang==='hi' ? `फ़ोटो प्रमाण सहेजा गया (24 बच्चे)` : `Photo headcount verified (24 children)`, 1]
+      [lang==='hi' ? `फ़ोटो प्रमाण सहेजा गया (${verifiedCount} बच्चे)` : `Photo headcount verified (${verifiedCount} children)`, 1]
     ];
 
     const items=dynamicItems.map(i=>`<div class="item" style="border-left-color:var(${i[1]?'--green':'--red'})">
@@ -1186,30 +1326,46 @@ async function handleVoiceSARR(){
     // Call SARR API with actual transcription
     const sarr = await callAPI(AURA_API.runSARR, { 
       transcript: finalTranscript, 
-      centreId: 'AWC_04' 
+      centreId: CW().centre || 'AWC_04' 
     });
 
     if (sarr && sarr.registers) {
       console.log('[SARR result]', sarr.registers);
       window.sarrRegisters = sarr.registers;
+
+      // Update attendance session dynamically based on SARR results
+      const attReg = sarr.registers.find(r => r.name === 'Attendance');
+      if (attReg && attReg.status === 'approved') {
+        const childName = attReg.value.split(':')[0].trim();
+        const roster = window.CHILDREN_ROSTER && window.CHILDREN_ROSTER.length > 0 ? window.CHILDREN_ROSTER : MOCK.children;
+        const found = roster.find(c => c.name.toLowerCase() === childName.toLowerCase() || c.nameHi === childName);
+        if (found) {
+          if (!window.SESSION.absentIds) window.SESSION.absentIds = [];
+          if (!window.SESSION.presentIds) window.SESSION.presentIds = [];
+          
+          if (!window.SESSION.absentIds.includes(found.id)) {
+            window.SESSION.absentIds.push(found.id);
+          }
+          const pIdx = window.SESSION.presentIds.indexOf(found.id);
+          if (pIdx !== -1) {
+            window.SESSION.presentIds.splice(pIdx, 1);
+          }
+          window.SESSION.presentCount = window.SESSION.presentIds.length;
+          window.SESSION.absentCount = window.SESSION.absentIds.length;
+          window.SESSION.totalPresent = window.SESSION.presentCount;
+        }
+      }
     }
     render();
   }, lang);
 }
 async function handleSubmitAttendance(){
-  // Update session state
-  window.SESSION.presentIds = ['JH-001', 'JH-002', 'JH-003', 'JH-005'];
-  window.SESSION.absentIds = ['JH-004'];
-  window.SESSION.presentCount = window.SESSION.presentIds.length;
-  window.SESSION.absentCount = window.SESSION.absentIds.length;
-  window.SESSION.totalPresent = window.SESSION.presentCount;
-
   // 🔌 SOCKET: AURA_API.submitAttendance → go('audit') or shell
   const result = await callAPI(AURA_API.submitAttendance, {
-    centreId: 'AWC_04',
-    present: window.SESSION.presentIds,
-    absent: window.SESSION.absentIds,
-    photoCount: window.SESSION.photoCount || 24
+    centreId: CW().centre || 'AWC_04',
+    present: window.SESSION.presentIds || [],
+    absent: window.SESSION.absentIds || [],
+    photoCount: window.SESSION.photoCount || (window.SESSION.presentCount || 24)
   });
   if(result?.success){ updateSyncPill(); go('audit'); }
 }
@@ -1315,15 +1471,19 @@ async function handleAttendanceCameraCapture() {
 async function handleLogMeal(){
   startAudioRecording(async (text) => {
     // Extract fed count from voice transcript
-    let fedCount = 18;
+    const roster = (window.CHILDREN_ROSTER && window.CHILDREN_ROSTER.length > 0) ? window.CHILDREN_ROSTER : MOCK.children;
+    const rosterCount = roster.length;
+    let fedCount = Math.round(rosterCount * 0.75); // default to 75%
     if (text) {
       const txt = text.toLowerCase();
-      if (txt.includes('सब') || txt.includes('सभी') || txt.includes('पूरा') || txt.includes('all') || txt.includes('everyone') || txt.includes('24') || txt.includes('२४')) {
-        fedCount = 24;
-      } else if (txt.includes('20') || txt.includes('२०')) {
-        fedCount = 20;
-      } else if (txt.includes('15') || txt.includes('१५')) {
-        fedCount = 15;
+      const numPattern = txt.match(/\d+/);
+      if (txt.includes('सब') || txt.includes('सभी') || txt.includes('पूरा') || txt.includes('all') || txt.includes('everyone') || txt.includes(String(rosterCount))) {
+        fedCount = rosterCount;
+      } else if (numPattern) {
+        const parsedVal = parseInt(numPattern[0], 10);
+        if (parsedVal <= rosterCount) {
+          fedCount = parsedVal;
+        }
       }
     }
     
@@ -1331,7 +1491,7 @@ async function handleLogMeal(){
     render();
 
     // 🔌 SOCKET: AURA_API.logMeal
-    const result = await callAPI(AURA_API.logMeal, { centreId: 'AWC_04', fedCount: window.SESSION.fedCount, totalPresent: window.SESSION.totalPresent });
+    const result = await callAPI(AURA_API.logMeal, { centreId: CW().centre || 'AWC_04', fedCount: window.SESSION.fedCount, totalPresent: window.SESSION.totalPresent || rosterCount });
     if(result?.success) {
       console.log('[Meal logged]');
       alert(lang === 'hi' 
@@ -1394,10 +1554,17 @@ async function openHealthScreen(childId){
   }
 }
 async function handleAuditCommit(){
+  const verifiedCount = window.SESSION.photoCount !== undefined ? window.SESSION.photoCount : window.SESSION.presentCount;
+  const dynamicItems = [
+    lang==='hi' ? `${window.SESSION.presentCount} बच्चे उपस्थित दर्ज` : `${window.SESSION.presentCount} children marked present`,
+    lang==='hi' ? `${window.SESSION.absentCount} बच्चे अनुपस्थित दर्ज` : `${window.SESSION.absentCount} children marked absent`,
+    lang==='hi' ? `${window.SESSION.fedCount} बच्चों को गर्म भोजन खिलाया` : `${window.SESSION.fedCount} children fed hot cooked meals`,
+    lang==='hi' ? `फ़ोटो प्रमाण सहेजा गया (${verifiedCount} बच्चे)` : `Photo headcount verified (${verifiedCount} children)`
+  ];
   // 🔌 SOCKET: AURA_API.commitAudit → PDF gen → CRDT sync → jump('shell')
   const result = await callAPI(AURA_API.commitAudit, {
-    centreId: 'AWC_04',
-    approvedItems: T[lang].auditItems.map(i=>i[0]),
+    centreId: CW().centre || 'AWC_04',
+    approvedItems: dynamicItems,
     presentCount: window.SESSION.presentCount,
     absentCount: window.SESSION.absentCount,
     fedCount: window.SESSION.fedCount
@@ -1706,7 +1873,22 @@ if (new URLSearchParams(location.search).has('test_whisper')) {
 }
 
 // Init
-render();
+AURA_API.getChildren(WORKERS[0].centre).then(list => {
+  window.CHILDREN_ROSTER = list;
+  if (!window.SESSION.presentIds || window.SESSION.presentIds.length === 0) {
+    window.SESSION.presentIds = list.map(c => c.id);
+    window.SESSION.absentIds = [];
+    window.SESSION.presentCount = list.length;
+    window.SESSION.absentCount = 0;
+    window.SESSION.totalPresent = list.length;
+    window.SESSION.fedCount = Math.round(list.length * 0.75);
+  }
+  render();
+}).catch(err => {
+  console.warn('[Startup] API fetch failed, fallback to mock children:', err);
+  window.CHILDREN_ROSTER = MOCK.children;
+  render();
+});
 updateSyncPill();
 if(!navigator.onLine) document.getElementById('net-banner').style.display='block';
 </script>
