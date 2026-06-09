@@ -24,6 +24,8 @@ each body with the real call below.
 | `logMeal(payload)` | `db/` → `daily_tracking` + `inventory_ledger` | SERVER | ✅ db built, needs endpoint |
 | `commitAudit(payload)` | `db/` commit + `db/universal_pdf_generator.js` | SERVER | ✅ db built, needs endpoint |
 | `getECEActivity(payload)` | `ml_pipeline/education_engine.js` → `generateDailyBriefing({ageCohort,rawActivity,localDatabaseNudges,voiceLogObservations})` | SERVER (LLM) | ✅ built, needs endpoint + LLM key |
+| `getECERiskProfile(childId)` | `ml_pipeline/ece_engine.js` → `runECERiskProfile(db, id)` | SERVER | ✅ built — `GET /api/ece/risk/:childId` |
+| `getECEBatchRiskProfiles()` | `ml_pipeline/ece_engine.js` → `runECEBatchRiskProfiles(db)` | SERVER | ✅ built — `GET /api/ece/risk` |
 | `transcribeVoice(audioBlob)` | sherpa-onnx ASR | BROWSER | ❌ not built |
 | `detectLanguage(audioBlob)` | language/dialect id model | BROWSER | ❌ not built |
 | `authenticateWorker(transcript)` | voice-print / name match (no workers table yet) | SERVER | ❌ not built |

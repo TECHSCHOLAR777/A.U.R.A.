@@ -196,6 +196,36 @@ const AURA_API = {
     }
   },
 
+  /* ── [SERVER] ECE risk profile — single child ───────────────────────────
+     GET /api/ece/risk/:childId */
+  getECERiskProfile: async (childId) => {
+    try {
+      return await _apiFetch(`/api/ece/risk/${encodeURIComponent(childId)}`);
+    } catch {
+      return null;
+    }
+  },
+
+  /* ── [SERVER] ECE risk profiles — all children (batch) ──────────────────
+     GET /api/ece/risk */
+  getECEBatchRiskProfiles: async () => {
+    try {
+      return await _apiFetch('/api/ece/risk');
+    } catch {
+      // Fallback: mock batch using known child IDs
+      return {
+        count: 5,
+        profiles: [
+          { beneficiary_id: 'JH-001', child_name: 'Rahul Munda',   overall_alert: 'stable',   predictions: { malnutrition_risk: { label: 'Low', confidence: 0.82 }, dropout_risk: { label: 'No', confidence: 0.88 }, developmental_delay: { label: 'Low', confidence: 0.79 }, social_participation: { label: 'Low', confidence: 0.84 } } },
+          { beneficiary_id: 'JH-002', child_name: 'Priya Soren',   overall_alert: 'stable',   predictions: { malnutrition_risk: { label: 'Low', confidence: 0.80 }, dropout_risk: { label: 'No', confidence: 0.85 }, developmental_delay: { label: 'Low', confidence: 0.77 }, social_participation: { label: 'Low', confidence: 0.81 } } },
+          { beneficiary_id: 'JH-003', child_name: 'Suresh Oraon',  overall_alert: 'critical', predictions: { malnutrition_risk: { label: 'High', confidence: 0.94 }, dropout_risk: { label: 'Yes', confidence: 0.87 }, developmental_delay: { label: 'High', confidence: 0.76 }, social_participation: { label: 'Moderate', confidence: 0.68 } } },
+          { beneficiary_id: 'JH-004', child_name: 'Anita Toppo',   overall_alert: 'warning',  predictions: { malnutrition_risk: { label: 'Moderate', confidence: 0.72 }, dropout_risk: { label: 'No', confidence: 0.80 }, developmental_delay: { label: 'Moderate', confidence: 0.69 }, social_participation: { label: 'Moderate', confidence: 0.71 } } },
+          { beneficiary_id: 'JH-005', child_name: 'Kavita Hansda', overall_alert: 'stable',   predictions: { malnutrition_risk: { label: 'Low', confidence: 0.83 }, dropout_risk: { label: 'No', confidence: 0.87 }, developmental_delay: { label: 'Low', confidence: 0.80 }, social_participation: { label: 'Low', confidence: 0.85 } } },
+        ]
+      };
+    }
+  },
+
   /* ── [SERVER] ECE activity briefing via Ollama/Qwen2.5-0.5B ─────────────
      POST /api/ece */
   getECEActivity: async ({ centreId, children }) => {

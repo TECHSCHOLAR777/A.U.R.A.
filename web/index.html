@@ -957,6 +957,19 @@ const screens = {
       </div>
       <div style="font-size:10px;margin-top:6px;line-height:1.5">${lang==='hi'?f.noteHi:f.note}</div>
     </div>`).join('');
+
+    // Risk summary strip (populated async via loadECERiskSummary())
+    const riskStrip = `<div id="ece-risk-strip" style="margin:14px 0 6px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <span style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.5px">${lang==='hi'?'बच्चों का खतरा स्तर (ECE मॉडल)':'CHILD RISK LEVELS (ECE MODELS)'}</span>
+        <button onclick="loadECERiskSummary()" style="background:none;border:none;font-size:10px;font-weight:700;color:var(--forest);cursor:pointer;font-family:inherit;padding:0">${lang==='hi'?'ताज़ा करें':'Refresh'}</button>
+      </div>
+      <div id="ece-risk-cards" style="display:flex;flex-direction:column;gap:8px">
+        <div style="font-size:11px;color:var(--muted);text-align:center;padding:12px 0">${lang==='hi'?'लोड हो रहा है...':'Loading risk data...'}</div>
+      </div>
+      <button class="btn ghost" style="margin-top:10px;font-size:12px;padding:10px" onclick="go('eceRisk')">${lang==='hi'?'सभी बच्चों का पूरा विश्लेषण देखें →':'View full risk analysis for all children →'}</button>
+    </div>`;
+
     return `<div class="screen active">${statusbar('9:30')}${header(true)}<div class="scroll"><div class="body">
       ${kw(t.eceKw,'--purple')}<div class="sub">${t.eceSub}</div>
       <div class="vcard" style="border-left-color:var(--purple)">
@@ -965,12 +978,74 @@ const screens = {
         <div style="font-size:10px;line-height:1.5;margin-top:8px">${lang==='hi'?act.descHi:act.desc}</div>
         <div style="font-size:8px;color:var(--muted);margin-top:8px">${lang==='hi'?'500 खेलों में से चुना':'Picked from 500 activities'}</div>
       </div>
+      ${riskStrip}
       <div class="sectionlabel">${t.eceFocus}</div>${flags}
       <div class="sectionlabel">${t.eceNote}</div>
       <div class="vcard" style="border-left-color:var(--muted)">
         <div style="font-size:10px;color:var(--muted)">${t.eceNoteV}</div>
       </div>
     </div></div>${nav('ece')}</div>`;
+  },
+  eceRisk(){
+    // Full-page batch risk view — data populated async by loadECERiskDetail()
+    return `<div class="screen active">${statusbar('9:31')}${header(true)}<div class="scroll"><div class="body">
+      <div class="kw">${lang==='hi'?'बच्चों का ':'Children\'s '}<span class="hl" style="background:var(--purple)">${lang==='hi'?'जोखिम विश्लेषण':'Risk Analysis'}</span></div>
+      <div class="sub">${lang==='hi'?'चार ECE मॉडल: कुपोषण, छोड़ना, विकास, सामाजिक भागीदारी':'4 ECE models: malnutrition, dropout, development, social'}</div>
+      <div id="ece-detail-container" style="margin-top:4px">
+        <div style="text-align:center;padding:32px 0;color:var(--muted);font-size:13px">${lang==='hi'?'डेटा लोड हो रहा है...':'Loading data...'}</div>
+      </div>
+    </div></div>${nav('ece')}</div>`;
+  },
+  eceChildDetail(){
+    const child = window._eceDetailChild || {};
+    const p = child.profile;
+    const name = (p && p.child_name) || child.name || '\u2014';
+    if (child.loading || !p) {
+      return '<div class="screen active">' + statusbar() + header(true) + '<div class="scroll"><div class="body"><div class="kw" style="font-size:20px">' + name + '</div><div style="text-align:center;padding:40px 0;color:var(--muted);font-size:13px">' + (lang==='hi'?'विश्लेषण हो रहा है...':'Analysing...') + '</div></div></div>' + nav('ece') + '</div>';
+    }
+    const alertColor = { critical: '--red', warning: '--amber', stable: '--green', unknown: '--muted' };
+    const alertBg    = { critical: '--rl',  warning: '--al',   stable: '--gl',   unknown: '--card'  };
+    const al  = p.overall_alert || 'unknown';
+    const c   = alertColor[al] || '--muted';
+    const bg  = alertBg[al]    || '--card';
+    const preds = p.predictions || {};
+    const modelRows = [
+      { key: 'malnutrition_risk',    en: 'Malnutrition Risk',    hi: '\u0915\u0941\u092a\u094b\u0937\u0923 \u0916\u0924\u0930\u093e',      icon: '\uD83C\uDF7D' },
+      { key: 'dropout_risk',         en: 'Dropout Risk (30d)',   hi: '\u091b\u094b\u0921\u093c\u0928\u0947 \u0915\u093e \u0916\u0924\u0930\u093e', icon: '\uD83D\uDEAA' },
+      { key: 'developmental_delay',  en: 'Developmental Delay',  hi: '\u0935\u093f\u0915\u093e\u0938 \u092e\u0947\u0902 \u0926\u0947\u0930\u0940',  icon: '\uD83E\uDDE0' },
+      { key: 'social_participation', en: 'Social Participation', hi: '\u0938\u093e\u092e\u093e\u091c\u093f\u0915 \u092d\u093e\u0917\u0940\u0926\u093e\u0930\u0940', icon: '\uD83D\uDC65' },
+    ];
+    const modelCards = modelRows.map(function(row) {
+      const pred  = preds[row.key] || {};
+      const label = pred.label || '\u2014';
+      const conf  = pred.confidence != null ? Math.round(pred.confidence * 100) + '%' : '\u2014';
+      const probs = pred.probabilities || {};
+      const isHigh = label === 'High' || label === 'Yes';
+      const isMid  = label === 'Moderate';
+      const mc = isHigh ? '--red' : isMid ? '--amber' : '--green';
+      const mbg = isHigh ? '--rl' : isMid ? '--al' : '--gl';
+      const probBars = Object.entries(probs).map(function(entry) {
+        const lbl = entry[0]; const prob = entry[1];
+        const pct = Math.round(prob * 100);
+        const bc  = (lbl === 'High' || lbl === 'Yes') ? '#c0392b' : lbl === 'Moderate' ? '#cc6a1a' : '#216a3f';
+        return '<div style="display:flex;align-items:center;gap:6px;margin-top:3px"><span style="font-size:9px;color:var(--muted);min-width:58px">' + lbl + '</span><div style="flex:1;height:6px;background:#e6e6e6;border-radius:3px;overflow:hidden"><div style="width:' + pct + '%;height:100%;background:' + bc + ';border-radius:3px"></div></div><span style="font-size:9px;font-weight:700;color:' + bc + ';min-width:28px">' + pct + '%</span></div>';
+      }).join('');
+      return '<div style="border:1px solid var(--line);border-left:4px solid var(' + mc + ');border-radius:11px;padding:12px;margin-bottom:9px;background:var(' + mbg + ')"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div style="display:flex;align-items:center;gap:6px"><span style="font-size:15px">' + row.icon + '</span><span style="font-size:12px;font-weight:700;color:var(--ink)">' + (lang==='hi'?row.hi:row.en) + '</span></div><div style="display:flex;align-items:center;gap:6px"><span style="font-size:11px;font-weight:800;color:var(' + mc + ')">' + label + '</span><span style="font-size:9px;color:var(--muted)">' + (lang==='hi'?'\u0935\u093f\u0936\u094d\u0935\u093e\u0938':'conf') + ' ' + conf + '</span></div></div>' + probBars + '</div>';
+    }).join('');
+    const feats = p.features_used || {};
+    const featDefs = [
+      { k: 'attendance_last_30d',         en: 'Attendance (30d)', hi: '\u0939\u093e\u091c\u093c\u093f\u0930\u0940 (30 \u0926\u093f\u0928)',   fmt: function(v){ return v + ' days'; } },
+      { k: 'attendance_percentage_month', en: 'Attendance %',     hi: '\u0939\u093e\u091c\u093c\u093f\u0930\u0940 \u092a\u094d\u0930\u0924\u093f\u0936\u0924', fmt: function(v){ return Math.round(v*100) + '%'; } },
+      { k: 'consecutive_absence_days',    en: 'Absent streak',    hi: '\u0932\u0917\u093e\u0924\u093e\u0930 \u0917\u0948\u0930\u0939\u093e\u091c\u093c\u093f\u0930\u0940', fmt: function(v){ return v + ' days'; } },
+      { k: 'zwfl',                        en: 'Z-score (WFL)',     hi: 'Z-\u0938\u094d\u0915\u094b\u0930',  fmt: function(v){ return v.toFixed(2); } },
+      { k: 'missed_meals_30d',            en: 'Missed meals (30d)',hi: '\u091b\u0942\u091f\u0947 \u0916\u093e\u0928\u0947', fmt: function(v){ return String(v); } },
+      { k: 'vitamin_A_status',            en: 'Vitamin A',         hi: '\u0935\u093f\u091f\u093e\u092e\u093f\u0928 A', fmt: function(v){ return v ? '\u2713' : '\u2717'; } },
+      { k: 'deworming_status',            en: 'Deworming',         hi: '\u0915\u0943\u092e\u093f\u0928\u093e\u0936\u0915', fmt: function(v){ return v ? '\u2713' : '\u2717'; } },
+    ];
+    const featRows = featDefs.filter(function(d){ return feats[d.k] !== undefined; }).map(function(d){
+      return '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--line);font-size:11px"><span style="color:var(--muted)">' + (lang==='hi'?d.hi:d.en) + '</span><span style="font-weight:700;color:var(--ink)">' + d.fmt(feats[d.k]) + '</span></div>';
+    }).join('');
+    return '<div class="screen active">' + statusbar() + '<div class="scroll"><div style="background:var(' + c + ');padding:16px 20px 18px"><button class="backbtn" style="position:static;background:rgba(255,255,255,.2);border:none;color:#fff;margin-bottom:10px" onclick="back()">' + (lang==='hi'?'\u2039 \u0935\u093e\u092a\u0938':'\u2039 back') + '</button><div style="display:flex;justify-content:space-between;align-items:flex-start"><div><h2 style="font-size:22px;font-weight:800;color:#fff">' + name + '</h2><p style="font-size:11px;color:rgba(255,255,255,.8);margin-top:3px">' + (lang==='hi'?'ECE \u091c\u094b\u0916\u093f\u092e \u092a\u094d\u0930\u094b\u092b\u093c\u093e\u0907\u0932':'ECE Risk Profile') + '</p></div><span style="background:#fff;color:var(' + c + ');font-size:10px;font-weight:800;padding:5px 12px;border-radius:12px">' + al.toUpperCase() + '</span></div></div><div class="body"><div class="sectionlabel" style="margin-top:14px">' + (lang==='hi'?'\u092e\u0949\u0921\u0932 \u092d\u0935\u093f\u0937\u094d\u092f\u0935\u093e\u0923\u093f\u092f\u093e\u0901':'MODEL PREDICTIONS') + '</div>' + modelCards + (featRows ? '<div class="sectionlabel">' + (lang==='hi'?'\u092a\u094d\u0930\u092e\u0941\u0916 \u0921\u0947\u091f\u093e \u0938\u0902\u0915\u0947\u0924':'KEY DATA SIGNALS') + '</div><div style="border:1px solid var(--line);border-radius:11px;padding:12px;background:var(--card)">' + featRows + '</div>' : '') + '<div style="font-size:9px;color:var(--muted);margin-top:12px;line-height:1.5;text-align:center">ECE Engine v1 \u00B7 LightGBM \u00B7 ' + (lang==='hi'?'\u0932\u093e\u0907\u0935 DB \u0921\u0947\u091f\u093e':'Live DB data') + '</div></div></div>' + nav('ece') + '</div>';
   },
   audit(){
     const t=T[lang];
@@ -1524,6 +1599,140 @@ async function handleFileGrievance() {
 }
 
 
+// ─── ECE Risk: Summary strip on the main ECE screen ───────────────────────
+async function loadECERiskSummary() {
+  const container = document.getElementById('ece-risk-cards');
+  if (!container) return;
+
+  try {
+    const data = await AURA_API.getECEBatchRiskProfiles();
+    if (!data || !data.profiles || !data.profiles.length) {
+      container.innerHTML = `<div style="font-size:11px;color:var(--muted);padding:8px 0">${lang==='hi'?'डेटा उपलब्ध नहीं।':'No data available.'}</div>`;
+      return;
+    }
+
+    const alertColor = { critical: '--red', warning: '--amber', stable: '--green', unknown: '--muted' };
+    const alertBg    = { critical: '--rl',  warning: '--al',   stable: '--gl',   unknown: '--card'  };
+    const alertLabel = {
+      critical: { en: 'Critical', hi: 'गंभीर' },
+      warning:  { en: 'Warning',  hi: 'सावधान' },
+      stable:   { en: 'Stable',   hi: 'ठीक है' },
+      unknown:  { en: 'Unknown',  hi: 'अज्ञात' },
+    };
+
+    container.innerHTML = data.profiles.map(p => {
+      const al = p.overall_alert || 'unknown';
+      const c  = alertColor[al] || '--muted';
+      const bg = alertBg[al]    || '--card';
+      const lbl = L(alertLabel[al] || alertLabel.unknown);
+
+      const preds = p.predictions || {};
+      const chips = [
+        { key: 'malnutrition_risk',    en: 'Nutrition', hi: 'पोषण'   },
+        { key: 'dropout_risk',         en: 'Dropout',   hi: 'छोड़ना'  },
+        { key: 'developmental_delay',  en: 'Dev.',      hi: 'विकास'   },
+        { key: 'social_participation', en: 'Social',    hi: 'सामाजिक' },
+      ].map(({ key, en, hi }) => {
+        const pred  = preds[key] || {};
+        const label = pred.label || '—';
+        const isHigh = label === 'High' || label === 'Yes';
+        const isMid  = label === 'Moderate';
+        const chipC  = isHigh ? '--red' : isMid ? '--amber' : '--green';
+        return `<span style="font-size:8px;font-weight:700;padding:2px 6px;border-radius:6px;background:var(${chipC});color:#fff;white-space:nowrap">${lang==='hi'?hi:en}: ${label}</span>`;
+      }).join('');
+
+      return `<div class="crow" style="border-left-color:var(${c});background:var(${bg});cursor:pointer" onclick="openECEChildDetail('${p.beneficiary_id}','${p.child_name}')">
+        <div class="ic" style="background:var(${c});color:#fff;font-size:9px;font-weight:800;min-width:20px">${lbl.charAt(0)}</div>
+        <div class="info" style="min-width:0">
+          <div class="nm" style="color:var(--ink)">${p.child_name}</div>
+          <div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:4px">${chips}</div>
+        </div>
+        <span style="color:var(${c});font-size:13px;font-weight:700;flex-shrink:0">›</span>
+      </div>`;
+    }).join('');
+  } catch (err) {
+    container.innerHTML = `<div style="font-size:11px;color:var(--red);padding:8px 0">${lang==='hi'?'लोड करने में त्रुटि':'Error loading risk data'}</div>`;
+  }
+}
+
+// ─── ECE Risk: Full detail page for all children ───────────────────────────
+async function loadECERiskDetail() {
+  const container = document.getElementById('ece-detail-container');
+  if (!container) return;
+
+  try {
+    const data = await AURA_API.getECEBatchRiskProfiles();
+    if (!data || !data.profiles || !data.profiles.length) {
+      container.innerHTML = `<div style="text-align:center;padding:32px;color:var(--muted)">${lang==='hi'?'डेटा नहीं मिला।':'No data found.'}</div>`;
+      return;
+    }
+
+    const alertColor = { critical: '--red', warning: '--amber', stable: '--green', unknown: '--muted' };
+    const alertBg    = { critical: '--rl',  warning: '--al',   stable: '--gl',   unknown: '--card'  };
+    const modelRows  = [
+      { key: 'malnutrition_risk',    en: 'Malnutrition Risk',      hi: 'कुपोषण खतरा'      },
+      { key: 'dropout_risk',         en: 'Dropout Risk',            hi: 'छोड़ने का खतरा'   },
+      { key: 'developmental_delay',  en: 'Developmental Delay',     hi: 'विकास में देरी'    },
+      { key: 'social_participation', en: 'Social Participation',    hi: 'सामाजिक भागीदारी' },
+    ];
+
+    container.innerHTML = `
+      <div style="font-size:11px;color:var(--muted);margin-bottom:12px">${lang==='hi'?`${data.count} बच्चों के लिए विश्लेषण`:`Analysis for ${data.count} children`}</div>
+      ${data.profiles.map(p => {
+        const al  = p.overall_alert || 'unknown';
+        const c   = alertColor[al] || '--muted';
+        const bg  = alertBg[al]    || '--card';
+        const preds = p.predictions || {};
+
+        const modelHtml = modelRows.map(({ key, en, hi }) => {
+          const pred  = preds[key] || {};
+          const label = pred.label || '—';
+          const conf  = pred.confidence != null ? `${Math.round(pred.confidence * 100)}%` : '';
+          const isHigh = label === 'High' || label === 'Yes';
+          const isMid  = label === 'Moderate';
+          const rowC   = isHigh ? '#c0392b' : isMid ? '#cc6a1a' : '#216a3f';
+          return `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--line)">
+            <span style="font-size:10px;color:var(--muted)">${lang==='hi'?hi:en}</span>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:10px;font-weight:700;color:${rowC}">${label}</span>
+              ${conf ? `<span style="font-size:9px;color:var(--muted)">${conf}</span>` : ''}
+            </div>
+          </div>`;
+        }).join('');
+
+        return `<div style="border:1px solid var(--line);border-left:4px solid var(${c});border-radius:12px;padding:13px;margin-bottom:10px;background:var(--bg)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <span style="font-size:14px;font-weight:800;color:var(--ink)">${p.child_name}</span>
+            <span style="font-size:9px;font-weight:700;padding:3px 10px;border-radius:10px;background:var(${c});color:#fff">${al.toUpperCase()}</span>
+          </div>
+          ${modelHtml}
+          <button onclick="openECEChildDetail('${p.beneficiary_id}','${p.child_name}')" 
+            style="margin-top:8px;width:100%;padding:8px;background:var(${c});color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">
+            ${lang==='hi'?'पूरा विवरण देखें →':'View full details →'}
+          </button>
+        </div>`;
+      }).join('')}`;
+  } catch (err) {
+    container.innerHTML = `<div style="text-align:center;padding:32px;color:var(--red)">${lang==='hi'?'डेटा लोड नहीं हो सका।':'Could not load data.'}</div>`;
+  }
+}
+
+// ─── ECE Risk: Open single child detail (reuses health screen + ECE data) ──
+async function openECEChildDetail(childId, childName) {
+  window._eceDetailChild = { id: childId, name: childName, loading: true, profile: null };
+  go('eceChildDetail');
+
+  try {
+    const profile = await AURA_API.getECERiskProfile(childId);
+    window._eceDetailChild.loading = false;
+    window._eceDetailChild.profile = profile;
+    render();
+  } catch (err) {
+    window._eceDetailChild.loading = false;
+    render();
+  }
+}
+
 /* ============================================================
    SECTION 10 — RENDER
    ============================================================ */
@@ -1538,6 +1747,10 @@ function render(){
   if (document.getElementById('pdf-list')) {
     updatePDFList();
   }
+
+  // Load ECE risk data on the relevant screens
+  if (id === 'ece')      loadECERiskSummary();
+  if (id === 'eceRisk')  loadECERiskDetail();
 
   // reflect in URL without reload
   try { history.replaceState(null,'','/?screen='+id); } catch{}
