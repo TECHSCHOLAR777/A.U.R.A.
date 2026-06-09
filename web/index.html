@@ -342,6 +342,29 @@ function matchWorker(text){
   return WORKERS.find(w => w.match.some(k => t.includes(k.toLowerCase()))) || null;
 }
 
+function detectLanguage(text) {
+  const t = (text || '').toLowerCase();
+  if (/[\u0900-\u097F]/.test(t)) {
+    return 'hi';
+  }
+  const hinglishKeywords = ['mera', 'naam', 'char', 'chaar', 'khunti', 'munda', 'soren', 'oraon', 'devi', 'kumari', 'sunita', 'phoolmani', 'rekha'];
+  const englishKeywords = ['my', 'name', 'is', 'center', 'centre', 'four', 'block'];
+  
+  let hiCount = 0;
+  let enCount = 0;
+  for (const kw of hinglishKeywords) {
+    if (t.includes(kw)) hiCount++;
+  }
+  for (const kw of englishKeywords) {
+    if (t.includes(kw)) enCount++;
+  }
+  
+  if (hiCount > enCount) return 'hi';
+  if (enCount > hiCount) return 'en';
+  
+  return lang || 'en';
+}
+
 let loginRecorder = null;
 let loginAudioChunks = [];
 let loginRecordingTimeout = null;
@@ -371,15 +394,18 @@ async function startRecognition(){
       updateLiveTranscript();
 
       try {
-        const res = await AURA_API.transcribeVoice(audioBlob, lang);
+        const res = await AURA_API.transcribeVoice(audioBlob, 'auto');
         if (res && res.text) {
           liveText = res.text;
+          const detectedLang = detectLanguage(liveText);
+          setLang(detectedLang);
+
           const w = matchWorker(liveText);
           if (w) {
             pendingWorker = w;
             recogState = 'matched';
             updateLiveTranscript();
-            setTimeout(() => go('vl4'), 800);
+            setTimeout(() => go('vl3'), 800);
           } else {
             recogState = 'nomatch';
             updateLiveTranscript();
@@ -586,10 +612,9 @@ function header(showBack = false){
   const avInit = L(CW().av) || CW().av || '';
   return `<div class="header">
     ${backHtml}
-    <div class="avatar" onclick="jump('vlpick')">${avInit}</div>
+    <div class="avatar" onclick="jump('vl1')">${avInit}</div>
     <div class="brand">AURA</div>
     <div class="right">
-      <button class="pill-lang" onclick="toggleLanguage()">${lang==='hi'?'English':'हिंदी'}</button>
       <span id="sync-pill" class="header-sync-pill offline">⬡</span>
     </div>
   </div>`;
@@ -616,8 +641,7 @@ const screens = {
       <div class="rule"></div>
       <div class="chip"><span class="pulse"></span>${lang==='hi'?'ऑफ़लाइन चलता है':'WORKS OFFLINE'}</div>
       <button class="startbtn" onclick="handleVoiceLogin()">${SVG.voice} ${L({en:'Speak to log in',hi:'बोलकर लॉगिन करो'})}</button>
-      <button onclick="go('vlpick')" style="margin-top:14px;background:transparent;border:1.5px solid rgba(255,255,255,.35);color:#fff;border-radius:30px;padding:15px 30px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:9px">⌨️ ${L({en:'Type your name instead',hi:'या नाम लिखकर लॉगिन करो'})}</button>
-      <div class="fine">${L({en:'Choose voice or typing. No password needed.',hi:'आवाज़ या टाइपिंग चुनो। पासवर्ड नहीं चाहिए।'})}</div>
+      <div class="fine" style="margin-top:14px;color:rgba(255,255,255,0.75)">${L({en:'Speak clearly with your name and center. No password needed.',hi:'नाम और केंद्र के साथ साफ आवाज में बोलें। पासवर्ड की आवश्यकता नहीं है।'})}</div>
       <div class="govstrip">${lang==='hi'?'वाधवानी AI · खूंटी, झारखंड':'Wadhwani AI · Khunti, Jharkhand'} · ${BUILD}</div>
     </div>`;
   },
@@ -633,53 +657,40 @@ const screens = {
         <div class="q" id="live-text" style="margin-top:4px;min-height:22px">…</div>
       </div>
       <button class="btn green" style="display:flex;gap:8px;align-items:center;justify-content:center" onclick="retryVoice()">${SVG.voice} ${L({en:'Speak again',hi:'फिर से बोलो'})}</button>
-      <div style="display:flex;align-items:center;gap:8px;margin:14px 0 4px;color:var(--muted);font-size:11px"><div style="flex:1;height:1px;background:var(--line)"></div>${L({en:'or type your name',hi:'या नाम लिखो'})}<div style="flex:1;height:1px;background:var(--line)"></div></div>
-      <div style="display:flex;gap:8px">
-        <input id="name-input" type="text" autocomplete="off" placeholder="${L({en:'Type your name…',hi:'अपना नाम लिखो…'})}" onkeydown="if(event.key==='Enter')typedLogin()" style="flex:1;padding:13px 14px;border:1.5px solid var(--line);border-radius:11px;font-size:15px;font-family:inherit;outline:none" onfocus="this.style.borderColor='var(--green)'" onblur="this.style.borderColor='var(--line)'">
-        <button class="btn green" style="width:auto;padding:13px 18px" onclick="typedLogin()">${L({en:'Go',hi:'चलो'})}</button>
-      </div>
-      <button class="btn outline" style="margin-top:9px" onclick="stopRecognition();go('vlpick')">${L({en:'Or pick from the list',hi:'या सूची से चुनो'})}</button>
-      </div></div></div>`;
-  },
-  vlpick(){
-    return `<div class="screen active"><button class="backbtn" onclick="back()">${L({en:'‹ back',hi:'‹ वापस'})}</button>
-      ${statusbar()}<div class="scroll"><div class="body">
-      <div class="kw" style="font-size:22px">${L({en:'Tap your name',hi:'अपना नाम चुनो'})}</div>
-      <div class="sub">${L({en:'Type your name, or find your centre below.',hi:'नाम लिखो, या नीचे अपना केंद्र चुनो।'})}</div>
-      <div style="display:flex;gap:8px;margin-bottom:16px">
-        <input id="name-input" type="text" autocomplete="off" placeholder="${L({en:'Type your name…',hi:'अपना नाम लिखो…'})}" onkeydown="if(event.key==='Enter')typedLogin()" style="flex:1;padding:13px 14px;border:1.5px solid var(--line);border-radius:11px;font-size:15px;font-family:inherit;outline:none" onfocus="this.style.borderColor='var(--green)'" onblur="this.style.borderColor='var(--line)'">
-        <button class="btn green" style="width:auto;padding:13px 18px" onclick="typedLogin()">${L({en:'Go',hi:'चलो'})}</button>
-      </div>
-      ${WORKERS.map(w=>`<div class="slot" onclick="pickWorker('${w.id}')">
-        <div class="dot" style="background:var(--forest)">${L(w.av)}</div>
-        <div class="meta"><div class="a" style="color:var(--ink)">${L(w.name)}</div><div class="b">${w.centre} · ${L(w.block)}</div></div>
-        <span class="chev" style="color:var(--muted)">›</span>
-      </div>`).join('')}
       </div></div></div>`;
   },
   vl3(){
     const t=T[lang];
-    return `<div class="screen active"><button class="backbtn" onclick="back()">${L({en:'‹ back',hi:'‹ वापस'})}</button>
-      ${statusbar('9:00')}<div class="scroll"><div class="body">
+    const detectedLangName = lang === 'hi' ? 'हिंदी (Hindi)' : 'English (अंग्रेज़ी)';
+    return `<div class="screen active">
+      <button class="backbtn" onclick="go('vl1')">${L({en:'‹ back',hi:'‹ वापस'})}</button>
+      ${statusbar()}<div class="scroll"><div class="body">
       <div style="margin:14px 0"><div class="globewrap">${SVG.globe}</div></div>
-      <div style="text-align:center;font-size:17px;font-weight:800;margin-bottom:16px">${t.vlLangTitle}</div>
-      <div class="nowcard" style="padding:16px">
-        <div class="nlabel">${t.vlLangLabel}</div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px">
-          <h2 style="font-size:23px">${t.vlLangName}</h2>
-          <span style="background:var(--green);padding:6px 12px;border-radius:13px;font-size:11px;font-weight:700">${t.vlSure}</span>
-        </div>
-        <div class="ntask" style="margin-top:8px">${t.vlLangNote}</div>
+      <div style="text-align:center;font-size:17px;font-weight:800;margin-bottom:16px">
+        ${lang === 'hi' ? 'भाषा पहचानी गई' : 'Language Detected'}
       </div>
-      <div class="sectionlabel">${t.vlPickOther}</div>
-      <div class="langlist">${t.vlLangs.map((l,i)=>`<div class="lr ${i===1?'on':''}"><span class="nm">${l}</span>${i===1?`<span class="ck">${SVG.check}</span>`:''}</div>`).join('')}</div>
-      <button class="btn primary" onclick="go('vl4')">${t.vlYesRight}</button>
+      <div class="nowcard" style="padding:16px">
+        <div class="nlabel">${lang === 'hi' ? 'पहचानी गई भाषा' : 'Detected Language'}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px">
+          <h2 style="font-size:23px">${detectedLangName}</h2>
+          <span style="background:var(--green);padding:6px 12px;border-radius:13px;font-size:11px;font-weight:700;color:#fff">${lang === 'hi' ? '96% पक्का' : '96% Sure'}</span>
+        </div>
+        <p style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5">
+          ${lang === 'hi' ? 'पूरी ऐप अब हिंदी भाषा में चलेगी।' : 'The entire app will now run in English.'}
+        </p>
+      </div>
+      <button class="btn primary" style="margin-top:16px" onclick="go('vl4')">
+        ${lang === 'hi' ? 'हाँ, यही सही है (आगे बढ़ें) ✓' : 'Yes, this is right (Continue) ✓'}
+      </button>
+      <button class="btn outline" style="margin-top:9px" onclick="retryVoice()">
+        ${lang === 'hi' ? 'फिर से बोलें 🎤' : 'Speak again 🎤'}
+      </button>
       </div></div></div>`;
   },
   vl4(){
     const t=T[lang];
     const w = pendingWorker || WORKERS[0];
-    return `<div class="screen active"><button class="backbtn" onclick="go('vlpick')">${L({en:'‹ back',hi:'‹ वापस'})}</button>
+    return `<div class="screen active"><button class="backbtn" onclick="go('vl1')">${L({en:'‹ back',hi:'‹ वापस'})}</button>
       ${statusbar()}<div class="scroll"><div class="body">
       <div class="kw" style="font-size:22px">${t.vlIsThis}</div>
       <div class="sub">${t.vlFound}</div>
@@ -692,7 +703,7 @@ const screens = {
       <div class="listrow"><span class="l">${lang==='hi'?'ब्लॉक':'Block'}</span><span class="v">${L(w.block)}</span></div>
       <div class="listrow"><span class="l">${lang==='hi'?'बच्चे':'Children'}</span><span class="v">${w.childCount} ${lang==='hi'?'दर्ज':'enrolled'}</span></div>
       <button class="btn primary" style="margin-top:8px" onclick="confirmWorker()">${t.vlYesMe}</button>
-      <button class="btn outline" style="margin-top:9px" onclick="go('vlpick')">${t.vlNotMe}</button>
+      <button class="btn outline" style="margin-top:9px" onclick="go('vl1')">${t.vlNotMe}</button>
       </div></div></div>`;
   },
   vl5(){
