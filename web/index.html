@@ -651,7 +651,7 @@ const screens = {
         <button class="btn green" style="width:auto;padding:13px 18px" onclick="typedLogin()">${L({en:'Go',hi:'चलो'})}</button>
       </div>
       ${WORKERS.map(w=>`<div class="slot" onclick="pickWorker('${w.id}')">
-        <div class="dot" style="background:var(--forest)">${w.av}</div>
+        <div class="dot" style="background:var(--forest)">${L(w.av)}</div>
         <div class="meta"><div class="a" style="color:var(--ink)">${L(w.name)}</div><div class="b">${w.centre} · ${L(w.block)}</div></div>
         <span class="chev" style="color:var(--muted)">›</span>
       </div>`).join('')}
@@ -684,7 +684,7 @@ const screens = {
       <div class="kw" style="font-size:22px">${t.vlIsThis}</div>
       <div class="sub">${t.vlFound}</div>
       <div class="profilecard">
-        <div class="pa">${w.av}</div>
+        <div class="pa">${L(w.av)}</div>
         <h3>${L(w.name)}</h3>
         <div class="role">${t.vlWorker}</div>
       </div>
