@@ -154,7 +154,14 @@ export async function analyzeClassroomPhoto(imageCanvas, onnxModelPath) {
     
     try {
         // 1. Initialize ONNX runtime session
-        ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.18.0/dist/';
+        ort.env.wasm.numThreads = 1;
+        ort.env.wasm.wasmPaths = {
+            'ort-wasm.wasm': 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.18.0/dist/ort-wasm.wasm',
+            'ort-wasm-simd.wasm': 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.18.0/dist/ort-wasm-simd.wasm',
+            'ort-wasm-threaded.wasm': 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.18.0/dist/ort-wasm.wasm',
+            'ort-wasm-simd-threaded.wasm': 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.18.0/dist/ort-wasm-simd.wasm',
+            'ort-wasm-simd-threaded.jsep.wasm': 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.18.0/dist/ort-wasm-simd.wasm'
+        };
         const session = await ort.InferenceSession.create(onnxModelPath);
         
         // 2. Enhance image canvas to counter dark classroom lighting (brightness/contrast boost)

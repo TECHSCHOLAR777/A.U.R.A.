@@ -1837,10 +1837,12 @@ window.addEventListener('offline', ()=>{
 // Install prompt
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault(); deferredInstallPrompt = e;
-  document.getElementById('install-btn').style.display = 'block';
+  const btn = document.getElementById('install-btn');
+  if (btn) btn.style.display = 'block';
 });
 window.addEventListener('appinstalled', ()=>{
-  document.getElementById('install-btn').style.display = 'none';
+  const btn = document.getElementById('install-btn');
+  if (btn) btn.style.display = 'none';
   deferredInstallPrompt = null;
 });
 

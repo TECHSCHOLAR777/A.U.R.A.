@@ -14,7 +14,14 @@ import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transfo
 
 // Configure transformers.js to load WASM binaries and cache models in IndexedDB
 env.allowLocalModels = false;
-env.backends.onnx.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.18.0/dist/';
+env.backends.onnx.wasm.wasmPaths = {
+    'ort-wasm.wasm': 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.18.0/dist/ort-wasm.wasm',
+    'ort-wasm-simd.wasm': 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.18.0/dist/ort-wasm-simd.wasm',
+    'ort-wasm-threaded.wasm': 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.18.0/dist/ort-wasm.wasm',
+    'ort-wasm-simd-threaded.wasm': 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.18.0/dist/ort-wasm-simd.wasm',
+    'ort-wasm-simd-threaded.jsep.wasm': 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.18.0/dist/ort-wasm-simd.wasm'
+};
+env.backends.onnx.wasm.numThreads = 1;
 
 let transcriberInstance = null;
 let isLoading = false;
@@ -37,6 +44,7 @@ export async function initWhisper(onProgress = null) {
     try {
         console.log('[whisper] Initializing Whisper Tiny model...');
         transcriberInstance = await pipeline('automatic-speech-recognition', 'Xenova/whisper-tiny', {
+            device: 'cpu',
             progress_callback: (data) => {
                 if (data.status === 'progress' && typeof onProgress === 'function') {
                     onProgress(data.progress);

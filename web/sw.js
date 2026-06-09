@@ -72,7 +72,13 @@ self.addEventListener('fetch', (event) => {
         }
         return response;
       }).catch(() =>
-        caches.match(event.request).then(c => c || caches.match('/index.html'))
+        caches.match(event.request).then(c => {
+          if (c) return c;
+          return caches.match('/index.html').then(idx => {
+            if (idx) return idx;
+            return new Response("Offline", { status: 503, headers: { 'Content-Type': 'text/plain' } });
+          });
+        })
       )
     );
     return;
@@ -87,7 +93,10 @@ self.addEventListener('fetch', (event) => {
         caches.open(CACHE_VERSION).then(cache => cache.put(event.request, clone));
         return response;
       }).catch(() => {
-        if (event.request.mode === 'navigate') return caches.match('/index.html');
+        if (event.request.mode === 'navigate') {
+          return caches.match('/index.html').then(idx => idx || new Response("Offline", { status: 503, headers: { 'Content-Type': 'text/plain' } }));
+        }
+        return new Response("Not Found", { status: 404, headers: { 'Content-Type': 'text/plain' } });
       });
     })
   );
