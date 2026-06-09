@@ -12,15 +12,16 @@
 // Import pipeline from transformers.js CDN
 import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.0';
 
-// Configure transformers.js to load WASM binaries and cache models in IndexedDB
-env.allowLocalModels = false;
-env.backends.onnx.wasm.wasmPaths = {
-    'ort-wasm.wasm': 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.18.0/dist/ort-wasm.wasm',
-    'ort-wasm-simd.wasm': 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.18.0/dist/ort-wasm-simd.wasm',
-    'ort-wasm-threaded.wasm': 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.18.0/dist/ort-wasm.wasm',
-    'ort-wasm-simd-threaded.wasm': 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.18.0/dist/ort-wasm-simd.wasm',
-    'ort-wasm-simd-threaded.jsep.wasm': 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.18.0/dist/ort-wasm-simd.wasm'
-};
+// ─── Configuration ───────────────────────────────────────────────────────────
+// Try local model files first (served by Express from /ml_pipeline/models/).
+// If local files fail (e.g. first install), fall back to Hugging Face Hub CDN
+// and let the browser cache them for subsequent offline use.
+env.allowLocalModels = true;
+env.allowRemoteModels = true;   // fallback to HF Hub if local fetch fails
+env.localModelPath = '/ml_pipeline/models/';
+
+// Force single-threaded WASM to avoid SharedArrayBuffer/COOP/COEP crashes
+env.backends.onnx.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.18.0/dist/';
 env.backends.onnx.wasm.numThreads = 1;
 
 let transcriberInstance = null;
@@ -28,7 +29,7 @@ let isLoading = false;
 
 /**
  * Initializes the Whisper Tiny ASR model.
- * Downloads the model on first call and caches it locally.
+ * Loads from local disk on subsequent runs; first run may fetch from CDN.
  */
 export async function initWhisper(onProgress = null) {
     if (transcriberInstance) return transcriberInstance;
@@ -44,7 +45,6 @@ export async function initWhisper(onProgress = null) {
     try {
         console.log('[whisper] Initializing Whisper Tiny model...');
         transcriberInstance = await pipeline('automatic-speech-recognition', 'Xenova/whisper-tiny', {
-            device: 'cpu',
             progress_callback: (data) => {
                 if (data.status === 'progress' && typeof onProgress === 'function') {
                     onProgress(data.progress);
@@ -92,13 +92,18 @@ export async function transcribeAudioBlob(audioBlob, targetLang = 'hi', onProgre
         console.log('[whisper] Resampling audio to 16kHz mono...');
         const pcmData = await resampleAudioTo16k(audioBlob);
         
-        console.log('[whisper] Running client-side Whisper inference...');
-        const result = await transcriber(pcmData, {
-            language: targetLang === 'hi' ? 'hindi' : 'english',
+        const options = {
             task: 'transcribe',
             chunk_length_s: 30,
             stride_length_s: 5
-        });
+        };
+        if (targetLang === 'hi') {
+            options.language = 'hindi';
+        } else if (targetLang === 'en') {
+            options.language = 'english';
+        }
+        
+        const result = await transcriber(pcmData, options);
         
         console.log('[whisper] Inference complete:', result);
         return {

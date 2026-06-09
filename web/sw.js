@@ -4,7 +4,7 @@
    Background sync wired to AURA_API.syncNow().
    ============================================================ */
 
-const CACHE_VERSION = 'aura-v8';
+const CACHE_VERSION = 'aura-v9';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -48,6 +48,11 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
   const url = new URL(event.request.url);
+
+  // ML model files (.onnx, .json configs) → always bypass SW, go straight to server.
+  // The SW clone/cache cycle corrupts response.body streams for large binary files,
+  // causing transformers.js to crash with "Cannot read properties of null (reading 'getReader')".
+  if (url.pathname.startsWith('/ml_pipeline/models/')) return;
 
   // /api/* and Ollama calls → always network, 503 fallback offline
   if (url.pathname.startsWith('/api/') || url.hostname === 'localhost' && url.port === '11434') {
