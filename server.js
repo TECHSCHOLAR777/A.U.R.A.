@@ -451,6 +451,29 @@ app.post('/api/grievance', (req, res) => {
   }
 });
 
+// ─── API: ECE Risk Profile — Single Child ─────────────────────────────────
+app.get('/api/ece/risk/:childId', (req, res) => {
+  const { childId } = req.params;
+  try {
+    const { runECERiskProfile } = require('./ml_pipeline/ece_engine');
+    const profile = runECERiskProfile(db, childId);
+    res.json(profile);
+  } catch (err) {
+    res.status(err.message.includes('not found') ? 404 : 500).json({ error: err.message });
+  }
+});
+
+// ─── API: ECE Risk Profile — All Children (batch) ─────────────────────────
+app.get('/api/ece/risk', (req, res) => {
+  try {
+    const { runECEBatchRiskProfiles } = require('./ml_pipeline/ece_engine');
+    const profiles = runECEBatchRiskProfiles(db);
+    res.json({ count: profiles.length, profiles });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ─── API: SARR (Semantic Automated Register Routing) ───────────────────────
 app.post('/api/sarr', (req, res) => {
   const { transcript, centreId } = req.body;
