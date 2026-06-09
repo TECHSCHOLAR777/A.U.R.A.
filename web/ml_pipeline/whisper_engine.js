@@ -43,6 +43,8 @@ export async function initWhisper(onProgress = null) {
 
     isLoading = true;
     try {
+        console.log('[whisper] crossOriginIsolated:', self.crossOriginIsolated);
+        console.log('[whisper] SharedArrayBuffer available:', typeof SharedArrayBuffer !== 'undefined');
         console.log('[whisper] Initializing Whisper Tiny model...');
         transcriberInstance = await pipeline('automatic-speech-recognition', 'Xenova/whisper-tiny', {
             progress_callback: (data) => {

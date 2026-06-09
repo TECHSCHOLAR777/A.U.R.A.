@@ -4,7 +4,7 @@
    Background sync wired to AURA_API.syncNow().
    ============================================================ */
 
-const CACHE_VERSION = 'aura-v9';
+const CACHE_VERSION = 'aura-v10';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
