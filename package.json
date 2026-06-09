@@ -8,6 +8,8 @@
   },
   "dependencies": {
     "express": "^4.19.2",
-    "better-sqlite3": "^11.0.0"
+    "better-sqlite3": "^11.0.0",
+    "jspdf": "^2.5.1",
+    "jspdf-autotable": "^3.8.2"
   }
 }
