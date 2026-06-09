@@ -1672,11 +1672,45 @@ function handleGrievanceVoiceRecord() {
 function handleGrievanceCameraUpload() {
   const box = document.getElementById('grv-photo-box');
   if (!box) return;
-  grievancePhotoData = 'evidence_photo_broken_toilet_2026.jpg';
-  box.style.background = '#e6fffa';
-  box.style.borderColor = '#319795';
-  box.style.color = '#234e52';
-  box.innerHTML = `✅ ${lang === 'hi' ? 'तस्वीर सफलतापूर्वक ली गई ✓' : 'Photo evidence captured successfully ✓'}`;
+  
+  let input = document.getElementById('grievance-photo-input');
+  if (!input) {
+    input = document.createElement('input');
+    input.id = 'grievance-photo-input';
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.capture = 'environment';
+    input.style.display = 'none';
+    document.body.appendChild(input);
+  }
+
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    box.innerHTML = lang === 'hi' ? '⏳ तस्वीर लोड की जा रही है...' : '⏳ Loading image...';
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      grievancePhotoData = reader.result; // Base64 Data URL
+      box.style.background = '#e6fffa';
+      box.style.borderColor = '#319795';
+      box.style.color = '#234e52';
+      box.innerHTML = `
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+          <img src="${reader.result}" style="max-height:80px;border-radius:6px;box-shadow:0 2px 4px rgba(0,0,0,0.1)">
+          <span>✅ ${lang === 'hi' ? 'तस्वीर सफलतापूर्वक ली गई ✓' : 'Photo evidence captured successfully ✓'}</span>
+        </div>
+      `;
+    };
+    reader.onerror = (err) => {
+      console.error('[Grievance Photo Read Error]', err);
+      box.innerHTML = lang === 'hi' ? '❌ तस्वीर लोड करने में विफल' : '❌ Failed to load image';
+    };
+    reader.readAsDataURL(file);
+  };
+
+  input.click();
 }
 
 async function handleFileGrievance() {
@@ -1701,7 +1735,7 @@ async function handleFileGrievance() {
 
   try {
     const res = await callAPI(AURA_API.fileGrievance, {
-      centreId: 'AWC_04',
+      centreId: CW().centre || 'AWC_04',
       issueType,
       description,
       photoData
