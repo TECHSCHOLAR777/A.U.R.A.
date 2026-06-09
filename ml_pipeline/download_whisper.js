@@ -34,7 +34,18 @@ function downloadFile(url, dest) {
   return new Promise((resolve, reject) => {
     ensureDirectoryExistence(dest);
     const file = fs.createWriteStream(dest);
-    
+    let requestFinished = false;
+
+    const cleanupAndReject = (err) => {
+      if (requestFinished) return;
+      requestFinished = true;
+      file.close(() => {
+        fs.unlink(dest, () => {
+          reject(err);
+        });
+      });
+    };
+
     const options = {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
@@ -44,25 +55,29 @@ function downloadFile(url, dest) {
       if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
         // Handle redirect
         const redirectUrl = new URL(response.headers.location, url).toString();
-        downloadFile(redirectUrl, dest).then(resolve).catch(reject);
+        file.close(() => {
+          fs.unlink(dest, () => {
+            downloadFile(redirectUrl, dest).then(resolve).catch(reject);
+          });
+        });
         return;
       }
       
       if (response.statusCode !== 200) {
-        reject(new Error(`Failed to get '${url}' (Status Code: ${response.statusCode})`));
+        cleanupAndReject(new Error(`Failed to get '${url}' (Status Code: ${response.statusCode})`));
         return;
       }
       
       response.pipe(file);
       
       file.on('finish', () => {
+        requestFinished = true;
         file.close();
         console.log(`[Downloaded] ${path.basename(dest)}`);
         resolve();
       });
     }).on('error', (err) => {
-      fs.unlink(dest, () => {}); // delete temporary file
-      reject(err);
+      cleanupAndReject(err);
     });
   });
 }
@@ -75,7 +90,7 @@ async function start() {
     const url = BASE_URL + file;
     const dest = path.join(TARGET_DIR, ...file.split('/'));
     
-    if (fs.existsSync(dest)) {
+    if (fs.existsSync(dest) && fs.statSync(dest).size > 0) {
       console.log(`[Exists] Skipping ${file} (already downloaded)`);
       continue;
     }
