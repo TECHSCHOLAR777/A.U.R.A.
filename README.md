@@ -24,11 +24,8 @@ npm install
 ```
 
 ### 3. Whisper Tiny Offline Model Setup (ASR)
-To run and test speech recognition 100% offline without remote network requests:
-- Ensure the Whisper Tiny ONNX model files are pre-downloaded to the local cache:
-  `web/ml_pipeline/models/Xenova/whisper-tiny/`
-  *(If missing, run the download script: `powershell -File ml_pipeline/download_whisper.ps1`)*
-- The app's transformers.js pipeline is locked to `env.allowLocalModels = true` and `env.allowRemoteModels = false` to run fully offline.
+The Whisper Tiny ONNX model files are **automatically downloaded** to your local workspace during the `npm install` post-installation step (stored in `web/ml_pipeline/models/Xenova/whisper-tiny/`). No manual action is required.
+The app's transformers.js pipeline is locked to look up these files locally, blocking external HF Hub network calls so that ASR operates 100% offline.
 
 ### 4. Initialize the Local Database
 A.U.R.A. runs a highly normalized 8-table SQLite relational database. Initialize and seed it with realistic historical test data (dated for **October 2026**):

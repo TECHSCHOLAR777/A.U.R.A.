@@ -1285,9 +1285,15 @@ async function startAudioRecording(targetCallback, targetLang = 'hi') {
       try {
         const { transcribeAudioBlob } = await import('./ml_pipeline/whisper_engine.js');
         const res = await transcribeAudioBlob(audioBlob, targetLang, (progress) => {
-          showASRStatus(lang === 'hi' 
-            ? `📥 डाउनलोड हो रहा है: ${Math.round(progress)}%` 
-            : `📥 Downloading Whisper: ${Math.round(progress)}%`);
+          if (progress < 100) {
+            showASRStatus(lang === 'hi' 
+              ? `⏳ ऑफलाइन इंजन लोड हो रहा है: ${Math.round(progress)}%` 
+              : `⏳ Loading offline voice engine: ${Math.round(progress)}%`);
+          } else {
+            showASRStatus(lang === 'hi' 
+              ? `⏳ आवाज़ पहचानी जा रही है...` 
+              : `⏳ Transcribing audio...`);
+          }
         });
         
         hideASRModal();

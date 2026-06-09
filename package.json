@@ -4,7 +4,8 @@
   "description": "Root server for AURA Progressive Web App",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "postinstall": "node ml_pipeline/download_whisper.js"
   },
   "dependencies": {
     "express": "^4.19.2",
