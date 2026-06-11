@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AURA Voice Login: Module Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --forest:#1B3A2D;--forest-d:#11261C;--green:#216A3F;--red:#C0392B;
+    --amber:#CC6A1A;--ink:#161616;--muted:#6B6B6B;--line:#E2E2E2;
+    --gl:#E9F3EC;--rl:#FCEBE9;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{font-family:'Inter','Noto Sans Devanagari',system-ui,sans-serif;background:var(--forest-d);
+    min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+  .card{width:380px;max-width:94vw;background:#fff;border-radius:24px;overflow:hidden;
+    box-shadow:0 24px 64px rgba(0,0,0,.45)}
+  .head{background:var(--forest);color:#fff;padding:18px 20px;display:flex;
+    align-items:center;justify-content:space-between}
+  .head .t{font-size:15px;font-weight:800;letter-spacing:.5px}
+  .head .s{font-size:10px;color:#9fc3b1;margin-top:2px}
+  .langs{display:flex;gap:4px;background:rgba(255,255,255,.12);border-radius:9px;padding:3px}
+  .langs button{border:none;background:none;color:#cfe3d8;font-size:11px;font-weight:700;
+    padding:4px 10px;border-radius:7px;cursor:pointer;font-family:inherit}
+  .langs button.on{background:#fff;color:var(--forest)}
+  .body{padding:22px 20px 24px}
+  .micwrap{display:flex;flex-direction:column;align-items:center;gap:12px;margin:8px 0 18px}
+  .mic{width:96px;height:96px;border-radius:50%;background:var(--forest);border:none;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;color:#fff;
+    box-shadow:0 0 0 10px var(--gl);transition:transform .15s}
+  .mic:active{transform:scale(.96)}
+  .mic svg{width:36px;height:36px}
+  .mic.live{animation:pulse 1.2s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 10px var(--gl)}50%{box-shadow:0 0 0 18px var(--gl)}100%{box-shadow:0 0 0 10px var(--gl)}}
+  .status{font-size:13px;font-weight:700;color:var(--forest);min-height:18px;text-align:center}
+  .status.bad{color:var(--red)}
+  .tbox{border:2px solid var(--green);border-left:4px solid var(--green);border-radius:13px;
+    padding:12px 14px;margin-bottom:14px;display:none}
+  .tbox .l{font-size:9px;font-weight:700;color:var(--green);letter-spacing:.4px}
+  .tbox .q{font-size:14px;margin-top:4px;min-height:20px;line-height:1.5}
+  .profile{display:none;border:1px solid var(--line);border-left:4px solid var(--green);
+    border-radius:14px;padding:16px;text-align:center;margin-bottom:14px;background:var(--gl)}
+  .profile .pa{width:64px;height:64px;border-radius:50%;background:var(--forest);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;margin:0 auto 10px}
+  .profile h3{font-size:18px;font-weight:800}
+  .profile .meta{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.6}
+  .row{display:flex;gap:8px;margin-bottom:10px}
+  input[type=text]{flex:1;padding:12px 13px;border:1.5px solid var(--line);border-radius:11px;
+    font-size:14px;font-family:inherit;outline:none}
+  input[type=text]:focus{border-color:var(--green)}
+  .btn{border:none;border-radius:11px;padding:12px 16px;font-size:13px;font-weight:700;
+    cursor:pointer;font-family:inherit}
+  .btn.green{background:var(--green);color:#fff}
+  .btn.ghost{background:#fff;border:1.5px solid var(--forest);color:var(--forest);width:100%}
+  .picklist{display:none;margin-top:6px}
+  .slot{display:flex;align-items:center;gap:11px;border:1px solid var(--line);
+    border-left:4px solid var(--line);border-radius:11px;padding:10px 12px;margin-bottom:8px;cursor:pointer}
+  .slot:hover{border-left-color:var(--green)}
+  .slot .dot{width:30px;height:30px;border-radius:50%;background:var(--forest);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+  .slot .nm{font-size:13px;font-weight:700}
+  .slot .b{font-size:10px;color:var(--muted)}
+  .divider{display:flex;align-items:center;gap:8px;margin:14px 0 10px;color:var(--muted);font-size:10px}
+  .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--line)}
+  .foot{font-size:9px;color:var(--muted);text-align:center;padding:0 20px 18px;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="head">
+    <div>
+      <div class="t">AURA · Voice Login</div>
+      <div class="s">standalone module demo</div>
+    </div>
+    <div class="langs">
+      <button id="l-hi" class="on" onclick="setLang('hi')">हिं</button>
+      <button id="l-en" onclick="setLang('en')">EN</button>
+    </div>
+  </div>
+  <div class="body">
+
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+      <span style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.4px;white-space:nowrap">भाषा · Language</span>
+      <select id="recog-lang" style="flex:1;padding:9px 10px;border:1.5px solid var(--line);border-radius:10px;font-size:13px;font-family:inherit;outline:none;background:#fff">
+        <option value="hi-IN" selected>हिंदी (hi-IN)</option>
+        <option value="en-IN">English (en-IN)</option>
+        <option value="gu-IN">ગુજરાતી (gu-IN)</option>
+        <option value="ml-IN">മലയാളം (ml-IN)</option>
+      </select>
+    </div>
+
+    <div class="micwrap">
+      <button class="mic" id="mic" onclick="onMic()">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2C8.3 2 7 3.3 7 5V10C7 11.7 8.3 13 10 13S13 11.7 13 10V5C13 3.3 11.7 2 10 2Z"/><path d="M5 10C5 13.5 7.4 16 10 16S15 13.5 15 10"/><path d="M10 16V19M7 19H13"/></svg>
+      </button>
+      <div class="status" id="status"></div>
+    </div>
+
+    <div class="tbox" id="tbox">
+      <div class="l" id="tlabel"></div>
+      <div class="q" id="ttext"></div>
+    </div>
+
+    <div class="profile" id="profile">
+      <div class="pa" id="p-av"></div>
+      <h3 id="p-name"></h3>
+      <div class="meta" id="p-meta"></div>
+    </div>
+
+    <div class="divider" id="div-type"></div>
+    <div class="row">
+      <input type="text" id="name-input" autocomplete="off">
+      <button class="btn green" id="go-btn" onclick="typedLogin()"></button>
+    </div>
+    <button class="btn ghost" id="pick-btn" onclick="togglePick()"></button>
+    <div class="picklist" id="picklist"></div>
+
+  </div>
+  <div class="foot" id="foot"></div>
+</div>
+
+<script src="workers.js"></script>
+<script src="aura-voice.js"></script>
+<script>
+let lang = 'hi';
+let login = null;
+const C = {
+  hi:{ tap:'माइक दबाओ, अपना नाम और केंद्र बोलो', listening:'सुन रहे हैं...', said:'आपने कहा',
+       matched:'मिल गया', nomatch:'नाम समझ नहीं आया: नीचे लिखो या चुनो',
+       micblocked:'माइक बंद है: नीचे नाम लिखो या चुनो', nosupport:'इस ब्राउज़र में आवाज़ नहीं चलेगी: नीचे नाम लिखो',
+       type:'या नाम लिखो', ph:'अपना नाम लिखो...', go:'चलो', pick:'या सूची से चुनो',
+       worker:'आंगनवाड़ी सेविका', children:'बच्चे दर्ज',
+       foot:'Web Speech API: मुफ़्त, बिना key। https या localhost पर चलाओ।' },
+  en:{ tap:'Tap the mic, say your name and centre', listening:'Listening...', said:'YOU SAID',
+       matched:'Matched', nomatch:'Did not catch a name: type or pick below',
+       micblocked:'Microphone blocked: type or pick below', nosupport:'Voice is not available in this browser: type your name below',
+       type:'or type your name', ph:'Type your name...', go:'Go', pick:'Or pick from the list',
+       worker:'Anganwadi Worker', children:'children enrolled',
+       foot:'Web Speech API: free, no keys. Serve over https or localhost.' }
+};
+const L = o => (typeof o === 'string') ? o : (lang === 'hi' ? (o.hi ?? o.en) : (o.en ?? o.hi));
+
+function setLang(l){
+  lang = l;
+  document.getElementById('l-hi').classList.toggle('on', l==='hi');
+  document.getElementById('l-en').classList.toggle('on', l==='en');
+  applyCopy();
+}
+function applyCopy(){
+  const c = C[lang];
+  document.getElementById('status').textContent = c.tap;
+  document.getElementById('tlabel').textContent = c.said;
+  document.getElementById('div-type').textContent = c.type;
+  document.getElementById('name-input').placeholder = c.ph;
+  document.getElementById('go-btn').textContent = c.go;
+  document.getElementById('pick-btn').textContent = c.pick;
+  document.getElementById('foot').textContent = c.foot;
+  renderPicklist();
+}
+function renderPicklist(){
+  document.getElementById('picklist').innerHTML = AURA_WORKERS.map(w =>
+    `<div class="slot" onclick="showProfile(AURA_WORKERS.find(x=>x.id==='${w.id}'))">
+       <div class="dot">${L(w.av)}</div>
+       <div><div class="nm">${L(w.name)}</div><div class="b">${w.centre} · ${L(w.block)}</div></div>
+     </div>`).join('');
+}
+function status(msg, bad){
+  const el = document.getElementById('status');
+  el.textContent = msg; el.classList.toggle('bad', !!bad);
+}
+function showTranscript(text){
+  document.getElementById('tbox').style.display = 'block';
+  document.getElementById('ttext').textContent = text || '...';
+}
+function showProfile(w){
+  const p = document.getElementById('profile');
+  p.style.display = 'block';
+  document.getElementById('p-av').textContent = L(w.av);
+  document.getElementById('p-name').textContent = L(w.name);
+  document.getElementById('p-meta').textContent =
+    `${C[lang].worker} · ${w.centre} · ${L(w.block)} · ${w.childCount} ${C[lang].children}`;
+  document.getElementById('mic').classList.remove('live');
+  status(C[lang].matched + ' ✓');
+}
+function showFallback(reason){
+  document.getElementById('mic').classList.remove('live');
+  status(reason, true);
+  document.getElementById('picklist').style.display = 'block';
+}
+
+function buildLogin(){
+  login = AuraVoiceLogin.create({ workers: AURA_WORKERS, lang: document.getElementById('recog-lang').value, timeoutMs: 8000 });
+  login.on('transcript', t => showTranscript(t.text));
+  login.on('match', m => showProfile(m.worker));
+  login.on('nomatch', () => showFallback(C[lang].nomatch));
+  login.on('error', e => {
+    if (e.code === 'unsupported') showFallback(C[lang].nosupport);
+    else if (e.fatal) showFallback(C[lang].micblocked);
+  });
+}
+function onMic(){
+  document.getElementById('profile').style.display = 'none';
+  buildLogin();
+  if (!AuraVoiceLogin.isSupported('webspeech')) { showFallback(C[lang].nosupport); return; }
+  document.getElementById('mic').classList.add('live');
+  showTranscript('');
+  status(C[lang].listening);
+  login.start();
+}
+function typedLogin(){
+  const val = (document.getElementById('name-input').value || '').trim();
+  if (!val) return;
+  const m = AuraVoiceLogin.matchWorker(val, AURA_WORKERS);
+  if (m) showProfile(m.worker);
+  else showFallback(C[lang].nomatch);
+}
+function togglePick(){
+  const el = document.getElementById('picklist');
+  el.style.display = (el.style.display === 'block') ? 'none' : 'block';
+}
+document.getElementById('name-input').addEventListener('keydown', e => { if (e.key === 'Enter') typedLogin(); });
+applyCopy();
+</script>
+</body>
+</html>
