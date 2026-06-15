@@ -258,6 +258,32 @@ function ageBandToDiffKey(band) {
 }
 
 /**
+ * Predict reward for a candidate using linear weights (Contextual Bandit helper).
+ */
+function predictReward(variantId, features, weights) {
+  if (!weights) return 0;
+  let score = 0;
+  for (const feature of features) {
+    const key = `${variantId}_${feature}`;
+    score += weights[key] || 0;
+  }
+  return score;
+}
+
+/**
+ * Extract context features (matches bandit_engine.js features).
+ */
+function extractFeatures(context) {
+  if (!context) return ['bias:1'];
+  return [
+    `ageMix:${context.ageMix || 'none'}`,
+    `materials:${context.materials || 'none'}`,
+    `domain:${context.domain || 'none'}`,
+    `bias:1`
+  ];
+}
+
+/**
  * selectSafeSubstitute — Pick a substitute activity that has no exclusion_tags
  * and no choking_hazard, preferring a different domain than the candidate.
  *
@@ -541,7 +567,7 @@ app.get('/api/mastery/aggregate/:node_id', (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 app.post('/api/activity/next', (req, res) => {
-  const { child_profiles, node_id, age_band_months } = req.body || {};
+  const { child_profiles, node_id, age_band_months, context, bandit_weights } = req.body || {};
 
   // Input validation (Req 8.5)
   if (!Array.isArray(child_profiles) || child_profiles.length === 0) {
@@ -559,7 +585,17 @@ app.post('/api/activity/next', (req, res) => {
     const cleanNodeId = node_id.trim();
 
     // Select candidate activities from the bank
-    const candidates = selectCandidates(activityBank, cleanNodeId, age_band_months);
+    let candidates = selectCandidates(activityBank, cleanNodeId, age_band_months);
+
+    // If bandit weights are provided, score and sort candidates (D6 Integration)
+    if (bandit_weights && context) {
+      const features = extractFeatures(context);
+      candidates = [...candidates].sort((a, b) => {
+        const scoreA = predictReward(a.id, features, bandit_weights);
+        const scoreB = predictReward(b.id, features, bandit_weights);
+        return scoreB - scoreA; // descending order of expected reward
+      });
+    }
 
     // Reject/substitute loop (per design pseudocode)
     for (const candidate of candidates) {
