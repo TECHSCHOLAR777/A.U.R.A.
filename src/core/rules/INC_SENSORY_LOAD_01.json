@@ -1,0 +1,27 @@
+{
+  "rule_id": "INC_SENSORY_LOAD_01",
+  "type": "inclusion",
+  "description": "Flags activities with high material count for sensory-sensitive infants 0-6 months — reduce sensory load",
+  "trigger": {
+    "age_bands": ["0-3", "3-6"]
+  },
+  "condition": {
+    "type": "compound_and",
+    "conditions": [
+      {
+        "type": "flag_check",
+        "flag": "sensory_sensitivity",
+        "present": true
+      },
+      {
+        "type": "age_check",
+        "operator": "lte",
+        "field": "max_age_months",
+        "value": 6
+      }
+    ]
+  },
+  "action": "flag_modify",
+  "message": "🎨 Inclusion: Sensory-sensitive infant (0-6 months) — reduce material count to 1-2 items. Use soft textures and muted colours. Avoid sudden stimuli.",
+  "severity": "warn"
+}

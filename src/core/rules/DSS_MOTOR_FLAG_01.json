@@ -1,0 +1,25 @@
+{
+  "rule_id": "DSS_MOTOR_FLAG_01",
+  "type": "dss_interaction",
+  "description": "Flags motor activities when DSS motor concern is active — simplify motor demands and provide physical support",
+  "trigger": {
+    "domains": ["motor"]
+  },
+  "condition": {
+    "type": "compound_and",
+    "conditions": [
+      {
+        "type": "flag_check",
+        "flag": "motor_concern",
+        "present": true
+      },
+      {
+        "type": "domain_check",
+        "domain": "motor"
+      }
+    ]
+  },
+  "action": "flag_modify",
+  "message": "🏥 DSS: Motor concern flagged for child — simplify motor demand in this activity. Reduce steps, provide hand-over-hand support, allow seated participation.",
+  "severity": "warn"
+}

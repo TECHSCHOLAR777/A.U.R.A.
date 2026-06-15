@@ -1,0 +1,29 @@
+{
+  "rule_id": "INC_VISUAL_01",
+  "type": "inclusion",
+  "description": "Flags motor activities when motor concern child present and no inclusion modifications applied",
+  "trigger": {
+    "domains": ["motor"]
+  },
+  "condition": {
+    "type": "compound_and",
+    "conditions": [
+      {
+        "type": "flag_check",
+        "flag": "motor_concern",
+        "present": true
+      },
+      {
+        "type": "domain_check",
+        "domain": "motor"
+      },
+      {
+        "type": "vast_check",
+        "parameter": "none"
+      }
+    ]
+  },
+  "action": "flag_modify",
+  "message": "🦿 Inclusion: Motor concern child in room — motor activity needs adapted instructions. Add supported seating, reduce range-of-motion demands, or provide hand-over-hand guidance.",
+  "severity": "warn"
+}

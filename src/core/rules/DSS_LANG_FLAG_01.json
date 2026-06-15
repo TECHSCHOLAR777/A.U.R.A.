@@ -1,0 +1,25 @@
+{
+  "rule_id": "DSS_LANG_FLAG_01",
+  "type": "dss_interaction",
+  "description": "Flags language activities when DSS language concern is active — add visual cues and reduce verbal complexity",
+  "trigger": {
+    "domains": ["language"]
+  },
+  "condition": {
+    "type": "compound_and",
+    "conditions": [
+      {
+        "type": "flag_check",
+        "flag": "language_concern",
+        "present": true
+      },
+      {
+        "type": "domain_check",
+        "domain": "language"
+      }
+    ]
+  },
+  "action": "flag_modify",
+  "message": "🏥 DSS: Language concern flagged for child — add visual cues (picture cards, gestures) to this language activity. Simplify verbal instructions to 1-2 word prompts.",
+  "severity": "warn"
+}
