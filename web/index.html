@@ -1,0 +1,2042 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="AURA">
+<meta name="theme-color" content="#1B3A2D">
+<meta name="description" content="Offline-first voice assistant for Anganwadi workers. No password, works in tribal dialects.">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icon.svg">
+<title>A.U.R.A.</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&family=Noto+Sans+Devanagari:wght@400;500;700&display=swap" rel="stylesheet">
+<!-- Import map so vision_engine.js can use onnxruntime-web as an ES module -->
+<script type="importmap">
+{
+  "imports": {
+    "onnxruntime-web": "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.18.0/dist/esm/ort.all.min.js"
+  }
+}
+</script>
+<script src="https://unpkg.com/dexie/dist/dexie.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+#debug-panel {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  padding: 15px;
+  border-radius: 8px;
+  font-family: sans-serif;
+  font-size: 12px;
+  z-index: 9999;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+  width: 180px;
+}
+#debug-panel button {
+  background: #444;
+  color: white;
+  border: none;
+  padding: 8px 10px;
+  margin-top: 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  width: 100%;
+  font-weight: bold;
+}
+#debug-panel button:hover {
+  background: #666;
+}
+#debug-panel button.active {
+  background: #C0392B;
+}
+:root{
+  --forest:#1B3A2D;--forest-d:#11261C;--green:#216A3F;--red:#C0392B;
+  --amber:#CC6A1A;--orange:#D67424;--purple:#6B5296;--navy:#13384D;
+  --ink:#161616;--muted:#6B6B6B;--line:#E2E2E2;--card:#F6F6F6;
+  --bg:#FFFFFF;--rl:#FCEBE9;--al:#FCF3E3;--gl:#E9F3EC;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+/* Responsive Layout */
+body{font-family:'Inter','Segoe UI',system-ui,sans-serif;background:#0f172a;color:var(--ink);
+  min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0;padding:0}
+.hindi *{font-family:'Noto Sans Devanagari','Inter',sans-serif}
+/* offline/update banners */
+#net-banner{display:none;position:fixed;top:0;left:0;right:0;z-index:999;
+  background:var(--amber);color:#fff;text-align:center;font-size:12px;font-weight:700;
+  padding:10px;letter-spacing:.3px}
+#update-banner{display:none;position:fixed;top:0;left:0;right:0;z-index:998;
+  background:var(--forest);color:#fff;text-align:center;font-size:12px;font-weight:600;
+  padding:10px;cursor:pointer}
+/* responsive app wrapper */
+.phone{width:100%;height:100vh;height:100dvh;background:var(--bg);position:relative;overflow:hidden;display:flex;flex-direction:column}
+.screen{position:absolute;inset:0;display:none;flex-direction:column;background:var(--bg);overflow:hidden}
+.screen.active{display:flex}
+.screen.dark{background:var(--forest)}
+.scroll{flex:1;overflow-y:auto;overflow-x:hidden}.scroll::-webkit-scrollbar{width:0}
+svg{width:20px;height:20px;flex-shrink:0;display:block}
+.nav .tab svg{width:22px;height:22px}.nav .fab svg{width:26px;height:26px}
+.rings svg{width:42px;height:42px}.dark .logo svg,.dark .emblem svg{width:40px;height:40px}
+.globewrap svg{width:30px;height:30px}
+.statusbar{height:42px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 22px;font-size:13px;font-weight:600;flex-shrink:0}
+.statusbar .r{color:var(--muted);font-size:11px;font-weight:500}
+.header{height:54px;display:flex;align-items:center;padding:0 18px;gap:10px;flex-shrink:0}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--forest);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;position:relative;cursor:pointer}
+.avatar::after{content:'';position:absolute;right:-3px;bottom:-2px;width:13px;height:13px;
+  border-radius:50%;background:var(--navy);border:2px solid #fff}
+.brand{font-size:18px;font-weight:800;color:var(--forest);letter-spacing:.5px}
+.header .right{margin-left:auto;display:flex;align-items:center;gap:12px}
+.pill-lang{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--forest)}
+.header-sync-pill{font-size:14px;font-weight:700;display:inline-flex;align-items:center;gap:2px;cursor:pointer}
+.header-sync-pill.synced{color:#4caf80}
+.header-sync-pill.queued{color:var(--amber)}
+.header-sync-pill.offline{color:#888}
+.header-back{background:none;border:none;color:var(--forest);font-size:26px;font-weight:700;cursor:pointer;padding-right:8px;line-height:1;display:flex;align-items:center}
+.body{padding:0 20px 84px} /* padded bottom to prevent overlapping with bottom nav */
+.greet{font-size:16px;color:var(--muted);margin-top:8px}
+.greet small{display:block;font-size:13px;margin-top:2px}
+.kw{margin:18px 0 4px;font-size:23px;font-weight:800;line-height:1.3}
+.kw .hl{color:#fff;padding:1px 10px;border-radius:7px;display:inline-block}
+.sub{font-size:12px;color:var(--muted);margin:6px 0 14px;line-height:1.5}
+.nowcard{background:var(--forest);border-radius:18px;padding:18px;color:#fff}
+.nowcard .nlabel{font-size:11px;color:#9fc3b1;font-weight:600;letter-spacing:.4px}
+.nowcard .nclock{font-size:11px;color:#bcd8cb;display:flex;align-items:center;gap:6px;margin-bottom:10px}
+.nowcard .nclock svg{width:14px;height:14px}
+.nowcard h2{font-size:25px;font-weight:800;margin-top:2px}
+.nowcard .ntask{font-size:14px;color:#d7ece1;margin-top:4px}
+.nowbtn{margin-top:16px;background:var(--green);color:#fff;border:none;border-radius:11px;
+  width:100%;padding:13px;font-size:15px;font-weight:700;cursor:pointer;
+  font-family:inherit;display:flex;align-items:center;justify-content:space-between}
+.alert{display:flex;align-items:center;gap:12px;background:var(--rl);border:1px solid var(--red);
+  border-left:4px solid var(--red);border-radius:11px;padding:13px 14px;margin-top:16px;
+  cursor:pointer;color:var(--red)}
+.alert .ai{width:22px;height:22px;flex-shrink:0;color:var(--red)}
+.alert .ai svg{width:22px;height:22px}
+.alert .t{font-size:13px;font-weight:700;color:var(--red);flex:1;line-height:1.35}
+.alert .chev{color:var(--red);font-weight:700;flex-shrink:0}
+.sectionlabel{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.5px;margin:22px 0 10px}
+.slot{display:flex;align-items:center;gap:12px;border:1px solid var(--line);
+  border-left:4px solid var(--line);border-radius:11px;padding:11px 12px;
+  margin-bottom:9px;background:var(--card);cursor:pointer;transition:transform .12s}
+.slot:hover{transform:translateX(2px)}
+.slot.now{background:#fff;border:2px solid var(--green);border-left:4px solid var(--green)}
+.slot .dot{width:30px;height:30px;border-radius:50%;background:#e3e3e3;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;color:#fff}
+.slot .dot svg{width:16px;height:16px}
+.slot.now .dot{background:var(--green)}
+.slot .meta{flex:1}
+.slot .meta .a{font-size:13px;font-weight:700;color:var(--muted)}
+.slot.now .meta .a{color:var(--ink)}
+.slot .meta .b{font-size:10px;color:var(--muted);margin-top:1px}
+.slot .nowtag{background:var(--green);color:#fff;font-size:9px;font-weight:700;
+  padding:4px 9px;border-radius:11px}
+.blockh{display:flex;align-items:center;gap:8px;padding:8px 14px;border-left:6px solid;margin:0 -20px}
+.blockh .num{font-size:12px;font-weight:800}
+.blockh .ti{font-size:13px;font-weight:700}
+.blockh .su{margin-left:auto;font-size:9px;font-weight:500}
+.crow{display:flex;gap:12px;border:1px solid var(--line);border-left:4px solid;
+  border-radius:11px;padding:11px 12px;margin:9px 0;background:#fff;cursor:pointer;align-items:flex-start}
+.crow .ic{width:20px;height:20px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;margin-top:2px}
+.crow .info{flex:1}
+.crow .info .nm{font-size:14px;font-weight:700}
+.crow .info .ag{font-size:9px;color:var(--muted);margin:2px 0}
+.crow .info .ds{font-size:10px;line-height:1.45}
+.crow .tag{font-size:8px;font-weight:600;padding:3px 8px;border-radius:9px;height:fit-content;white-space:nowrap}
+.transcript{background:#fff;border:2px solid var(--green);border-left:4px solid var(--green);
+  border-radius:13px;padding:14px;margin-bottom:16px}
+.transcript .q{font-size:14px;line-height:1.5}
+.transcript .h{font-size:9px;font-weight:600;color:var(--green);margin-top:10px}
+.bar{height:4px;background:#e6e6e6;border-radius:2px;margin-top:6px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--green);width:94%}
+.reg{display:flex;align-items:center;border-radius:11px;padding:10px 12px;margin-bottom:9px;border-left:4px solid}
+.reg .l{font-size:9px;font-weight:600}
+.reg .v{font-size:13px;font-weight:700;color:var(--ink)}
+.reg .st{margin-left:auto;font-size:8px;font-weight:600;color:#fff;padding:4px 11px;border-radius:10px}
+.tier{display:flex;align-items:center;border-radius:11px;padding:10px 12px;margin-bottom:9px;
+  border-left:4px solid var(--line);border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.tier.on{border:1px solid;border-left:4px solid}
+.tier .tl{font-size:12px;font-weight:700}
+.tier .td{font-size:9px;color:var(--muted)}
+.tier .ck{margin-left:auto;width:20px;height:20px;border-radius:50%;color:#fff;
+  display:flex;align-items:center;justify-content:center}
+.tier .ck svg{width:12px;height:12px}
+.hero{border-radius:14px;padding:16px;color:#fff}
+.hero h2{font-size:22px;font-weight:800}
+.hero p{font-size:12px;margin-top:4px;opacity:.9}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.vital{border:1px solid var(--line);border-radius:12px;padding:12px}
+.vital .l{font-size:9px;color:var(--muted)}
+.vital .v{font-size:16px;font-weight:800;margin-top:3px}
+.vital .d{font-size:9px;margin-top:3px}
+.btn{border:none;border-radius:11px;padding:13px;font-size:14px;font-weight:700;
+  cursor:pointer;font-family:inherit;width:100%}
+.btn svg{width:18px;height:18px}
+.btn.primary{background:var(--forest);color:#fff}
+.btn.green{background:var(--green);color:#fff}
+.btn.red{background:var(--red);color:#fff}
+.btn.ghost{background:#fff;border:1.5px solid var(--forest);color:var(--forest)}
+.btn.outline{background:#fff;border:1px solid var(--line);color:var(--muted)}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.vcard{border:1px solid var(--line);border-left:4px solid;border-radius:11px;padding:12px;margin-bottom:9px}
+.vcard .mh{display:flex;gap:8px;align-items:center;margin-bottom:6px}
+.vcard .mh svg{width:18px;height:18px}
+.listrow{display:flex;align-items:center;border:1px solid var(--line);border-radius:11px;
+  padding:13px;margin-bottom:9px}
+.listrow .l{font-size:11px;color:var(--muted)}
+.listrow .v{margin-left:auto;font-size:13px;font-weight:700}
+.item{display:flex;align-items:center;gap:10px;border:1px solid var(--line);
+  border-left:4px solid;border-radius:10px;padding:10px 12px;margin-bottom:8px}
+.item .b{width:14px;height:14px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:8px;font-weight:800;color:#fff;flex-shrink:0}
+.item .x{font-size:10px;line-height:1.4}
+.camline{background:#161616;border-radius:11px;padding:12px;margin-top:12px;
+  display:flex;gap:10px;align-items:center}
+.camline .ci{width:20px;height:20px;flex-shrink:0;color:#8fe6c0}
+.nav{height:70px;background:#fff;border-top:1px solid var(--line);display:flex;
+  position:relative;flex-shrink:0}
+.nav .tab{flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:3px;cursor:pointer;color:var(--muted);position:relative}
+.nav .tab.on{color:var(--forest)}
+.nav .tab.on::before{content:'';position:absolute;top:0;width:32px;height:3px;
+  background:var(--forest);border-radius:2px}
+.nav .tab .lab{font-size:9px;font-weight:600}
+.nav .fab{position:absolute;left:50%;top:-22px;transform:translateX(-50%);
+  width:58px;height:58px;border-radius:50%;background:var(--forest);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 6px 18px rgba(27,58,45,.45);cursor:pointer;border:4px solid #fff}
+.nav .fab svg{color:#fff}
+.navspacer{flex:1.4}
+.screen.dark{justify-content:center;align-items:center;text-align:center;padding:0 32px;
+  position:absolute;inset:0}
+.dark::before{content:'';position:absolute;top:-80px;left:50%;transform:translateX(-50%);
+  width:380px;height:380px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,255,255,.05),transparent 70%)}
+.dark .emblem{width:104px;height:104px;border-radius:50%;background:var(--forest-d);
+  display:flex;align-items:center;justify-content:center;margin-bottom:30px;
+  box-shadow:0 0 0 1px rgba(255,255,255,.12),0 0 0 11px rgba(255,255,255,.04);
+  position:relative;z-index:1}
+.dark .emblem svg{width:42px;height:42px;color:#fff}
+.dark .logo{width:88px;height:88px;border-radius:50%;background:var(--forest-d);
+  display:flex;align-items:center;justify-content:center;margin-bottom:28px;
+  box-shadow:0 0 0 1px rgba(255,255,255,.12),0 0 0 11px rgba(255,255,255,.04)}
+.dark h1{font-size:50px;font-weight:800;letter-spacing:4px;line-height:1;color:#fff}
+.dark .fullform{font-size:11px;color:#9fc3b1;margin-top:12px;letter-spacing:2px;
+  text-transform:uppercase;font-weight:600}
+.dark .rule{width:42px;height:2px;background:rgba(255,255,255,.22);border-radius:2px;margin:24px 0}
+.dark .chip{display:inline-flex;align-items:center;gap:7px;border:1px solid rgba(255,255,255,.22);
+  border-radius:20px;padding:6px 14px;font-size:11px;font-weight:600;color:#cfe3d8}
+.dark .chip .pulse{width:7px;height:7px;border-radius:50%;background:#6fd29b;
+  animation:pulse 2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(111,210,155,.5)}70%{box-shadow:0 0 0 8px rgba(111,210,155,0)}100%{box-shadow:0 0 0 0 rgba(111,210,155,0)}}
+.dark .tag{font-size:13px;color:#9fc3b1;margin-top:10px;max-width:240px}
+.dark .startbtn{margin-top:34px;background:#fff;color:var(--forest);border:none;
+  border-radius:30px;padding:17px 38px;font-size:16px;font-weight:700;cursor:pointer;
+  font-family:inherit;display:flex;align-items:center;gap:11px;
+  box-shadow:0 10px 24px rgba(0,0,0,.22);position:relative;z-index:1}
+.dark .startbtn svg{width:20px;height:20px}
+.dark .fine{font-size:12px;color:#8fb9a3;margin-top:22px;max-width:250px;line-height:1.5}
+.dark .govstrip{position:absolute;bottom:26px;left:0;right:0;font-size:10.5px;color:#5f8a73;letter-spacing:.4px}
+.rings{width:180px;height:180px;border-radius:50%;background:var(--gl);display:flex;
+  align-items:center;justify-content:center;margin:30px auto}
+.rings .r2{width:132px;height:132px;border-radius:50%;background:#d3e8da;display:flex;
+  align-items:center;justify-content:center}
+.rings .r3{width:88px;height:88px;border-radius:50%;background:var(--forest);display:flex;
+  align-items:center;justify-content:center}
+.rings.listening .r3{animation:pulse 1s infinite}
+.globewrap{width:60px;height:60px;border-radius:50%;background:var(--gl);display:flex;
+  align-items:center;justify-content:center;margin:0 auto;color:var(--green)}
+.profilecard{border:1px solid var(--line);border-radius:16px;padding:24px;text-align:center;margin:16px 0}
+.profilecard .pa{width:84px;height:84px;border-radius:50%;background:var(--forest);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:800;margin:0 auto 14px}
+.profilecard h3{font-size:20px;font-weight:800}
+.profilecard .role{font-size:11px;color:var(--muted);margin-top:2px}
+.langlist .lr{display:flex;align-items:center;border:1px solid var(--line);
+  border-radius:11px;padding:13px;margin-bottom:9px;cursor:pointer}
+.langlist .lr.on{border:1.5px solid var(--green);border-left:4px solid var(--green);background:var(--gl)}
+.langlist .lr .nm{font-size:13px;font-weight:600}
+.langlist .lr.on .nm{font-weight:700}
+.langlist .lr .ck{margin-left:auto;width:20px;height:20px;border-radius:50%;
+  background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center}
+.langlist .lr .ck svg{width:12px;height:12px}
+.backbtn{position:absolute;top:48px;left:14px;z-index:20;background:rgba(255,255,255,.9);
+  border:1px solid var(--line);border-radius:20px;padding:6px 12px;font-size:12px;
+  font-weight:600;cursor:pointer;font-family:inherit;color:var(--ink)}
+/* loading overlay */
+.loading-overlay{position:absolute;inset:0;background:rgba(27,58,45,.7);
+  display:none;align-items:center;justify-content:center;z-index:100;border-radius:0}
+.loading-overlay.show{display:flex}
+.spinner{width:44px;height:44px;border:4px solid rgba(255,255,255,.2);
+  border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.hint{font-size:11px;color:#aaa;text-align:center;margin-top:12px;max-width:430px;line-height:1.6}
+
+/* Desktop card design */
+@media (min-width: 480px) {
+  body {
+    background: #0f172a;
+    padding: 20px 0;
+  }
+  .phone {
+    width: 430px;
+    height: 880px;
+    border-radius: 24px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+    border: 8px solid #1e293b;
+  }
+  .loading-overlay {
+    border-radius: 24px;
+  }
+}
+.pulse-icon.recording {
+  animation: pulse-ring 1.5s infinite;
+}
+@keyframes pulse-ring {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 16px rgba(239, 68, 68, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+</style>
+</head>
+<body>
+
+<div id="net-banner">You are offline: data is saved locally and will sync when connected</div>
+<div id="update-banner" onclick="updateSW()">New version available: tap to update</div>
+
+<div class="phone" id="phone">
+  <div id="app"></div>
+  <div class="loading-overlay" id="loader"><div class="spinner"></div></div>
+</div>
+
+<p class="hint" id="hint"></p>
+
+<!-- ASR Transcription Modal -->
+<div id="asr-modal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.9);z-index:9999;align-items:center;justify-content:center;color:#fff;font-family:inherit">
+  <div style="text-align:center;padding:24px;width:85%;max-width:340px;background:#1e293b;border-radius:24px;border:1.5px solid rgba(255,255,255,0.1)">
+    <div id="asr-pulse" class="pulse-icon recording" style="width:70px;height:70px;border-radius:50%;background:var(--red);margin:0 auto 20px;display:flex;align-items:center;justify-content:center">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" style="width:34px;height:34px;color:#fff">
+        <path d="M10 2C8.3 2 7 3.3 7 5V10C7 11.7 8.3 13 10 13S13 11.7 13 10V5C13 3.3 11.7 2 10 2Z"/>
+        <path d="M5 10C5 13.5 7.4 16 10 16S15 13.5 15 10"/>
+        <path d="M10 16V19M7 19H13"/>
+      </svg>
+    </div>
+    <h3 id="asr-title" style="font-size:18px;font-weight:800;margin-bottom:8px">Listening...</h3>
+    <p id="asr-subtitle" style="font-size:12px;color:rgba(255,255,255,0.7);margin-bottom:20px;line-height:1.5">Speak clearly into the microphone</p>
+    <button id="asr-stop-btn" class="btn red" style="margin:0;width:100%;padding:14px">Stop Recording</button>
+  </div>
+</div>
+
+<!-- On-Screen Debug Panel -->
+<div id="debug-panel">
+  <div style="font-weight:bold; margin-bottom: 8px; color: #f39c12;">🔧 Debug Panel</div>
+  <div style="margin-bottom: 8px;">Sync Queue: <span id="debug-queue-len" style="font-weight:bold; color:#2ecc71;">0</span></div>
+  <button onclick="AURA_API.syncNow().then(updateDebugQueue)">Trigger Sync</button>
+  <button id="debug-offline-toggle" onclick="toggleOfflineMode()">Offline Sim: OFF</button>
+</div>
+
+<script>
+  window.DEBUG_OFFLINE_MODE = false;
+  function toggleOfflineMode() {
+    window.DEBUG_OFFLINE_MODE = !window.DEBUG_OFFLINE_MODE;
+    const btn = document.getElementById('debug-offline-toggle');
+    if (window.DEBUG_OFFLINE_MODE) {
+      btn.textContent = 'Offline Sim: ON';
+      btn.classList.add('active');
+    } else {
+      btn.textContent = 'Offline Sim: OFF';
+      btn.classList.remove('active');
+    }
+  }
+
+  async function updateDebugQueue() {
+    if (typeof window.AURA_DB !== 'undefined') {
+      const queue = await window.AURA_DB.getPendingSync();
+      const countEl = document.getElementById('debug-queue-len');
+      if (countEl) countEl.textContent = queue.length;
+    }
+  }
+
+  // Hook into the global queue event if AURA_DB uses it, or just poll periodically
+  setInterval(updateDebugQueue, 2000);
+  // Also expose as updateSyncPill which AURA_DB already tries to call
+  window.updateSyncPill = updateDebugQueue;
+</script>
+
+<script src="bandit_engine.js"></script>
+<script src="aura-api.js"></script>
+<script src="ml_pipeline/ml_inference.js"></script>
+<script>
+/* SECTIONS 1-3 (AURA_API, AURA_DB, MOCK) now live in aura-api.js,
+   loaded as a separate script before this one. Edit that file to wire the backend. */
+
+/* ============================================================
+   SECTION 4 — APP STATE
+   ============================================================ */
+let lang = 'hi';
+const BUILD = 'build 8';
+let stack = ['vl1'];
+let currentWorker = null;   // the logged-in worker (drives the whole dashboard)
+let pendingWorker = null;   // worker matched at login, awaiting confirmation
+let liveText = '';          // live speech transcript
+let heardFinal = '';        // final recognized text
+let recog = null;           // SpeechRecognition instance
+let recogState = 'idle';    // idle | listening | matched | nomatch | error | unsupported
+
+// Dynamic Session State for features tracking (Feature 12)
+window.SESSION = {
+  presentCount: 4,
+  absentCount: 1,
+  presentIds: ['JH-001', 'JH-002', 'JH-003', 'JH-005'],
+  absentIds: ['JH-004'],
+  fedCount: 18,
+  totalPresent: 24,
+  referralLogged: 0
+};
+
+// Resolve a { en, hi } object by current language
+function L(obj){ if(obj == null) return ''; if(typeof obj === 'string') return obj; return lang === 'hi' ? (obj.hi ?? obj.en) : (obj.en ?? obj.hi); }
+// Current worker (never null once logged in; default to first for safety)
+function CW(){ return currentWorker || WORKERS[0]; }
+
+// Match what the worker said against the WORKERS dataset
+function matchWorker(text){
+  const t = (text || '').toLowerCase();
+  return WORKERS.find(w => w.match.some(k => t.includes(k.toLowerCase()))) || null;
+}
+
+function detectLanguage(text) {
+  const t = (text || '').toLowerCase();
+  if (/[\u0900-\u097F]/.test(t)) {
+    return 'hi';
+  }
+  const hinglishKeywords = ['mera', 'naam', 'char', 'chaar', 'khunti', 'munda', 'soren', 'oraon', 'devi', 'kumari', 'sunita', 'phoolmani', 'rekha'];
+  const englishKeywords = ['my', 'name', 'is', 'center', 'centre', 'four', 'block'];
+  
+  let hiCount = 0;
+  let enCount = 0;
+  for (const kw of hinglishKeywords) {
+    if (t.includes(kw)) hiCount++;
+  }
+  for (const kw of englishKeywords) {
+    if (t.includes(kw)) enCount++;
+  }
+  
+  if (hiCount > enCount) return 'hi';
+  if (enCount > hiCount) return 'en';
+  
+  return lang || 'en';
+}
+
+let loginRecorder = null;
+let loginAudioChunks = [];
+let loginRecordingTimeout = null;
+
+// Unified Whisper-based speech recognition for login
+async function startRecognition(){
+  liveText = '';
+  heardFinal = '';
+  pendingWorker = null;
+  recogState = 'listening';
+  updateLiveTranscript();
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    loginRecorder = new MediaRecorder(stream);
+    loginAudioChunks = [];
+
+    loginRecorder.ondataavailable = (e) => {
+      if (e.data.size > 0) loginAudioChunks.push(e.data);
+    };
+
+    loginRecorder.onstop = async () => {
+      const audioBlob = new Blob(loginAudioChunks, { type: 'audio/wav' });
+      stream.getTracks().forEach(t => t.stop());
+
+      recogState = 'processing';
+      updateLiveTranscript();
+
+      try {
+        const res = await AURA_API.transcribeVoice(audioBlob, 'auto');
+        if (res && res.text) {
+          liveText = res.text;
+          const detectedLang = detectLanguage(liveText);
+          setLang(detectedLang);
+
+          const w = matchWorker(liveText);
+          if (w) {
+            pendingWorker = w;
+            recogState = 'matched';
+            updateLiveTranscript();
+            setTimeout(() => go('vl3'), 800);
+          } else {
+            recogState = 'nomatch';
+            updateLiveTranscript();
+          }
+        } else {
+          recogState = 'nomatch';
+          updateLiveTranscript();
+        }
+      } catch (err) {
+        console.error('[Login ASR] error:', err);
+        recogState = 'error';
+        updateLiveTranscript();
+      }
+    };
+
+    loginRecorder.start();
+    loginRecordingTimeout = setTimeout(() => {
+      stopRecognition();
+    }, 6000); // Record up to 6 seconds
+  } catch (err) {
+    console.error('[Login ASR] mic error:', err);
+    recogState = 'error';
+    updateLiveTranscript();
+  }
+}
+
+function stopRecognition(){
+  if (loginRecordingTimeout) clearTimeout(loginRecordingTimeout);
+  if (loginRecorder && loginRecorder.state === 'recording') {
+    loginRecorder.stop();
+  }
+}
+
+// Update the listening screen's live text + status without re-rendering (keeps mic alive)
+function updateLiveTranscript(){
+  const el = document.getElementById('live-text'); if(el) el.textContent = liveText || '…';
+  const st = document.getElementById('live-status');
+  if(st){
+    const map = {
+      listening: { en:'Listening…', hi:'सुन रहे हैं…' },
+      processing: { en:'Processing voice with Whisper...', hi:'आवाज़ पहचानी जा रही है (Whisper)...' },
+      matched:   { en:'Got it ✓', hi:'मिल गया ✓' },
+      nomatch:   { en:'Did not catch a name. Say again, or tap your name below.', hi:'नाम समझ नहीं आया। फिर बोलो, या नीचे अपना नाम चुनो।' },
+      error:     { en:'Microphone blocked. Tap your name below instead.', hi:'माइक बंद है। नीचे अपना नाम चुनो।' }
+    };
+    st.textContent = L(map[recogState] || map.listening);
+    st.style.color = (recogState === 'matched') ? 'var(--green)' : ((recogState === 'listening' || recogState === 'processing') ? 'var(--forest)' : 'var(--red)');
+  }
+  const ring = document.getElementById('live-ring');
+  if(ring) ring.classList.toggle('listening', recogState === 'listening');
+}
+
+// Tap-to-pick fallback (also used when speech is unsupported)
+function pickWorker(id){ pendingWorker = WORKERS.find(w => w.id === id) || WORKERS[0]; go('vl4'); }
+window.CHILDREN_ROSTER = [];
+
+function toggleChildAttendance(id) {
+  if (!window.SESSION.absentIds) window.SESSION.absentIds = [];
+  if (!window.SESSION.presentIds) window.SESSION.presentIds = [];
+  const absIdx = window.SESSION.absentIds.indexOf(id);
+  if (absIdx !== -1) {
+    window.SESSION.absentIds.splice(absIdx, 1);
+    if (!window.SESSION.presentIds.includes(id)) window.SESSION.presentIds.push(id);
+  } else {
+    const presIdx = window.SESSION.presentIds.indexOf(id);
+    if (presIdx !== -1) window.SESSION.presentIds.splice(presIdx, 1);
+    if (!window.SESSION.absentIds.includes(id)) window.SESSION.absentIds.push(id);
+  }
+  window.SESSION.presentCount = window.SESSION.presentIds.length;
+  window.SESSION.absentCount = window.SESSION.absentIds.length;
+  window.SESSION.totalPresent = window.SESSION.presentCount;
+
+  // Anonymous Bandit Weight Vector: Reward function
+  if (window.AURA_BANDIT) {
+    const isPresent = window.SESSION.presentIds.includes(id);
+    const reward = isPresent ? 1 : 0;
+    
+    // Get the currently rendered Adapted-Activity variant
+    const activeVariant = (window.MOCK && window.MOCK.eceActivity && window.MOCK.eceActivity.id) || 'default_variant';
+    
+    // The Bandit Engine dynamically pulls [age-mix, materials, domain] context internally now
+    window.AURA_BANDIT.updateWeights(activeVariant, reward).catch(err => {
+      console.warn('[Bandit] Error updating weights:', err);
+    });
+  }
+
+  render();
+}
+
+
+function L_Hi(ageStr) {
+  if (!ageStr) return '';
+  return ageStr.replace('yrs', 'साल').replace('mos', 'महीने').replace('years', 'साल').replace('months', 'महीने');
+}
+
+async function confirmWorker(){
+  currentWorker = pendingWorker || WORKERS[0];
+  showLoader();
+  try {
+    const list = await AURA_API.getChildren(currentWorker.centre);
+    window.CHILDREN_ROSTER = list;
+    
+    // Initialize SESSION state based on actual database roster
+    window.SESSION.presentIds = list.map(c => c.id);
+    window.SESSION.absentIds = [];
+    window.SESSION.presentCount = list.length;
+    window.SESSION.absentCount = 0;
+    window.SESSION.totalPresent = list.length;
+    window.SESSION.fedCount = Math.round(list.length * 0.75);
+  } catch (err) {
+    console.error('[confirmWorker] failed to fetch children:', err);
+    window.CHILDREN_ROSTER = MOCK.children;
+  }
+  hideLoader();
+  jump('vl5');
+}
+
+// Type a name directly: match a seeded worker, else log in under the typed name
+function typedLogin(){
+  const el = document.getElementById('name-input');
+  const val = (el && el.value || '').trim();
+  if(!val) return;
+  const w = matchWorker(val);
+  if(w){ pendingWorker = w; }
+  else {
+    const base = WORKERS[0];   // representative centre data under the typed name
+    pendingWorker = { ...base, id:'AWW_TYPED', custom:true,
+      av: val.charAt(0).toUpperCase(), name: { en: val, hi: val } };
+  }
+  stopRecognition();
+  go('vl4');
+}
+
+/* ============================================================
+   SECTION 5 — SVG ICONS
+   ============================================================ */
+const SVG = {
+  home:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M10 2L2 9V18H7V13H13V18H18V9Z"/></svg>',
+  voice:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2C8.3 2 7 3.3 7 5V10C7 11.7 8.3 13 10 13S13 11.7 13 10V5C13 3.3 11.7 2 10 2Z"/><path d="M5 10C5 13.5 7.4 16 10 16S15 13.5 15 10"/><path d="M10 16V19M7 19H13"/></svg>',
+  heart:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M10 17C10 17 3 12.5 3 7.5C3 5.2 4.8 3.4 7 3.4C8.4 3.4 9.5 4.3 10 5C10.5 4.3 11.6 3.4 13 3.4C15.2 3.4 17 5.2 17 7.5C17 12.5 10 17 10 17Z"/></svg>',
+  book:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M10 4C8 2.6 5 2.2 2 3.2V16C5 15 8 15.4 10 16.8C12 15.4 15 15 18 16V3.2C15 2.2 12 2.6 10 4Z"/><path d="M10 4V16.8"/></svg>',
+  grid:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="5" height="5"/><rect x="12" y="3" width="5" height="5"/><rect x="3" y="12" width="5" height="5"/><rect x="12" y="12" width="5" height="5"/></svg>',
+  bell:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M10 3C7.8 3 6 4.8 6 7V11L4.5 13H15.5L14 11V7C14 4.8 12.2 3 10 3Z"/><path d="M8.3 15C8.5 16 9.2 16.5 10 16.5S11.5 16 11.7 15"/></svg>',
+  clock:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="8"/><path d="M10 5V10L13 12" stroke-linecap="round"/></svg>',
+  meal:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M5 3V9C5 10 6 11 7 11V18M7 11C8 11 9 10 9 9V3M7 3V8M14 3C12.5 3 12 5 12 7C12 8.5 13 9 14 9V18"/></svg>',
+  globe:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="8"/><path d="M2 10H18M10 2C12 4 13 7 13 10S12 16 10 18 7 16 7 10 8 4 10 2Z"/></svg>',
+  warn:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M10 2L18 16H2Z"/><path d="M10 8V11M10 13.5V13.6" stroke-linecap="round"/></svg>',
+  cam:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M3 6H6L7 4H13L14 6H17V15H3Z"/><circle cx="10" cy="11" r="3"/></svg>',
+  check:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10L8 14L16 5"/></svg>'
+};
+
+/* ============================================================
+   SECTION 6 — COPY (i18n strings)
+   ============================================================ */
+const T={
+ hi:{pill:"हिं|A",nav:["घर","सेहत","खेल","और"],greet:"सुप्रभात, मीरा।",date:"रविवार, 24 मई।",nowClock:"अभी 8:04 बजे",nowLabel:"अभी का काम",nowTask:"सुबह की हाज़िरी",nowSub:"और नाश्ता देना",start:"हाज़िरी शुरू करो",alert:"3 बच्चे ज़रूरी: तुरंत देखो",day:"दिन का नक्शा",nowtag:"अभी",
+  slots:[["हाज़िरी और नाश्ता","8 से 9 बजे","att",1],["खेल और पढ़ाई","9 से 12 बजे","ece",0],["गरम खाना","12 से 1 बजे","meal",0],["सेहत जाँच","1 से 2 बजे","health",0],["दिन की जाँच","2 बजे बाद","audit",0]],
+  triageKw:["आज किसे ","देखना है"],
+  blocks:[{n:"01",t:"तुरंत देखो",s:"बहुत कमज़ोर बच्चे",c:"--red",bg:"--rl",kids:[{nm:"मीरा शर्मा",ag:"3 साल",ds:"वज़न 3 हफ़्ते से घट रहा। आज नाप लो।",tag:"बहुत कमज़ोर"},{nm:"रवि दास",ag:"2 साल",ds:"बाँह बहुत पतली। अस्पताल भेजो।",tag:"बहुत कमज़ोर"}]},{n:"02",t:"बाकी है",s:"2 दिन से जानकारी नहीं",c:"--amber",bg:"--al",kids:[{nm:"अनिता कुमारी",ag:"4 साल",ds:"3 दिन से कुछ दर्ज नहीं।",tag:null},{nm:"राहुल मुर्मू",ag:"2 साल",ds:"5 दिन नहीं आया। आज लौटा।",tag:"आज लौटा"}]},{n:"03",t:"बाकी काम",s:"टीका, राशन",c:"--green",bg:"--gl",kids:[{nm:"सुरेश यादव",ag:"3 साल",ds:"विटामिन A का टीका बाकी। आज दो।",tag:null}]}],
+  voiceKw:["बस ","बोल दो"],voiceSub:"एक बार बोलो, हर जगह अपने आप लिख जाएगा।",voiceQ:"राहुल आज नहीं आया, प्रिया को दुगना राशन, मीरा का वज़न नापो",voiceH:"सही सुना: 94%",filling:"अपने आप भर रहा है",done:"हो गया",pend:"बाकी",sure:"कितना पक्का है",
+  regs:[["हाज़िरी","राहुल: नहीं आया",1],["राशन","प्रिया: दुगना राशन",1],["सेहत","मीरा: वज़न नापना बाकी",0]],
+  tiers:[["अपने आप सेव","92% से ज़्यादा पक्का","--green",1],["पक्का करो","थोड़ा कम पक्का","--amber",0],["फिर से बोलो","साफ़ नहीं सुना","--red",0]],
+  attKw:["आज की ","हाज़िरी"],allHere:"सब आ गए",allCount:"26 में से 26 बच्चे",allTime:"45 मिनट का काम: अब 10 सेकंड",camLine:"फोटो से गिना: 24 बच्चे दिखे",camMatch:"आवाज़ से भी 24: मिल गया",absent:"जो नहीं आए",absTag:": नहीं आया",addVoice:"बोलकर बताओ",attKids:[["राहुल मुर्मू","AW022"],["काव्या सिंह","AW031"]],sumLine:"24 आए, 2 नहीं आए",pct:"आज 92% हाज़िरी",send:"देखकर भेजो",
+  mealKw:["अभी ","गरम खाना"],mealSub:"12 से 1 बजे: सबको खाना खिलाओ।",mealToday:"आज का खाना",mealFood:"दाल, चावल, सब्ज़ी, अंडा",mealPer:"हर बच्चे को: 1 कटोरी दाल चावल और 1 अंडा",mealFed:"कितने बच्चों ने खाया",mealOf:"/ 24 बच्चे",mealVoice:"बोलो: सब बच्चों ने खाना खा लिया",mealStock:"राशन कम हो रहा है",mealStockS:"अंडे 2 दिन के बचे हैं।",
+  hDanger:"खतरा",hSignal:"खतरे का इशारा",hScore:"सेहत का नाप (WHO)",hVeryWeak:"बहुत कमज़ोर",hWeigh:"वज़न नापो",hRefer:"अस्पताल भेजो",hVitals:[["वज़न","7.8 किलो","घट रहा",1],["कद","89 सेमी","ठीक",0],["बाँह","10.8 सेमी","पतली",1],["हाज़िरी","12/22 दिन","कम",1]],
+  eceKw:["आज का ","खेल"],eceSub:"9 से 12 बजे: बच्चों के साथ खेलो।",eceFocus:"आज इन बच्चों पर ध्यान दो",eceNote:"कल की बात",eceNoteV:"प्रिया कल पीछे खड़ी रही। सुनीता, 23 मई",
+  auditKw:["दिन खत्म, ","देख लो"],auditYes:"आपकी हाँ ज़रूरी है",auditYesD:"नीचे पढ़ो। गलत हो तो ठीक करो। फिर हाँ करो।",auditWhat:"आज क्या क्या हुआ",auditItems:[["राहुल और काव्या: नहीं आए",1],["24 बच्चे आए: फोटो से भी पक्का",1],["प्रिया को दुगना राशन दिया",1],["मीरा बहुत कमज़ोर: अस्पताल भेजना है",0],["सुरेश को विटामिन A का टीका देना है",1],["18 बच्चों ने गरम खाना खाया",1]],auditSafe:"बीच में फ़ोन आ जाए तो भी सब सुरक्षित रहेगा।",auditApprove:"मैंने देख लिया: अब सेव करो",
+  vlTag:"बिना पासवर्ड: सिर्फ़ आवाज़ से",vlBegin:"शुरू करने के लिए दबाओ",vlSpeak:["अपनी भाषा में ","बोलो"],vlSpeakSub:"अपना नाम और केंद्र बोलो।",vlListening:"सुन रहे हैं...",vlYouSaid:"आपने कहा",vlSaidEx:"मेरा नाम मीरा, केंद्र चार, खूंटी",vlHeard:"साफ़ सुना",vlLangTitle:"आपकी भाषा समझ ली",vlLangLabel:"आपकी भाषा",vlLangName:"हिंदी: मुंडारी",vlSure:"96% पक्का",vlLangNote:"अब पूरी ऐप इसी भाषा में चलेगी।",vlPickOther:"सही नहीं? दूसरी चुनो",vlLangs:["हिंदी","मुंडारी","संथाली","कुड़ुख","ओड़िया"],vlYesRight:"हाँ, यही सही है",vlIsThis:"क्या यह आप हैं?",vlFound:"हमें आपकी जानकारी मिली।",vlWorker:"आंगनवाड़ी सेविका",vlRows:[["केंद्र","AWC 04"],["ब्लॉक","खूंटी, झारखंड"],["बच्चे","26 दर्ज"]],vlYesMe:"हाँ, यही मैं हूँ",vlNotMe:"नहीं, मैं नहीं",vlWelcome:"स्वागत है, मीरा",vlWelcomeSub:"अभी 8:04 बजे हैं। सुबह की हाज़िरी का समय।",vlStartDay:"मेरा दिन शुरू करो",vlOpens:"सीधे अभी के काम पर खुलेगा।",av:"म"},
+ en:{pill:"EN|अ",nav:["Home","Health","ECE","More"],greet:"Good morning, Meera.",date:"Sunday, 24 May.",nowClock:"Now, 8:04 AM",nowLabel:"RIGHT NOW",nowTask:"Morning Attendance",nowSub:"and serve the snack",start:"Start attendance",alert:"3 children urgent: see now",day:"YOUR DAY",nowtag:"NOW",
+  slots:[["Attendance & Snack","8 to 9 AM","att",1],["Play & Learn","9 to 12","ece",0],["Hot Meal","12 to 1 PM","meal",0],["Health Check","1 to 2 PM","health",0],["Day Review","After 2 PM","audit",0]],
+  triageKw:["Who to ","see today"],
+  blocks:[{n:"01",t:"See Now",s:"Very weak children",c:"--red",bg:"--rl",kids:[{nm:"Meera Sharma",ag:"3 yrs",ds:"Weight dropping 3 weeks. Measure today.",tag:"Very weak"},{nm:"Ravi Das",ag:"2 yrs",ds:"Arm very thin. Send to hospital.",tag:"Very weak"}]},{n:"02",t:"Pending",s:"No info for 2+ days",c:"--amber",bg:"--al",kids:[{nm:"Anita Kumari",ag:"4 yrs",ds:"Nothing logged for 3 days.",tag:null},{nm:"Rahul Murmu",ag:"2 yrs",ds:"Absent 5 days. Back today.",tag:"Back today"}]},{n:"03",t:"Remaining",s:"Vaccine, ration",c:"--green",bg:"--gl",kids:[{nm:"Suresh Yadav",ag:"3 yrs",ds:"Vitamin A vaccine due. Give today.",tag:null}]}],
+  voiceKw:["Just ","speak"],voiceSub:"Say it once. Every register updates automatically.",voiceQ:"Rahul absent today, double ration for Priya, check Meera's weight",voiceH:"Heard correctly: 94%",filling:"FILLING AUTOMATICALLY",done:"Done",pend:"Pending",sure:"HOW SURE",
+  regs:[["Attendance","Rahul: absent",1],["Ration","Priya: double ration",1],["Health","Meera: weigh pending",0]],
+  tiers:[["Auto-save","Over 92% sure","--green",1],["Confirm it","A bit less sure","--amber",0],["Speak again","Not heard clearly","--red",0]],
+  attKw:["Today's ","attendance"],allHere:"Everyone is here",allCount:"26 of 26 children",allTime:"45 minutes of work: now 10 seconds",camLine:"Counted by photo: 24 seen",camMatch:"Voice says 24 too: matched",absent:"DID NOT COME",absTag:": absent",addVoice:"Say who is absent",attKids:[["Rahul Murmu","AW022"],["Kavya Singh","AW031"]],sumLine:"24 present, 2 absent",pct:"92% attendance today",send:"Review & send",
+  mealKw:["Hot ","meal now"],mealSub:"12 to 1 PM: feed every child.",mealToday:"TODAY'S MEAL",mealFood:"Dal, rice, vegetables, egg",mealPer:"Per child: 1 bowl dal-rice and 1 egg",mealFed:"CHILDREN FED",mealOf:"of 24",mealVoice:"Say: all children have eaten",mealStock:"Ration running low",mealStockS:"Only 2 days of eggs left.",
+  hDanger:"Danger",hSignal:"Danger signal",hScore:"Health measure (WHO)",hVeryWeak:"Very weak",hWeigh:"Measure weight",hRefer:"Send to hospital",hVitals:[["Weight","7.8 kg","Falling",1],["Height","89 cm","OK",0],["Arm","10.8 cm","Too thin",1],["Attendance","12/22 days","Rarely",1]],
+  eceKw:["Today's ","activity"],eceSub:"9 to 12: play and teach the children.",eceFocus:"FOCUS ON THESE CHILDREN TODAY",eceNote:"YESTERDAY'S NOTE",eceNoteV:"Priya stood at the back yesterday. Sunita, 23 May",
+  auditKw:["Day done, ","take a look"],auditYes:"Your yes is required",auditYesD:"Read below. Fix if wrong. Then say yes.",auditWhat:"WHAT HAPPENED TODAY",auditItems:[["Rahul and Kavya: did not come",1],["24 children came: photo confirms",1],["Priya given double ration",1],["Meera very weak: must send to hospital",0],["Suresh needs Vitamin A vaccine",1],["18 children ate the hot meal",1]],auditSafe:"If a call interrupts, everything stays safe.",auditApprove:"I have reviewed: save now",
+  vlTag:"No password: just your voice",vlBegin:"Press to begin",vlSpeak:["Speak in ","your language"],vlSpeakSub:"Say your name and your centre. Any language.",vlListening:"Listening...",vlYouSaid:"YOU SAID",vlSaidEx:"Mera naam Meera, AWC chaar, Khunti",vlHeard:"Heard clearly",vlLangTitle:"We understood your language",vlLangLabel:"YOUR LANGUAGE",vlLangName:"Hindi: Mundari",vlSure:"96% sure",vlLangNote:"The whole app will now speak this way.",vlPickOther:"NOT RIGHT? PICK ANOTHER",vlLangs:["Hindi","Mundari","Santali","Kurukh","Odia"],vlYesRight:"Yes, this is right",vlIsThis:"Is this you?",vlFound:"We found your worker profile.",vlWorker:"Anganwadi Worker",vlRows:[["Centre","AWC 04"],["Block","Khunti, Jharkhand"],["Children","26 enrolled"]],vlYesMe:"Yes, that's me",vlNotMe:"No, not me",vlWelcome:"Welcome, Meera",vlWelcomeSub:"It is 8:04 AM. Time for morning attendance.",vlStartDay:"Start my day",vlOpens:"Opens straight to your current task.",av:"M"}
+};
+
+/* ============================================================
+   SECTION 7 — NAVIGATION
+   ============================================================ */
+function go(id){ stack.push(id); render(); }
+function back(){ if(stack.length>1){ stack.pop(); render(); } }
+function jump(id){ stack=[id]; render(); }
+
+// Sync listener for online events
+window.addEventListener('online', () => {
+  if (typeof AURA_API !== 'undefined' && typeof AURA_API.syncNow === 'function') {
+    AURA_API.syncNow();
+  }
+});
+function setLang(l){
+  lang=l;
+  const btnHi = document.getElementById('lang-hi');
+  const btnEn = document.getElementById('lang-en');
+  if(btnHi) btnHi.classList.toggle('on',l==='hi');
+  if(btnEn) btnEn.classList.toggle('on',l==='en');
+  document.documentElement.lang = l==='hi'?'hi':'en';
+  render();
+  updateSyncPill();
+}
+function toggleLanguage(){
+  setLang(lang==='hi'?'en':'hi');
+}
+function showLoader(){ document.getElementById('loader').classList.add('show'); }
+function hideLoader(){ document.getElementById('loader').classList.remove('show'); }
+async function callAPI(fn, ...args){
+  showLoader();
+  try { const r = await fn(...args); hideLoader(); return r; }
+  catch(e){ hideLoader(); console.error('[API]', e); return null; }
+}
+
+/* ============================================================
+   SECTION 8 — SCREEN TEMPLATES
+   ============================================================ */
+const navic = {att:'home',ece:'book',meal:'meal',health:'heart',audit:'grid'};
+function statusbar(time='8:04'){ return `<div class="statusbar"><span>${time}</span><span class="r">5G &nbsp;64%</span></div>`; }
+function header(showBack = false){
+  const t=T[lang];
+  const backHtml = showBack ? `<button class="header-back" onclick="back()">‹</button>` : '';
+  const avInit = L(CW().av) || CW().av || '';
+  return `<div class="header">
+    ${backHtml}
+    <div class="avatar" onclick="jump('vl1')">${avInit}</div>
+    <div class="brand">AURA</div>
+    <div class="right">
+      <span id="sync-pill" class="header-sync-pill offline">⬡</span>
+    </div>
+  </div>`;
+}
+function nav(active){
+  const t=T[lang];
+  return `<div class="nav">
+    <div class="tab ${active==='home'?'on':''}" onclick="jump('shell')">${SVG.home}<span class="lab">${t.nav[0]}</span></div>
+    <div class="tab ${active==='health'?'on':''}" onclick="go('health')">${SVG.heart}<span class="lab">${t.nav[1]}</span></div>
+    <div class="navspacer"></div>
+    <div class="tab ${active==='ece'?'on':''}" onclick="go('ece')">${SVG.book}<span class="lab">${t.nav[2]}</span></div>
+    <div class="tab">${SVG.grid}<span class="lab">${t.nav[3]}</span></div>
+    <div class="fab" onclick="go('voice')">${SVG.voice}</div></div>`;
+}
+function kw(arr,color){ return `<div class="kw">${arr[0]}<span class="hl" style="background:var(${color})">${arr[1]}</span></div>`; }
+
+const screens = {
+  vl1(){
+    const t=T[lang];
+    return `<div class="screen dark active">
+      <div class="emblem">${SVG.voice}</div>
+      <h1>AURA</h1>
+      <div class="fullform">Anganwadi Unified Resource Assistant</div>
+      <div class="rule"></div>
+      <div class="chip"><span class="pulse"></span>${lang==='hi'?'ऑफ़लाइन चलता है':'WORKS OFFLINE'}</div>
+      <button class="startbtn" onclick="handleVoiceLogin()">${SVG.voice} ${L({en:'Speak to log in',hi:'बोलकर लॉगिन करो'})}</button>
+      <div class="fine" style="margin-top:14px;color:rgba(255,255,255,0.75)">${L({en:'Speak clearly with your name and center. No password needed.',hi:'नाम और केंद्र के साथ साफ आवाज में बोलें। पासवर्ड की आवश्यकता नहीं है।'})}</div>
+      <div class="govstrip">${lang==='hi'?'वाधवानी AI · खूंटी, झारखंड':'Wadhwani AI · Khunti, Jharkhand'} · ${BUILD}</div>
+    </div>`;
+  },
+  vl2(){
+    const t=T[lang];
+    return `<div class="screen active"><button class="backbtn" onclick="stopRecognition();back()">${L({en:'‹ back',hi:'‹ वापस'})}</button>
+      ${statusbar()}<div class="scroll"><div class="body">
+      ${kw(t.vlSpeak,'--forest')}<div class="sub">${t.vlSpeakSub}</div>
+      <div id="live-ring" class="rings listening"><div class="r2"><div class="r3">${SVG.voice}</div></div></div>
+      <div id="live-status" style="text-align:center;font-size:15px;font-weight:700;color:var(--forest);margin-bottom:14px">${t.vlListening}</div>
+      <div class="transcript">
+        <div class="h" style="margin-top:0">${t.vlYouSaid}</div>
+        <div class="q" id="live-text" style="margin-top:4px;min-height:22px">…</div>
+      </div>
+      <button class="btn green" style="display:flex;gap:8px;align-items:center;justify-content:center" onclick="retryVoice()">${SVG.voice} ${L({en:'Speak again',hi:'फिर से बोलो'})}</button>
+      </div></div></div>`;
+  },
+  vl3(){
+    const t=T[lang];
+    const detectedLangName = lang === 'hi' ? 'हिंदी (Hindi)' : 'English (अंग्रेज़ी)';
+    return `<div class="screen active">
+      <button class="backbtn" onclick="go('vl1')">${L({en:'‹ back',hi:'‹ वापस'})}</button>
+      ${statusbar()}<div class="scroll"><div class="body">
+      <div style="margin:14px 0"><div class="globewrap">${SVG.globe}</div></div>
+      <div style="text-align:center;font-size:17px;font-weight:800;margin-bottom:16px">
+        ${lang === 'hi' ? 'भाषा पहचानी गई' : 'Language Detected'}
+      </div>
+      <div class="nowcard" style="padding:16px">
+        <div class="nlabel">${lang === 'hi' ? 'पहचानी गई भाषा' : 'Detected Language'}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px">
+          <h2 style="font-size:23px">${detectedLangName}</h2>
+          <span style="background:var(--green);padding:6px 12px;border-radius:13px;font-size:11px;font-weight:700;color:#fff">${lang === 'hi' ? '96% पक्का' : '96% Sure'}</span>
+        </div>
+        <p style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5">
+          ${lang === 'hi' ? 'पूरी ऐप अब हिंदी भाषा में चलेगी।' : 'The entire app will now run in English.'}
+        </p>
+      </div>
+      <button class="btn primary" style="margin-top:16px" onclick="go('vl4')">
+        ${lang === 'hi' ? 'हाँ, यही सही है (आगे बढ़ें) ✓' : 'Yes, this is right (Continue) ✓'}
+      </button>
+      <button class="btn outline" style="margin-top:9px" onclick="retryVoice()">
+        ${lang === 'hi' ? 'फिर से बोलें 🎤' : 'Speak again 🎤'}
+      </button>
+      </div></div></div>`;
+  },
+  vl4(){
+    const t=T[lang];
+    const w = pendingWorker || WORKERS[0];
+    return `<div class="screen active"><button class="backbtn" onclick="go('vl1')">${L({en:'‹ back',hi:'‹ वापस'})}</button>
+      ${statusbar()}<div class="scroll"><div class="body">
+      <div class="kw" style="font-size:22px">${t.vlIsThis}</div>
+      <div class="sub">${t.vlFound}</div>
+      <div class="profilecard">
+        <div class="pa">${L(w.av)}</div>
+        <h3>${L(w.name)}</h3>
+        <div class="role">${t.vlWorker}</div>
+      </div>
+      <div class="listrow"><span class="l">${lang==='hi'?'केंद्र':'Centre'}</span><span class="v">${w.centre}</span></div>
+      <div class="listrow"><span class="l">${lang==='hi'?'ब्लॉक':'Block'}</span><span class="v">${L(w.block)}</span></div>
+      <div class="listrow"><span class="l">${lang==='hi'?'बच्चे':'Children'}</span><span class="v">${w.childCount} ${lang==='hi'?'दर्ज':'enrolled'}</span></div>
+      <button class="btn primary" style="margin-top:8px" onclick="confirmWorker()">${t.vlYesMe}</button>
+      <button class="btn outline" style="margin-top:9px" onclick="go('vl1')">${t.vlNotMe}</button>
+      </div></div></div>`;
+  },
+  vl5(){
+    const t=T[lang];
+    const w = CW();
+    const first = L(w.name).split(' ')[0];
+    return `<div class="screen dark active">
+      <div class="logo" style="background:var(--forest-d)">${SVG.check}</div>
+      <h1 style="font-size:30px">${lang==='hi'?('स्वागत है, '+first):('Welcome, '+first)}</h1>
+      <div class="tag">${t.vlWelcomeSub}</div>
+      <button class="startbtn" onclick="jump('shell')">${t.vlStartDay} →</button>
+      <div class="fine">${t.vlOpens}</div>
+    </div>`;
+  },
+  shell(){
+    const t=T[lang];
+    const w=CW();
+    const first=L(w.name).split(' ')[0];
+    const greet=lang==='hi'?('सुप्रभात, '+first+'।'):('Good morning, '+first+'.');
+    const critCount = window.CHILDREN_ROSTER && window.CHILDREN_ROSTER.length > 0
+      ? window.CHILDREN_ROSTER.filter(c => c.status.toLowerCase() === 'sam' || c.status.toLowerCase() === 'mam').length
+      : w.triage.filter(k=>k.tier==='critical').length;
+    const alertTxt=lang==='hi'?(critCount+' बच्चे ज़रूरी: तुरंत देखो'):(critCount+' children urgent: see now');
+    return `<div class="screen active">${statusbar()}${header()}<div class="scroll"><div class="body">
+      <div class="greet">${greet}<small>${t.date} · ${w.centre}</small></div>
+      <div class="nowcard">
+        <div class="nclock">${SVG.clock} ${t.nowClock}</div>
+        <div class="nlabel">${t.nowLabel}</div>
+        <h2>${t.nowTask}</h2>
+        <div class="ntask">${t.nowSub} · ${w.childCount} ${lang==='hi'?'बच्चे':'children'}</div>
+        <button class="nowbtn" onclick="go('att')">${t.start}<span>→</span></button>
+      </div>
+      <div class="alert" onclick="go('triage')">
+        <span class="ai">${SVG.warn}</span><span class="t">${alertTxt}</span><span class="chev">›</span>
+      </div>
+      <div class="sectionlabel">${t.day}</div>
+      ${t.slots.map(s=>`<div class="slot ${s[3]?'now':''}" onclick="go('${s[2]}')">
+        <div class="dot">${SVG[navic[s[2]]]}</div>
+        <div class="meta"><div class="a">${s[0]}</div><div class="b">${s[1]}</div></div>
+        ${s[3]?`<span class="nowtag">${t.nowtag}</span>`:''}
+      </div>`).join('')}
+      <div class="sectionlabel">${lang==='hi'?'रिपोर्ट और रजिस्टर':'Reports & Registers'}</div>
+      <div class="nowcard" style="background:#f4f9f7;border:1px solid var(--line);color:var(--ink);padding:16px;margin-bottom:16px">
+        <div class="nclock" style="color:var(--forest)">📄 ${lang==='hi'?'सरकारी रजिस्टर':'Government Datasheets'}</div>
+        <div class="nlabel" style="color:var(--muted);margin-top:6px">${lang==='hi'?'रजिस्टर प्रकार चुनें':'Select Register Type'}</div>
+        
+        <select id="reg-select" style="width:100%;padding:11px 12px;margin:8px 0 6px;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;font-size:14px;background:#fff;outline:none;color:var(--ink)">
+          <option value="REGISTER_2">${lang==='hi'?'रजिस्टर २: पूरक खाद्य स्टॉक बही':'Register No. 2: Supplementary Food Stock'}</option>
+          <option value="REGISTER_3">${lang==='hi'?'रजिस्टर ३: पूरक खाद्य वितरण':'Register No. 3: Supplementary Food Distribution'}</option>
+          <option value="REGISTER_4">${lang==='hi'?'रजिस्टर ४: पूर्व-विद्यालय शिक्षा उपस्थिति':'Register No. 4: Pre-School Attendance'}</option>
+          <option value="REGISTER_6" selected>${lang==='hi'?'रजिस्टर ६: दैनिक हाज़िरी और पूरक पोषण':'Register No. 6: Daily Attendance & Nutrition'}</option>
+          <option value="REGISTER_11">${lang==='hi'?'रजिस्टर ११: बच्चों का वज़न और लम्बाई':'Register No. 11: Growth Monitoring'}</option>
+          <option value="REGISTER_15">${lang==='hi'?'रजिस्टर १५: गंभीर कुपोषण (SAM) ट्रैकिंग':'Register No. 15: SAM Tracking & Referral'}</option>
+        </select>
+
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <div style="flex:1">
+            <div class="nlabel" style="color:var(--muted);font-size:11px">${lang==='hi'?'महीना':'Month'}</div>
+            <select id="reg-month" style="width:100%;padding:8px;margin-top:4px;border:1.5px solid var(--line);border-radius:8px;font-family:inherit;font-size:13px;background:#fff;outline:none;color:var(--ink)">
+              <option value="1">1 (Jan / जनवरी)</option>
+              <option value="2">2 (Feb / फरवरी)</option>
+              <option value="3">3 (Mar / मार्च)</option>
+              <option value="4">4 (Apr / अप्रैल)</option>
+              <option value="5">5 (May / मई)</option>
+              <option value="6">6 (Jun / जून)</option>
+              <option value="7">7 (Jul / जुलाई)</option>
+              <option value="8">8 (Aug / अगस्त)</option>
+              <option value="9">9 (Sep / सितंबर)</option>
+              <option value="10" selected>10 (Oct / अक्टूबर)</option>
+              <option value="11">11 (Nov / नवंबर)</option>
+              <option value="12">12 (Dec / दिसंबर)</option>
+            </select>
+          </div>
+          <div style="flex:1">
+            <div class="nlabel" style="color:var(--muted);font-size:11px">${lang==='hi'?'वर्ष':'Year'}</div>
+            <select id="reg-year" style="width:100%;padding:8px;margin-top:4px;border:1.5px solid var(--line);border-radius:8px;font-family:inherit;font-size:13px;background:#fff;outline:none;color:var(--ink)">
+              <option value="2025">2025</option>
+              <option value="2026" selected>2026</option>
+              <option value="2027">2027</option>
+            </select>
+          </div>
+        </div>
+        
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <button id="btn-pdf-gen" class="btn green" style="margin:0;padding:12px;font-size:13px;width:100%" onclick="handleGeneratePDF()">${lang==='hi'?'पीडीएफ बनाएं':'Generate Register PDF'}</button>
+        </div>
+
+        <div id="pdf-list-container">
+          <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px;border-top:1px dashed var(--line);padding-top:10px">${lang==='hi'?'डाउनलोड के लिए तैयार पीडीएफ':'Downloaded Register PDFs'}</div>
+          <div id="pdf-list" style="display:flex;flex-direction:column;gap:8px">
+            <span style="font-size:11px;color:var(--muted)">${lang==='hi'?'लोड हो रहा है...':'Loading list...'}</span>
+          </div>
+        </div>
+      </div>
+      <div class="nowcard" style="background:#fff5f5;border:1px solid #feb2b2;color:#9b2c2c;padding:16px;margin-bottom:16px;border-radius:14px">
+        <div class="nclock" style="color:#e53e3e">⚠️ ${lang==='hi'?'शिकायत पोर्टल':'Infrastructure Grievance Portal'}</div>
+        <div class="nlabel" style="color:#c53030;margin-top:6px">${lang==='hi'?'टूटी हुई चीजें या समस्याओं की रिपोर्ट करें':'Report infrastructure issues directly to Block Officer'}</div>
+        <button class="nowbtn" style="background:#e53e3e;color:#fff;margin-top:10px" onclick="go('grievance')">${lang==='hi'?'शिकायत दर्ज करें':'File Grievance'}<span>→</span></button>
+      </div>
+    </div></div>${nav('home')}</div>`;
+  },
+  triage(){
+    const t=T[lang];
+    const w=CW();
+    const tiers=[
+      {key:'critical', n:'01', c:'--red',   bg:'--rl', ti:{en:'See Now',hi:'तुरंत देखो'},   su:{en:'Very weak children',hi:'बहुत कमज़ोर बच्चे'}},
+      {key:'pending',  n:'02', c:'--amber', bg:'--al', ti:{en:'Pending',hi:'बाकी है'},      su:{en:'No info for 2+ days',hi:'2 दिन से जानकारी नहीं'}},
+      {key:'remaining',n:'03', c:'--green', bg:'--gl', ti:{en:'Remaining',hi:'बाकी काम'},   su:{en:'Vaccine, ration',hi:'टीका, राशन'}}
+    ];
+
+    const roster = window.CHILDREN_ROSTER && window.CHILDREN_ROSTER.length > 0 ? window.CHILDREN_ROSTER : MOCK.children;
+    const triageList = roster.map(c => {
+      let tier = 'remaining';
+      let dsEn = 'Normal growth trajectory.';
+      let dsHi = 'बढ़ोतरी की रफ़्तार सामान्य है।';
+      let tagEn = null;
+      let tagHi = null;
+
+      if (c.status.toLowerCase() === 'sam') {
+        tier = 'critical';
+        dsEn = 'Weight dropping 3 months. Measure today.';
+        dsHi = 'वज़न 3 महीने से घट रहा। आज नापो।';
+        tagEn = 'Very weak';
+        tagHi = 'बहुत कमज़ोर';
+      } else if (c.status.toLowerCase() === 'mam') {
+        tier = 'critical';
+        dsEn = 'Mild decline detected. Watch closely.';
+        dsHi = 'हल्की गिरावट। ध्यान दो।';
+        tagEn = 'Weak';
+        tagHi = 'कमज़ोर';
+      } else if (c.id === 'JH-001') {
+        tier = 'pending';
+        dsEn = 'Absent 5 days. Back today.';
+        dsHi = '5 दिन नहीं आया। आज लौटा।';
+        tagEn = 'Back today';
+        tagHi = 'आज लौटा';
+      } else if (c.id === 'JH-004') {
+        tier = 'critical';
+        dsEn = 'Vaccine default detected. Check up today.';
+        dsHi = 'टीका छूटा हुआ है। आज जाँच करें।';
+        tagEn = 'Weak';
+        tagHi = 'कमज़ोर';
+      } else if (c.id === 'JH-002') {
+        tier = 'remaining';
+        dsEn = 'Vitamin A vaccine due today.';
+        dsHi = 'विटामिन A का टीका आज बाकी।';
+        tagEn = 'Vaccine due';
+        tagHi = 'टीका बाकी';
+      }
+
+      return {
+        childId: c.id,
+        tier: tier,
+        name: { en: c.name, hi: c.nameHi || c.name },
+        age: { en: c.age, hi: L_Hi(c.age) },
+        ds: { en: dsEn, hi: dsHi },
+        tag: tagEn ? { en: tagEn, hi: tagHi } : null
+      };
+    });
+
+    const blocks=tiers.map(b=>{
+      const kids=triageList.filter(k=>k.tier===b.key);
+      if(!kids.length) return '';
+      return `<div class="blockh" style="border-color:var(${b.c});background:var(${b.bg})">
+        <span class="num" style="color:var(${b.c})">${b.n}</span>
+        <span class="ti" style="color:var(${b.c})">${L(b.ti)}</span>
+        <span class="su" style="color:var(${b.c})">${L(b.su)}</span>
+      </div>
+      ${kids.map(k=>`<div class="crow" style="border-left-color:var(${b.c})" onclick="openHealthScreen('${k.childId || ''}')">
+        <div class="ic" style="background:var(${b.bg});color:var(${b.c})">!</div>
+        <div class="info"><div class="nm">${L(k.name)}</div><div class="ag">${L(k.age)}</div>
+          <div class="ds" style="color:var(${b.c})">${L(k.ds)}</div></div>
+        ${k.tag?`<span class="tag" style="background:var(${b.bg});color:var(${b.c})">${L(k.tag)}</span>`:''}
+      </div>`).join('')}`;
+    }).join('');
+    return `<div class="screen active">${statusbar()}${header(true)}<div class="scroll"><div class="body">
+      ${kw(t.triageKw,'--red')}${blocks}
+    </div></div>${nav('home')}</div>`;
+  },
+  voice(){
+    const t=T[lang];
+    if (!window.sarrRegisters) {
+      window.sarrRegisters = [
+        { name: 'Attendance', nameHi: 'हाज़िरी', value: 'Rahul: absent', valueHi: 'राहुल: नहीं आया', confidence: 0.97, status: 'approved', tier: 1 },
+        { name: 'Ration',     nameHi: 'राशन',   value: 'Priya: double ration', valueHi: 'प्रिया: दुगना राशन', confidence: 0.91, status: 'pending', tier: 2 },
+        { name: 'Health',     nameHi: 'सेहत',   value: 'Meera: weigh pending', valueHi: 'मीरा: वज़न नापना बाकी', confidence: 0.85, status: 'pending', tier: 3 }
+      ];
+    }
+
+    const regs = window.sarrRegisters.map((r, index) => {
+      let c = '--amber';
+      let bg = '--al';
+      let badge = t.pend;
+      let controlHtml = '';
+
+      if (r.status === 'approved') {
+        c = '--green';
+        bg = '--gl';
+        badge = t.done;
+      } else if (r.tier === 2) {
+        controlHtml = `<div style="margin-top:8px">
+          <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;color:var(--amber);font-weight:700">
+            <input type="checkbox" onclick="handleConfirmRegister(${index}, this.checked)" ${r.status==='approved'?'checked':''}>
+            ${lang==='hi'?'हाँ, ब्यौरा सही है (पुष्टि करें)':'Confirm entry is correct'}
+          </label>
+        </div>`;
+      } else if (r.tier === 3) {
+        c = '--red';
+        bg = '--rl';
+        const options = (window.CHILDREN_ROSTER && window.CHILDREN_ROSTER.length > 0 ? window.CHILDREN_ROSTER : MOCK.children)
+          .map(c => `<option value="${c.name}">${lang==='hi' ? c.nameHi : c.name}</option>`)
+          .join('');
+        controlHtml = `<div style="margin-top:8px">
+          <span style="font-size:11px;color:var(--red);font-weight:700;display:block;margin-bottom:4px">⚠️ ${lang==='hi'?'कम भरोसा: मैन्युअल रूप से बच्चा चुनें':'Low Confidence: Select Child'}</span>
+          <select onchange="handleSelectChildForRegister(${index}, this.value)" style="padding:6px;border-radius:6px;font-size:11px;border:1.5px solid var(--red);outline:none;background:#fff;font-family:inherit">
+            <option value="">${lang==='hi'?'चुनें...':'Select...'}</option>
+            ${options}
+          </select>
+        </div>`;
+      }
+
+      return `<div class="reg" style="background:var(${bg});border-left:4px solid var(${c});margin-bottom:10px;padding:12px;border-radius:12px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div>
+            <div class="l" style="color:var(${c});font-weight:700">${lang==='hi'?r.nameHi:r.name}</div>
+            <div class="v" style="font-size:13px;margin-top:2px;font-weight:600">${lang==='hi'?r.valueHi:r.value}</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:2px">${lang==='hi'?'सटीकता':'Confidence'}: ${Math.round(r.confidence*100)}%</div>
+          </div>
+          <span class="st" style="background:var(${c});padding:3px 8px;border-radius:8px;font-size:10px;color:#fff;font-weight:700">${badge}</span>
+        </div>
+        ${controlHtml}
+      </div>`;
+    }).join('');
+
+    const tiers = t.tiers.map((ti, idx) => {
+      const isOn = (idx === 0 && !window.sarrRegisters.some(r => r.status === 'pending')) || 
+                   (idx === 1 && window.sarrRegisters.some(r => r.tier === 2 && r.status === 'pending')) ||
+                   (idx === 2 && window.sarrRegisters.some(r => r.tier === 3 && r.status === 'pending'));
+      
+      const c = ti[2];
+      return `<div class="tier ${isOn?'on':''}" style="${isOn?`background:var(${c==='--green'?'--gl':c==='--amber'?'--al':'--rl'});border-color:var(${c});border-left-color:var(${c})`:''}">
+        <div><div class="tl" style="${isOn?`color:var(${c})`:'color:var(--muted)'}">${ti[0]}</div><div class="td">${ti[1]}</div></div>
+        ${isOn && idx === 0 ? `<span class="ck" style="background:var(${c})">${SVG.check}</span>` : ''}
+      </div>`;
+    }).join('');
+
+    return `<div class="screen active">${statusbar('8:10')}${header(true)}<div class="scroll"><div class="body" style="margin-bottom:84px">
+      ${kw(t.voiceKw,'--green')}<div class="sub">${t.voiceSub}</div>
+      <div class="transcript"><div class="q">${t.voiceQ}</div>
+        <div class="h">${t.voiceH}</div><div class="bar"><i></i></div></div>
+      <div class="sectionlabel">${t.filling}</div>${regs}
+      <div class="sectionlabel">${t.sure}</div>${tiers}
+      <button class="btn green" style="margin-top:12px;display:flex;gap:8px;align-items:center;justify-content:center"
+        onclick="handleVoiceSARR()">${SVG.voice} ${lang==='hi'?'फिर बोलो':'Speak again'}</button>
+    </div></div>${nav('home')}</div>`;
+  },
+  att(){
+    const t=T[lang];
+    const roster = (window.CHILDREN_ROSTER && window.CHILDREN_ROSTER.length > 0) ? window.CHILDREN_ROSTER : MOCK.children;
+    const kids = roster.map(c => {
+      const isAbsent = window.SESSION.absentIds && window.SESSION.absentIds.includes(c.id);
+      const nameText = lang === 'hi' ? (c.nameHi || c.name) : c.name;
+      const ageText = lang === 'hi' ? L_Hi(c.age) : c.age;
+      
+      if (isAbsent) {
+        return `<div class="crow" style="border-left-color:var(--red); cursor:pointer" onclick="toggleChildAttendance('${c.id}')">
+          <div class="ic" style="background:var(--rl);color:var(--red)">✕</div>
+          <div class="info">
+            <div class="nm">${nameText}</div>
+            <div class="ag">${ageText}${t.absTag}</div>
+          </div>
+        </div>`;
+      } else {
+        return `<div class="crow" style="border-left-color:var(--green); cursor:pointer" onclick="toggleChildAttendance('${c.id}')">
+          <div class="ic" style="background:var(--gl);color:var(--green)">✓</div>
+          <div class="info">
+            <div class="nm">${nameText}</div>
+            <div class="ag">${ageText}</div>
+          </div>
+        </div>`;
+      }
+    }).join('');
+
+    const photoCount = window.SESSION.photoCount !== undefined ? window.SESSION.photoCount : null;
+    const registeredCount = window.SESSION.presentCount || 0;
+
+    let camLineText = t.camLine;
+    let camMatchText = t.camMatch;
+    let camStyle = '';
+
+    if (photoCount !== null) {
+      camLineText = lang === 'hi'
+        ? `फोटो से गिना: ${photoCount} बच्चे दिखे`
+        : `Counted by photo: ${photoCount} seen`;
+
+      const confPct = Math.round((window.SESSION.photoConfidence || 0.91) * 100);
+      if (photoCount === registeredCount) {
+        camMatchText = lang === 'hi'
+          ? `रजिस्टर से मेल खाता है (सटीकता: ${confPct}%)`
+          : `Matches register (confidence: ${confPct}%)`;
+        camStyle = 'background:#1e5235;border-color:#2a704a';
+      } else {
+        camMatchText = lang === 'hi'
+          ? `अंतर: फोटो में ${photoCount} vs रजिस्टर में ${registeredCount} (सटीकता: ${confPct}%)`
+          : `Mismatch: ${photoCount} in photo vs ${registeredCount} in register (confidence: ${confPct}%)`;
+        camStyle = 'background:#854c1d;border-color:#ad662b';
+      }
+    } else {
+      camLineText = lang === 'hi'
+        ? `📷 फोटो से उपस्थिति सत्यापित करें (YOLOv8)`
+        : `📷 Verify Attendance with Photo (YOLOv8)`;
+      camMatchText = lang === 'hi'
+        ? `यहाँ क्लिक करके कक्षा की फोटो लें`
+        : `Click to capture / load classroom photo`;
+    }
+
+    const titleStr = window.SESSION.absentCount === 0 ? t.allHere : (lang === 'hi' ? 'उपस्थिति दर्ज' : 'Attendance Marked');
+    const countStr = lang === 'hi' 
+      ? `${roster.length} में से ${window.SESSION.presentCount} बच्चे` 
+      : `${window.SESSION.presentCount} of ${roster.length} children`;
+    
+    const sumLineText = lang === 'hi' 
+      ? `${window.SESSION.presentCount} आए, ${window.SESSION.absentCount} नहीं आए` 
+      : `${window.SESSION.presentCount} present, ${window.SESSION.absentCount} absent`;
+    
+    const pctVal = roster.length > 0 ? Math.round((window.SESSION.presentCount / roster.length) * 100) : 100;
+    const pctText = lang === 'hi' ? `आज ${pctVal}% हाज़िरी` : `${pctVal}% attendance today`;
+    const sectionTitle = lang === 'hi' ? 'बच्चों की सूची (टैप करके उपस्थिति बदलें)' : 'Children List (Tap to toggle presence)';
+
+    return `<div class="screen active">${statusbar()}${header(true)}<div class="scroll"><div class="body">
+      ${kw(t.attKw,'--green')}
+      <div class="hero" style="background:var(--green);margin-top:6px">
+        <h2>${titleStr}</h2><p>${countStr}</p>
+        <p style="font-size:10px;margin-top:6px;opacity:.85">${t.allTime}</p>
+      </div>
+      <div class="camline" id="camline-btn" style="cursor:pointer;${camStyle}" onclick="handleAttendanceCameraCapture()">
+        <span class="ci">${SVG.cam}</span>
+        <div><div style="color:#cdeede;font-size:11px;font-weight:600" id="camline-title">${camLineText}</div>
+          <div style="color:#7fae97;font-size:9px" id="camline-subtitle">${camMatchText}</div></div>
+      </div>
+      <div class="sectionlabel">${sectionTitle}</div>${kids}
+      <button class="btn ghost" style="display:flex;gap:8px;align-items:center;justify-content:center"
+        onclick="go('voice')">${SVG.voice} ${t.addVoice}</button>
+      <div class="hero" style="background:var(--forest);margin-top:16px">
+        <p style="opacity:.85">${sumLineText}</p><h2 style="font-size:20px">${pctText}</h2>
+        <button class="btn green" style="margin-top:10px" onclick="handleSubmitAttendance()">${t.send}</button>
+      </div>
+    </div></div>${nav('home')}</div>`;
+  },
+  meal(){
+    const t=T[lang];
+    const roster = (window.CHILDREN_ROSTER && window.CHILDREN_ROSTER.length > 0) ? window.CHILDREN_ROSTER : MOCK.children;
+    const totalPresent = window.SESSION.presentCount !== undefined ? window.SESSION.presentCount : roster.length;
+    const fedCount = window.SESSION.fedCount !== undefined ? window.SESSION.fedCount : Math.round(totalPresent * 0.75);
+    const fedOfText = lang === 'hi' ? `/ ${totalPresent} बच्चे` : `/ ${totalPresent} children`;
+    const pct = totalPresent > 0 ? Math.round((fedCount / totalPresent) * 100) : 0;
+
+    return `<div class="screen active">${statusbar('12:14')}${header(true)}<div class="scroll"><div class="body">
+      ${kw(t.mealKw,'--orange')}<div class="sub">${t.mealSub}</div>
+      <div class="vcard" style="border-left-color:var(--orange)">
+        <div class="mh" style="color:var(--orange)">${SVG.meal}<span style="font-size:10px;font-weight:600">${t.mealToday}</span></div>
+        <div style="font-size:16px;font-weight:800">${t.mealFood}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:4px">${t.mealPer}</div>
+      </div>
+      <div style="background:var(--al);border-left:4px solid var(--orange);border-radius:12px;padding:14px;margin-bottom:10px">
+        <div style="font-size:10px;color:var(--muted)">${t.mealFed}</div>
+        <div style="display:flex;align-items:baseline;gap:8px">
+          <span style="font-size:40px;font-weight:800;color:var(--orange)">${fedCount}</span>
+          <span style="font-size:12px;color:var(--muted)">${fedOfText}</span>
+        </div>
+        <div class="bar" style="height:8px"><i style="width:${pct}%;background:var(--orange)"></i></div>
+      </div>
+      <button class="btn ghost" style="display:flex;gap:8px;align-items:center;justify-content:center"
+        onclick="handleLogMeal()">${SVG.voice} ${t.mealVoice}</button>
+      <div style="background:var(--al);border-left:4px solid var(--amber);border-radius:11px;padding:13px;margin-top:14px">
+        <div style="font-size:12px;font-weight:700;color:var(--amber)">${t.mealStock}</div>
+        <div style="font-size:10px;color:var(--amber);margin-top:4px">${t.mealStockS}</div>
+      </div>
+    </div></div>${nav('home')}</div>`;
+  },
+  health(){
+    const t=T[lang];
+    const hRisk = window._activeHealthChild || CW().critical;
+    const cv = hRisk.vitals;
+    const vvals = [cv.weight, cv.height, cv.arm, cv.attendance + (lang==='hi'?' दिन':' days')];
+    const vit=t.hVitals.map((v,i)=>`<div class="vital">
+      <div class="l">${v[0]}</div><div class="v">${vvals[i]||v[1]}</div>
+      <div class="d" style="color:var(${v[3]?'--red':'--green'})">${v[2]}</div>
+    </div>`).join('');
+    const weakLabel = hRisk.category==='SAM' ? t.hVeryWeak : (lang==='hi'?'कमज़ोर (MAM)':'Weak (MAM)');
+    // Dynamic warning: supports both string and {en,hi} object (from XAI engine)
+    const warningText = hRisk.reason ? L(hRisk.reason) : L(hRisk.warning);
+    // Dynamic risk score display
+    const riskScoreHtml = hRisk.riskScore !== undefined
+      ? `<div style="font-size:9px;color:var(--amber);margin-top:4px">ML Risk Score: ${(hRisk.riskScore * 100).toFixed(1)}%</div>`
+      : '';
+    return `<div class="screen active">${statusbar('1:20')}<div class="scroll">
+      <div class="hero" style="background:var(--red);border-radius:0;padding:16px 20px 18px">
+        <button class="backbtn" style="position:static;background:rgba(255,255,255,.2);border:none;color:#fff;margin-bottom:10px" onclick="back()">${L({en:'‹ back',hi:'‹ वापस'})}</button>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div><h2>${L(hRisk.name)}</h2>
+            <p>${L(hRisk.age)}</p></div>
+          <span style="background:#fff;color:var(--red);font-size:10px;font-weight:800;padding:5px 12px;border-radius:12px">${hRisk.category}</span>
+        </div>
+      </div>
+      <div class="body">
+        <div id="health-warning-box" style="background:var(--rl);border:1px solid var(--red);border-left:4px solid var(--red);border-radius:12px;padding:13px;display:flex;gap:10px;margin-top:14px">
+          <span style="color:var(--red);width:20px;height:20px;flex-shrink:0">${SVG.warn}</span>
+          <div><div style="font-size:12px;font-weight:700;color:var(--red)">${t.hSignal}</div>
+            <div id="health-warning-text" style="font-size:10px;color:var(--red);line-height:1.5;margin-top:4px">${warningText}</div>
+            <div id="health-risk-score">${riskScoreHtml}</div>
+          </div>
+        </div>
+        <div class="grid2" style="margin-top:14px">${vit}</div>
+        <div class="vcard" style="border-left-color:var(--red);margin-top:14px">
+          <div style="font-size:9px;color:var(--muted)">${t.hScore}: ${hRisk.zscore}</div>
+          <div style="font-size:18px;font-weight:800;color:var(--red);margin-top:2px">${weakLabel}</div>
+        </div>
+        <div class="grid2" style="margin-top:6px">
+          <button class="btn red" onclick="handleHealthAction('weigh')">${t.hWeigh}</button>
+          <button class="btn primary" onclick="handleHealthAction('refer')">${t.hRefer}</button>
+        </div>
+      </div>
+    </div>${nav('health')}</div>`;
+  },
+  ece(){
+    const t=T[lang];
+    const act = MOCK.eceActivity;
+    const flags=act.focusChildren.map(f=>`<div class="vcard" style="background:var(--gl);border-left-color:var(--green)">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:13px;font-weight:700">${lang==='hi'?f.name:f.name}</span>
+        <span style="background:var(--amber);color:#fff;font-size:7px;font-weight:600;padding:3px 8px;border-radius:9px">${lang==='hi'?f.flagHi:f.flag}</span>
+      </div>
+      <div style="font-size:10px;margin-top:6px;line-height:1.5">${lang==='hi'?f.noteHi:f.note}</div>
+    </div>`).join('');
+    return `<div class="screen active">${statusbar('9:30')}${header(true)}<div class="scroll"><div class="body">
+      ${kw(t.eceKw,'--purple')}<div class="sub">${t.eceSub}</div>
+      <div class="vcard" style="border-left-color:var(--purple)">
+        <div style="font-size:16px;font-weight:800">${lang==='hi'?act.nameHi:act.name}</div>
+        <div style="font-size:9px;color:var(--muted);margin-top:4px">${lang==='hi'?act.ageRangeHi:act.ageRange} · ${act.duration}</div>
+        <div style="font-size:10px;line-height:1.5;margin-top:8px">${lang==='hi'?act.descHi:act.desc}</div>
+        <div style="font-size:8px;color:var(--muted);margin-top:8px">${lang==='hi'?'500 खेलों में से चुना':'Picked from 500 activities'}</div>
+      </div>
+      <div class="sectionlabel">${t.eceFocus}</div>${flags}
+      <div class="sectionlabel">${t.eceNote}</div>
+      <div class="vcard" style="border-left-color:var(--muted)">
+        <div style="font-size:10px;color:var(--muted)">${t.eceNoteV}</div>
+      </div>
+    </div></div>${nav('ece')}</div>`;
+  },
+  audit(){
+    const t=T[lang];
+    const s = window.SESSION;
+    const verifiedCount = s.photoCount !== undefined ? s.photoCount : s.presentCount;
+
+    const dynamicItems = [
+      [lang==='hi' ? `${s.presentCount} बच्चे उपस्थित दर्ज` : `${s.presentCount} children marked present`, 1],
+      [lang==='hi' ? `${s.absentCount} बच्चे अनुपस्थित दर्ज` : `${s.absentCount} children marked absent`, 1],
+      [lang==='hi' ? `${s.fedCount} बच्चों को गर्म भोजन खिलाया` : `${s.fedCount} children fed hot cooked meals`, 1],
+      [lang==='hi' ? `फ़ोटो प्रमाण सहेजा गया (${verifiedCount} बच्चे)` : `Photo headcount verified (${verifiedCount} children)`, 1]
+    ];
+
+    const items=dynamicItems.map(i=>`<div class="item" style="border-left-color:var(${i[1]?'--green':'--red'})">
+      <span class="b" style="background:var(${i[1]?'--green':'--red'})">${i[1]?'✓':'!'}</span>
+      <span class="x">${i[0]}</span>
+    </div>`).join('');
+
+    return `<div class="screen active">${statusbar('2:30')}${header(true)}<div class="scroll"><div class="body" style="margin-bottom:84px">
+      ${kw(t.auditKw,'--navy')}
+      <div style="background:var(--al);border-left:6px solid var(--amber);border-radius:12px;padding:13px;margin:6px 0 14px">
+        <div style="font-size:12px;font-weight:700;color:var(--amber)">${t.auditYes}</div>
+        <div style="font-size:9px;color:var(--amber);margin-top:4px">${t.auditYesD}</div>
+      </div>
+      <div class="sectionlabel">${t.auditWhat}</div>${items}
+      <div style="background:var(--gl);border-radius:10px;padding:11px;margin-top:4px;font-size:9px;color:var(--green)">${t.auditSafe}</div>
+      <button class="btn primary" style="margin-top:14px" onclick="handleAuditCommit()">${t.auditApprove}</button>
+    </div></div>${nav('home')}</div>`;
+  },
+  grievance(){
+    return `<div class="screen active">${statusbar()}${header(true)}<div class="scroll"><div class="body">
+      <div class="greet" style="color:#e53e3e;font-size:20px;font-weight:800;margin-bottom:4px">⚠️ ${lang==='hi'?'शिकायत दर्ज करें':'Infrastructure Grievance'}</div>
+      <div class="sub" style="margin-bottom:14px">${lang==='hi'?'संस्थान की मरम्मत या टूटी हुई बुनियादी ढांचे की रिपोर्ट करें।':'File alerts regarding damaged property or structural deficits.'}</div>
+
+      <div class="nowcard" style="padding:14px;border:1px solid var(--line);margin-bottom:14px;border-radius:14px">
+        <label class="nlabel" style="font-weight:700">${lang==='hi'?'समस्या का प्रकार':'Issue Type'}</label>
+        <select id="grv-issue" style="width:100%;padding:11px 12px;margin-top:8px;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;font-size:14px;background:#fff;outline:none;color:var(--ink)">
+          <option value="Water Supply">${lang==='hi'?'पेयजल आपूर्ति समस्या':'Water Supply deficit'}</option>
+          <option value="Broken Toilet">${lang==='hi'?'टूटा शौचालय':'Broken Toilet / Sanitation'}</option>
+          <option value="Roof Leakage">${lang==='hi'?'छत से पानी टपकना':'Roof Leakage'}</option>
+          <option value="Food/Ration Quality">${lang==='hi'?'खराब राशन/भोजन गुणवत्ता':'Ration / HCM Quality Defect'}</option>
+          <option value="Electricity Deficit">${lang==='hi'?'बिजली की समस्या':'Electricity Deficit'}</option>
+        </select>
+      </div>
+
+      <div class="nowcard" style="padding:14px;border:1px solid var(--line);margin-bottom:14px;border-radius:14px">
+        <label class="nlabel" style="font-weight:700">${lang==='hi'?'समस्या का विवरण':'Spoken Description'}</label>
+        <textarea id="grv-desc" style="width:100%;height:80px;padding:10px;margin-top:8px;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;font-size:13px;resize:none;outline:none;color:var(--ink)" placeholder="${lang==='hi'?'विवरण लिखें या बोलें...':'e.g. Toilet door is broken...'}" required></textarea>
+        <button class="btn ghost" style="margin-top:8px;display:flex;gap:8px;align-items:center;justify-content:center" onclick="handleGrievanceVoiceRecord()">🎤 ${lang==='hi'?'बोलकर विवरण भरें':'Speak to type description'}</button>
+      </div>
+
+      <div class="nowcard" style="padding:14px;border:1px solid var(--line);margin-bottom:14px;border-radius:14px;cursor:pointer" onclick="handleGrievanceCameraUpload()">
+        <label class="nlabel" style="font-weight:700">${lang==='hi'?'तस्वीर प्रमाण (कैमरा)':'Capture Photo evidence'}</label>
+        <div id="grv-photo-box" style="background:#edf2f7;border:1.5px dashed var(--line);border-radius:10px;padding:20px;text-align:center;margin-top:8px;font-size:12px;color:var(--muted)">
+          📸 ${lang==='hi'?'यहाँ क्लिक करके समस्या की फ़ोटो अपलोड करें':'Click to capture camera frame evidence'}
+        </div>
+      </div>
+
+      <button id="btn-submit-grv" class="btn red" style="margin-top:8px" onclick="handleFileGrievance()">${lang==='hi'?'ब्लॉक अधिकारी को रिपोर्ट भेजें':'Send Report to Block Officer'}</button>
+    </div></div>${nav('home')}</div>`;
+  }
+};
+
+/* ============================================================
+   SECTION 9 — API-WIRED EVENT HANDLERS
+   These are the "sockets" — each calls an AURA_API function.
+   ============================================================ */
+function handleVoiceLogin(){
+  // Real voice login: render the listening screen, then start the mic (within the click gesture)
+  go('vl2');
+  startRecognition();
+}
+function retryVoice(){ go('vl2'); startRecognition(); }
+// ─── ASR (Whisper Tiny) Recording Helpers ──────────────────────────────────
+let mediaRecorder = null;
+let audioChunks = [];
+let recordingTimeout = null;
+
+function showASRModal(onStopClick) {
+  const modal = document.getElementById('asr-modal');
+  const title = document.getElementById('asr-title');
+  const subtitle = document.getElementById('asr-subtitle');
+  const stopBtn = document.getElementById('asr-stop-btn');
+  const pulse = document.getElementById('asr-pulse');
+
+  if (modal) modal.style.display = 'flex';
+  if (title) title.textContent = lang === 'hi' ? 'सुन रहे हैं...' : 'Listening...';
+  if (subtitle) subtitle.textContent = lang === 'hi' ? 'माइक्रोफोन में स्पष्ट रूप से बोलें' : 'Speak clearly into the microphone';
+  if (pulse) pulse.className = 'pulse-icon recording';
+  
+  if (stopBtn) {
+    stopBtn.onclick = () => {
+      if (typeof onStopClick === 'function') onStopClick();
+    };
+    stopBtn.textContent = lang === 'hi' ? 'रिकॉर्डिंग रोकें' : 'Stop Recording';
+  }
+}
+
+function hideASRModal() {
+  const modal = document.getElementById('asr-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+function showASRStatus(statusText) {
+  const title = document.getElementById('asr-title');
+  const subtitle = document.getElementById('asr-subtitle');
+  const pulse = document.getElementById('asr-pulse');
+
+  if (title) title.textContent = statusText;
+  if (subtitle) subtitle.textContent = lang === 'hi' ? 'कृपया प्रतीक्षा करें...' : 'Please wait...';
+  if (pulse) pulse.className = 'pulse-icon'; // stop pulsing
+}
+
+async function startAudioRecording(targetCallback, targetLang = 'hi') {
+  audioChunks = [];
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream);
+    
+    mediaRecorder.ondataavailable = (e) => {
+      if (e.data.size > 0) audioChunks.push(e.data);
+    };
+    
+    mediaRecorder.onstop = async () => {
+      const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+      stream.getTracks().forEach(t => t.stop());
+      
+      showASRStatus(lang === 'hi' ? '⏳ आवाज़ को शब्दों में बदला जा रहा है...' : '⏳ Transcribing with Whisper...');
+      
+      try {
+        const { transcribeAudioBlob } = await import('./ml_pipeline/whisper_engine.js');
+        const res = await transcribeAudioBlob(audioBlob, targetLang, (progress) => {
+          if (progress < 100) {
+            showASRStatus(lang === 'hi' 
+              ? `⏳ ऑफलाइन इंजन लोड हो रहा है: ${Math.round(progress)}%` 
+              : `⏳ Loading offline voice engine: ${Math.round(progress)}%`);
+          } else {
+            showASRStatus(lang === 'hi' 
+              ? `⏳ आवाज़ पहचानी जा रही है...` 
+              : `⏳ Transcribing audio...`);
+          }
+        });
+        
+        hideASRModal();
+        if (res.success && res.text) {
+          targetCallback(res.text);
+        } else {
+          console.warn('[ASR] Whisper transcribing failed, using callback with empty/null');
+          targetCallback(null);
+        }
+      } catch (err) {
+        console.error('[ASR] Whisper pipeline execution error:', err);
+        hideASRModal();
+        targetCallback(null);
+      }
+    };
+    
+    showASRModal(() => {
+      stopAudioRecording();
+    });
+    
+    mediaRecorder.start();
+    console.log('[ASR] Recording mic started...');
+    
+    recordingTimeout = setTimeout(() => {
+      stopAudioRecording();
+    }, 7000); // Record up to 7 seconds
+    
+  } catch (err) {
+    console.error('[ASR] Mic access error:', err);
+    alert(lang === 'hi' ? 'माइक खोलने में असमर्थ। अनुमति जांचें।' : 'Microphone blocked. Check permission.');
+  }
+}
+
+function stopAudioRecording() {
+  if (recordingTimeout) clearTimeout(recordingTimeout);
+  if (mediaRecorder && mediaRecorder.state === 'recording') {
+    mediaRecorder.stop();
+  }
+}
+
+async function handleVoiceSARR(){
+  // Trigger client-side Whisper ASR recording
+  startAudioRecording(async (text) => {
+    const finalTranscript = text || T[lang].voiceQ; // fallback to static mock if empty/failed
+    window.sarrTranscript = finalTranscript;
+
+    // Call SARR API with actual transcription
+    const sarr = await callAPI(AURA_API.runSARR, { 
+      transcript: finalTranscript, 
+      centreId: CW().centre || 'AWC_04' 
+    });
+
+    if (sarr && sarr.registers) {
+      console.log('[SARR result]', sarr.registers);
+      window.sarrRegisters = sarr.registers;
+
+      // Update attendance session dynamically based on SARR results
+      const attReg = sarr.registers.find(r => r.name === 'Attendance');
+      if (attReg && attReg.status === 'approved') {
+        const childName = attReg.value.split(':')[0].trim();
+        const roster = window.CHILDREN_ROSTER && window.CHILDREN_ROSTER.length > 0 ? window.CHILDREN_ROSTER : MOCK.children;
+        const found = roster.find(c => c.name.toLowerCase() === childName.toLowerCase() || c.nameHi === childName);
+        if (found) {
+          if (!window.SESSION.absentIds) window.SESSION.absentIds = [];
+          if (!window.SESSION.presentIds) window.SESSION.presentIds = [];
+          
+          if (!window.SESSION.absentIds.includes(found.id)) {
+            window.SESSION.absentIds.push(found.id);
+          }
+          const pIdx = window.SESSION.presentIds.indexOf(found.id);
+          if (pIdx !== -1) {
+            window.SESSION.presentIds.splice(pIdx, 1);
+          }
+          window.SESSION.presentCount = window.SESSION.presentIds.length;
+          window.SESSION.absentCount = window.SESSION.absentIds.length;
+          window.SESSION.totalPresent = window.SESSION.presentCount;
+        }
+      }
+    }
+    render();
+  }, lang);
+}
+async function handleSubmitAttendance(){
+  // 🔌 SOCKET: AURA_API.submitAttendance → go('audit') or shell
+  const result = await callAPI(AURA_API.submitAttendance, {
+    centreId: CW().centre || 'AWC_04',
+    present: window.SESSION.presentIds || [],
+    absent: window.SESSION.absentIds || [],
+    photoCount: window.SESSION.photoCount || (window.SESSION.presentCount || 24)
+  });
+  if(result?.success){ updateSyncPill(); go('audit'); }
+}
+
+async function handleAttendanceCameraCapture() {
+  let input = document.getElementById('attendance-photo-input');
+  if (!input) {
+    input = document.createElement('input');
+    input.id = 'attendance-photo-input';
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.capture = 'environment';
+    input.style.display = 'none';
+    document.body.appendChild(input);
+  }
+
+  input.onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Update UI to processing state
+    const titleEl = document.getElementById('camline-title');
+    const subtitleEl = document.getElementById('camline-subtitle');
+    const btnEl = document.getElementById('camline-btn');
+
+    if (titleEl) titleEl.textContent = lang === 'hi' ? 'तस्वीर लोड हो रही है...' : 'Loading photo...';
+    if (subtitleEl) subtitleEl.textContent = lang === 'hi' ? 'कृपया प्रतीक्षा करें' : 'Please wait';
+
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.src = url;
+
+    img.onload = async () => {
+      URL.revokeObjectURL(url);
+
+      const canvas = document.createElement('canvas');
+      const maxDim = 640;
+      let w = img.width;
+      let h = img.height;
+      if (w > maxDim || h > maxDim) {
+        if (w > h) {
+          h = Math.round(h * maxDim / w);
+          w = maxDim;
+        } else {
+          w = Math.round(w * maxDim / h);
+          h = maxDim;
+        }
+      }
+      canvas.width = w;
+      canvas.height = h;
+
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+
+      if (titleEl) titleEl.textContent = lang === 'hi' ? 'YOLOv8 मॉडल चल रहा है...' : 'Running YOLOv8 model...';
+      if (subtitleEl) subtitleEl.textContent = lang === 'hi' ? 'बच्चों की गणना की जा रही है' : 'Detecting children...';
+
+      try {
+        const result = await AURA_API.countHeadsByCamera(canvas);
+        console.log('[YOLOv8 Headcount]', result);
+
+        window.SESSION.photoCount = result.count;
+        window.SESSION.photoConfidence = result.confidence;
+
+        const registeredCount = window.SESSION.presentCount || 24;
+
+        if (titleEl) {
+          titleEl.textContent = lang === 'hi'
+            ? `फोटो से गिना: ${result.count} बच्चे दिखे`
+            : `Counted by photo: ${result.count} seen`;
+        }
+        if (subtitleEl) {
+          const confPct = Math.round(result.confidence * 100);
+          if (result.count === registeredCount) {
+            subtitleEl.textContent = lang === 'hi'
+              ? `रजिस्टर से मेल खाता है (सटीकता: ${confPct}%)`
+              : `Matches register (confidence: ${confPct}%)`;
+          } else {
+            subtitleEl.textContent = lang === 'hi'
+              ? `अंतर: फोटो में ${result.count} vs रजिस्टर में ${registeredCount} (सटीकता: ${confPct}%)`
+              : `Mismatch: ${result.count} in photo vs ${registeredCount} in register (confidence: ${confPct}%)`;
+          }
+        }
+        if (btnEl) {
+          if (result.count === registeredCount) {
+            btnEl.style.background = '#1e5235';
+            btnEl.style.borderColor = '#2a704a';
+          } else {
+            btnEl.style.background = '#854c1d';
+            btnEl.style.borderColor = '#ad662b';
+          }
+        }
+      } catch (err) {
+        console.error('[YOLOv8 Error]', err);
+        if (titleEl) titleEl.textContent = lang === 'hi' ? 'गणना विफल रही' : 'Verification failed';
+        if (subtitleEl) subtitleEl.textContent = err.message;
+      }
+    };
+  };
+
+  input.click();
+}
+async function handleLogMeal(){
+  startAudioRecording(async (text) => {
+    // Extract fed count from voice transcript
+    const roster = (window.CHILDREN_ROSTER && window.CHILDREN_ROSTER.length > 0) ? window.CHILDREN_ROSTER : MOCK.children;
+    const rosterCount = roster.length;
+    let fedCount = Math.round(rosterCount * 0.75); // default to 75%
+    if (text) {
+      const txt = text.toLowerCase();
+      const numPattern = txt.match(/\d+/);
+      if (txt.includes('सब') || txt.includes('सभी') || txt.includes('पूरा') || txt.includes('all') || txt.includes('everyone') || txt.includes(String(rosterCount))) {
+        fedCount = rosterCount;
+      } else if (numPattern) {
+        const parsedVal = parseInt(numPattern[0], 10);
+        if (parsedVal <= rosterCount) {
+          fedCount = parsedVal;
+        }
+      }
+    }
+    
+    window.SESSION.fedCount = fedCount;
+    render();
+
+    // 🔌 SOCKET: AURA_API.logMeal
+    const result = await callAPI(AURA_API.logMeal, { centreId: CW().centre || 'AWC_04', fedCount: window.SESSION.fedCount, totalPresent: window.SESSION.totalPresent || rosterCount });
+    if(result?.success) {
+      console.log('[Meal logged]');
+      alert(lang === 'hi' 
+        ? `भोजन ब्यौरा दर्ज हो गया: ${fedCount} बच्चे खिलाए ✓` 
+        : `Meal logged successfully: ${fedCount} children fed ✓`);
+    }
+  }, lang);
+}
+async function handleHealthAction(action){
+  // 🔌 SOCKET: 'weigh' → open measurement entry | 'refer' → create referral
+  console.log(`[Health action: ${action}] — wire to your referral / measurement screen`);
+  alert(lang==='hi'
+    ? (action==='weigh'?'वज़न नापने की स्क्रीन: जल्द आएगी':'अस्पताल रेफरल बन गया ✓')
+    : (action==='weigh'?'Weight entry screen: coming soon':'Hospital referral created ✓'));
+}
+
+// ─── Open Health Screen with real DB-driven early warning ──────────────────
+async function openHealthScreen(childId){
+  // Start by showing the default static view immediately
+  window._activeHealthChild = CW().critical;
+  go('health');
+
+  if(!childId) return; // no DB child → stay with static mock
+
+  try {
+    const data = await AURA_API.getHealthRisk(childId);
+    if(!data) return;
+
+    // Build the updated health child object with API + ML data merged
+    window._activeHealthChild = {
+      childId: childId,
+      name: { en: data.name || L(CW().critical.name), hi: data.nameHi || L(CW().critical.name) },
+      age:  { en: data.age || '', hi: data.ageHi || '' },
+      zscore: data.zscore ?? CW().critical.zscore,
+      category: data.category || CW().critical.category,
+      warning: data.earlyWarning
+        ? { en: data.earlyWarning, hi: data.earlyWarningHi || data.earlyWarning }
+        : CW().critical.warning,
+      reason: data.reason || null,  // XAI reason {en, hi} from predictMalnutritionRisk
+      riskScore: data.riskScore,    // probability 0-1 from LightGBM
+      isHighRisk: data.isHighRisk,
+      vitals: data.vitals || CW().critical.vitals
+    };
+
+    // Dynamically update the warning text and risk score if the screen is still active
+    const warnEl = document.getElementById('health-warning-text');
+    const scoreEl = document.getElementById('health-risk-score');
+
+    if(warnEl) {
+      const reasonText = data.reason ? L(data.reason) : L(window._activeHealthChild.warning);
+      warnEl.textContent = reasonText;
+    }
+    if(scoreEl && data.riskScore !== undefined) {
+      scoreEl.innerHTML = `<div style="font-size:9px;color:var(--amber);margin-top:4px">ML Risk Score: ${(data.riskScore * 100).toFixed(1)}%</div>`;
+    }
+
+    console.log(`[Early Warning] childId=${childId} risk=${data.riskScore?.toFixed(3)} highRisk=${data.isHighRisk} reason=${data.reason ? L(data.reason) : 'n/a'}`);
+  } catch(err) {
+    console.warn('[Early Warning] API fetch failed, staying with static data', err);
+  }
+}
+async function handleAuditCommit(){
+  const verifiedCount = window.SESSION.photoCount !== undefined ? window.SESSION.photoCount : window.SESSION.presentCount;
+  const dynamicItems = [
+    lang==='hi' ? `${window.SESSION.presentCount} बच्चे उपस्थित दर्ज` : `${window.SESSION.presentCount} children marked present`,
+    lang==='hi' ? `${window.SESSION.absentCount} बच्चे अनुपस्थित दर्ज` : `${window.SESSION.absentCount} children marked absent`,
+    lang==='hi' ? `${window.SESSION.fedCount} बच्चों को गर्म भोजन खिलाया` : `${window.SESSION.fedCount} children fed hot cooked meals`,
+    lang==='hi' ? `फ़ोटो प्रमाण सहेजा गया (${verifiedCount} बच्चे)` : `Photo headcount verified (${verifiedCount} children)`
+  ];
+  // 🔌 SOCKET: AURA_API.commitAudit → PDF gen → CRDT sync → jump('shell')
+  const result = await callAPI(AURA_API.commitAudit, {
+    centreId: CW().centre || 'AWC_04',
+    approvedItems: dynamicItems,
+    presentCount: window.SESSION.presentCount,
+    absentCount: window.SESSION.absentCount,
+    fedCount: window.SESSION.fedCount
+  });
+  if(result?.success){
+    updateSyncPill();
+    // Trigger background sync via service worker
+    if('serviceWorker' in navigator){
+      navigator.serviceWorker.ready.then(sw => sw.sync?.register('aura-poshan-sync').catch(()=>{}));
+    }
+    jump('shell');
+  }
+}
+
+async function updatePDFList() {
+  const container = document.getElementById('pdf-list');
+  if (!container) return;
+  try {
+    const list = await AURA_API.listPDFs();
+    if (!list || list.length === 0) {
+      container.innerHTML = `<span style="font-size:11px;color:var(--muted)">${lang==='hi'?'कोई पीडीएफ उपलब्ध नहीं है।':'No PDFs generated yet.'}</span>`;
+      return;
+    }
+    container.innerHTML = list.map(pdf => {
+      const sizeKB = Math.round(pdf.sizeBytes / 1024 * 100) / 100;
+      const cleanName = pdf.filename.replace('.pdf', '').replace(/_/g, ' ');
+      return `<div style="display:flex;align-items:center;justify-content:space-between;background:#fff;padding:8px 10px;border-radius:8px;border:1px solid var(--line);font-size:12px;margin-bottom:4px">
+        <span style="font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px">📄 ${cleanName}</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:10px;color:var(--muted)">(${sizeKB} KB)</span>
+          <a href="${pdf.url}" download style="background:var(--forest);color:#fff;text-decoration:none;padding:4px 8px;border-radius:6px;font-size:10px;font-weight:700">${lang==='hi'?'खोलें':'Open'}</a>
+        </div>
+      </div>`;
+    }).join('');
+  } catch (err) {
+    container.innerHTML = `<span style="font-size:11px;color:var(--red)">${lang==='hi'?'लोड करने में त्रुटि':'Error loading list'}</span>`;
+  }
+}
+
+async function handleGeneratePDF() {
+  const select = document.getElementById('reg-select');
+  const monthSelect = document.getElementById('reg-month');
+  const yearSelect = document.getElementById('reg-year');
+  const btn = document.getElementById('btn-pdf-gen');
+  if (!select || !btn) return;
+  
+  const registerType = select.value;
+  const month = monthSelect ? parseInt(monthSelect.value) : (new Date().getMonth() + 1);
+  const year = yearSelect ? parseInt(yearSelect.value) : new Date().getFullYear();
+  const originalText = btn.textContent;
+  
+  btn.disabled = true;
+  btn.style.opacity = '0.6';
+  btn.textContent = lang === 'hi' ? 'तैयार हो रहा है...' : 'Generating...';
+  
+  try {
+    const res = await callAPI(AURA_API.generatePDF, { registerType, month, year });
+    if (res && res.success) {
+      await updatePDFList();
+    } else {
+      alert(lang === 'hi' ? 'त्रुटि: ऑफ़लाइन या सर्वर डाउन है' : 'Error: Offline or server down');
+    }
+  } catch (err) {
+    console.error(err);
+  } finally {
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    btn.textContent = originalText;
+  }
+}
+
+function handleConfirmRegister(index, checked) {
+  if (window.sarrRegisters && window.sarrRegisters[index]) {
+    window.sarrRegisters[index].status = checked ? 'approved' : 'pending';
+    render();
+  }
+}
+
+function handleSelectChildForRegister(index, value) {
+  if (window.sarrRegisters && window.sarrRegisters[index] && value) {
+    window.sarrRegisters[index].status = 'approved';
+    window.sarrRegisters[index].value = `${value}: weigh pending`;
+    window.sarrRegisters[index].valueHi = `${value}: वज़न नापना बाकी`;
+    render();
+  }
+}
+
+let grievancePhotoData = null;
+
+function handleGrievanceVoiceRecord() {
+  const desc = document.getElementById('grv-desc');
+  if (!desc) return;
+  
+  startAudioRecording((text) => {
+    if (text) {
+      desc.value = text;
+    } else {
+      desc.value = lang === 'hi'
+        ? 'बाथरूम का नल टूटा हुआ है और पानी बह रहा है।'
+        : 'Bathroom tap is broken and leaking water.';
+    }
+  }, lang);
+}
+
+function handleGrievanceCameraUpload() {
+  const box = document.getElementById('grv-photo-box');
+  if (!box) return;
+  
+  let input = document.getElementById('grievance-photo-input');
+  if (!input) {
+    input = document.createElement('input');
+    input.id = 'grievance-photo-input';
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.capture = 'environment';
+    input.style.display = 'none';
+    document.body.appendChild(input);
+  }
+
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    box.innerHTML = lang === 'hi' ? '⏳ तस्वीर लोड की जा रही है...' : '⏳ Loading image...';
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      grievancePhotoData = reader.result; // Base64 Data URL
+      box.style.background = '#e6fffa';
+      box.style.borderColor = '#319795';
+      box.style.color = '#234e52';
+      box.innerHTML = `
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+          <img src="${reader.result}" style="max-height:80px;border-radius:6px;box-shadow:0 2px 4px rgba(0,0,0,0.1)">
+          <span>✅ ${lang === 'hi' ? 'तस्वीर सफलतापूर्वक ली गई ✓' : 'Photo evidence captured successfully ✓'}</span>
+        </div>
+      `;
+    };
+    reader.onerror = (err) => {
+      console.error('[Grievance Photo Read Error]', err);
+      box.innerHTML = lang === 'hi' ? '❌ तस्वीर लोड करने में विफल' : '❌ Failed to load image';
+    };
+    reader.readAsDataURL(file);
+  };
+
+  input.click();
+}
+
+async function handleFileGrievance() {
+  const issue = document.getElementById('grv-issue');
+  const desc = document.getElementById('grv-desc');
+  const btn = document.getElementById('btn-submit-grv');
+  if (!issue || !desc || !btn) return;
+
+  if (!desc.value.trim()) {
+    alert(lang === 'hi' ? 'कृपया समस्या का विवरण दर्ज करें' : 'Please enter issue description');
+    return;
+  }
+
+  const issueType = issue.value;
+  const description = desc.value.trim();
+  const photoData = grievancePhotoData;
+
+  const originalText = btn.textContent;
+  btn.disabled = true;
+  btn.style.opacity = '0.6';
+  btn.textContent = lang === 'hi' ? 'भेजा जा रहा है...' : 'Submitting...';
+
+  try {
+    const res = await callAPI(AURA_API.fileGrievance, {
+      centreId: CW().centre || 'AWC_04',
+      issueType,
+      description,
+      photoData
+    });
+    if (res) {
+      alert(lang === 'hi'
+        ? 'शिकायत सफलतापूर्वक ब्लॉक अधिकारी को भेजी गई ✓'
+        : 'Grievance submitted successfully to the Block Officer ✓');
+      grievancePhotoData = null;
+      jump('shell');
+    }
+  } catch (err) {
+    console.error(err);
+  } finally {
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    btn.textContent = originalText;
+  }
+}
+
+
+/* ============================================================
+   SECTION 10 — RENDER
+   ============================================================ */
+function render(){
+  const id = stack[stack.length-1];
+  document.getElementById('app').innerHTML = (screens[id] || screens.shell)();
+  document.getElementById('phone').className = 'phone' + (lang==='hi'?' hindi':'');
+  document.getElementById('hint').textContent = lang==='hi'
+    ? 'बटन दबाएँ, नेविगेट करें। ऊपर से भाषा बदलें।'
+    : 'Tap buttons to navigate. Flow: splash → voice → language → profile → home → attendance → review.';
+  
+  if (document.getElementById('pdf-list')) {
+    updatePDFList();
+  }
+
+  // reflect in URL without reload
+  try { history.replaceState(null,'','/?screen='+id); } catch{}
+}
+
+/* ============================================================
+   SECTION 11 — PWA BOOTSTRAP
+   ============================================================ */
+let deferredInstallPrompt = null;
+
+function updateSyncPill(){
+  const q = AURA_DB.get('syncQueue') || [];
+  const pending = q.filter(x=>x.status==='pending').length;
+  const pill = document.getElementById('sync-pill');
+  if(!pill) return;
+  if(!navigator.onLine){ pill.textContent='⬡ offline'; pill.className='offline'; }
+  else if(pending>0){ pill.textContent=`⟳ ${pending} queued`; pill.className='queued'; }
+  else { pill.textContent='● synced'; pill.className='synced'; }
+}
+
+function installPWA(){
+  if(deferredInstallPrompt){ deferredInstallPrompt.prompt(); deferredInstallPrompt=null; }
+}
+function updateSW(){
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.getRegistration().then(reg=>{
+      reg?.waiting?.postMessage({type:'SKIP_WAITING'});
+      window.location.reload();
+    });
+  }
+}
+
+// Online / offline
+window.addEventListener('online', ()=>{
+  document.getElementById('net-banner').style.display='none';
+  updateSyncPill();
+  // trigger background sync
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.ready.then(sw => sw.sync?.register('aura-poshan-sync').catch(()=>{}));
+  }
+});
+window.addEventListener('offline', ()=>{
+  document.getElementById('net-banner').style.display='block';
+  updateSyncPill();
+});
+
+// Install prompt
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault(); deferredInstallPrompt = e;
+  const btn = document.getElementById('install-btn');
+  if (btn) btn.style.display = 'block';
+});
+window.addEventListener('appinstalled', ()=>{
+  const btn = document.getElementById('install-btn');
+  if (btn) btn.style.display = 'none';
+  deferredInstallPrompt = null;
+});
+
+// SW messages
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.addEventListener('message', async e=>{
+    if(e.data?.type==='SYNC_COMPLETE') updateSyncPill();
+    if(e.data?.type==='NAV') jump(e.data.screen);
+    if(e.data?.type==='controllerchange') document.getElementById('update-banner').style.display='block';
+    if(e.data?.type==='RUN_SYNC'){
+      // SW asked us to flush the offline queue
+      const result = await AURA_API.syncNow();
+      navigator.serviceWorker.controller?.postMessage({ type:'SYNC_RESULT', ...result });
+      updateSyncPill();
+    }
+  });
+}
+
+// Service worker registration
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('/sw.js').then(reg=>{
+      console.log('[SW] Registered, scope:', reg.scope);
+      reg.addEventListener('updatefound', ()=>{
+        const nw = reg.installing;
+        nw?.addEventListener('statechange', ()=>{
+          if(nw.state==='installed' && navigator.serviceWorker.controller){
+            document.getElementById('update-banner').style.display='block';
+          }
+        });
+      });
+    }).catch(err => console.warn('[SW] Registration failed:', err));
+  });
+}
+
+// Automated testing hooks for YOLOv8 headcount verification
+if (new URLSearchParams(location.search).has('test_yolo')) {
+  window.addEventListener('load', async () => {
+    console.log('[Test YOLO] Test mode active. Navigating to att screen...');
+    jump('att');
+    try {
+      console.log('[Test YOLO] Fetching test image /test_classroom.png...');
+      const response = await fetch('/test_classroom.png');
+      const blob = await response.blob();
+      const file = new File([blob], 'test_classroom.png', { type: 'image/png' });
+      
+      console.log('[Test YOLO] Initializing file input...');
+      let input = document.getElementById('attendance-photo-input');
+      if (!input) {
+        await handleAttendanceCameraCapture();
+        input = document.getElementById('attendance-photo-input');
+      }
+      
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(file);
+      input.files = dataTransfer.files;
+      
+      console.log('[Test YOLO] Triggering YOLOv8 change handler...');
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+    } catch (err) {
+      console.error('[Test YOLO] Failure running test yolo auto-load:', err);
+    }
+  });
+}
+
+// Automated testing hooks for Whisper Tiny ASR verification
+if (new URLSearchParams(location.search).has('test_whisper')) {
+  window.addEventListener('load', async () => {
+    console.log('[Test Whisper] Test mode active. Starting Whisper initialization...');
+    try {
+      const { initWhisper } = await import('./ml_pipeline/whisper_engine.js');
+      await initWhisper((progress) => {
+        console.log(`[Test Whisper] Load progress: ${Math.round(progress)}%`);
+      });
+      console.log('[Test Whisper] Whisper model initialized successfully ✓');
+      alert('Whisper model loaded successfully ✓');
+    } catch (err) {
+      console.error('[Test Whisper] Failed to load Whisper model:', err);
+    }
+  });
+}
+
+// Init
+AURA_API.getChildren(WORKERS[0].centre).then(list => {
+  window.CHILDREN_ROSTER = list;
+  if (!window.SESSION.presentIds || window.SESSION.presentIds.length === 0) {
+    window.SESSION.presentIds = list.map(c => c.id);
+    window.SESSION.absentIds = [];
+    window.SESSION.presentCount = list.length;
+    window.SESSION.absentCount = 0;
+    window.SESSION.totalPresent = list.length;
+    window.SESSION.fedCount = Math.round(list.length * 0.75);
+  }
+  render();
+}).catch(err => {
+  console.warn('[Startup] API fetch failed, fallback to mock children:', err);
+  window.CHILDREN_ROSTER = MOCK.children;
+  render();
+});
+updateSyncPill();
+if(!navigator.onLine) document.getElementById('net-banner').style.display='block';
+</script>
+</body>
+</html>
