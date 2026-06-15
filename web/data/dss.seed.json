@@ -1,0 +1,19 @@
+{
+  "instrument": "Navchetana Disability Screening Schedule (DSS)",
+  "age_range_months": "0-36",
+  "scoring": "Any 'yes' is a red flag -> refer the child for diagnosis and treatment (RBSK -> District Early Intervention Centre).",
+  "result_logic": "red_flag_count == 0 -> typical; 1 red flag -> monitor; >= 2 red flags -> refer",
+  "items": [
+    {"item_id":"dss_04","question":"Was the colour of the child unusual at birth? (blue / yellow / pale)","response_type":"yes_no","red_flag_if":"yes","action":"refer_for_diagnosis_and_treatment"},
+    {"item_id":"dss_05","question":"Did the child have feeding difficulties such as suckling or swallowing during feeding?","response_type":"yes_no","red_flag_if":"yes","action":"refer_for_diagnosis_and_treatment"},
+    {"item_id":"dss_06","question":"Has the child ever had fits or lost consciousness since birth?","response_type":"yes_no","red_flag_if":"yes","action":"refer_for_diagnosis_and_treatment"},
+    {"item_id":"dss_07","question":"Do the child's eyes frequently turn red or water?","response_type":"yes_no","red_flag_if":"yes","action":"refer_for_diagnosis_and_treatment"},
+    {"item_id":"dss_08","question":"Is there frequent pus or watery discharge from the child's ears?","response_type":"yes_no","red_flag_if":"yes","action":"refer_for_diagnosis_and_treatment"},
+    {"item_id":"dss_09","question":"Does the child frequently complain about ear aches or headaches?","response_type":"yes_no","red_flag_if":"yes","action":"refer_for_diagnosis_and_treatment"},
+    {"item_id":"dss_10","question":"Does the child have any missing or deformed body parts?","response_type":"yes_no","red_flag_if":"yes","action":"refer_for_diagnosis_and_treatment"},
+    {"item_id":"dss_11","question":"Is the child too small or too weak compared to other children of similar age?","response_type":"yes_no","red_flag_if":"yes","action":"refer_for_diagnosis_and_treatment"},
+    {"item_id":"dss_12","question":"Does the child have uncoordinated or jerky movements, or poor balance while walking?","response_type":"yes_no","red_flag_if":"yes","action":"refer_for_diagnosis_and_treatment"},
+    {"item_id":"dss_13","question":"Does the child walk with a limp?","response_type":"yes_no","red_flag_if":"yes","action":"refer_for_diagnosis_and_treatment"}
+  ],
+  "_note": "Seed extract (items 4-13) verified from the Navchetana DSS (Annexure). Complete items 1-3 and 14+ from the source PDF - see DEV4_ROADMAP.md, Step 2."
+}

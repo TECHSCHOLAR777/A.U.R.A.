@@ -1,0 +1,1707 @@
+[
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_lang_singing_baby_0003",
+    "source": "official_unmodified",
+    "targeted_domain": "language",
+    "age_band_months": "0-3",
+    "milestone_targeted": "responds to caregiver's voice; develops social smile",
+    "adapted_title": "Singing to Baby",
+    "step_by_step_instructions": [
+      "Choose a familiar lullaby or song.",
+      "Hold the baby close and look at their face while singing gently.",
+      "Watch the baby's reactions \u2013 stilling, blinking, or turning towards you.",
+      "Pause and wait for any response, then resume singing.",
+      "Repeat the song, varying your tone and pace to keep the baby engaged."
+    ],
+    "required_materials": [],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "attunement",
+      "instruction_override": "Hearing impairment: hold the baby against your chest so they feel the vibration of your voice (tactile-kinesthetic). Developmental delay: shorten to one repeated phrase and increase the pause time (Navchetana 4.3)."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_se_loving_hugging_0003",
+    "source": "official_unmodified",
+    "targeted_domain": "socio_emotional",
+    "age_band_months": "0-3",
+    "milestone_targeted": "develops a social smile; secure attachment",
+    "adapted_title": "Loving and Hugging",
+    "step_by_step_instructions": [
+      "Hold the baby close to your body with gentle, firm support.",
+      "Rock the baby slowly while making soft eye contact.",
+      "Talk to the baby in a warm, calm voice and show affectionate facial expressions.",
+      "Stroke the baby's back, head, and arms gently.",
+      "Celebrate any response \u2013 a smile or a coo \u2013 with warmth."
+    ],
+    "required_materials": [],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "togetherness",
+      "instruction_override": "Visual impairment: emphasise voice and gentle touch rather than eye contact. Developmental delay: repeat the routine at every feeding and nappy-change opportunity to build predictability (Navchetana 4.3)."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_se_gentle_soothing_0003",
+    "source": "official_unmodified",
+    "targeted_domain": "socio_emotional",
+    "age_band_months": "0-3",
+    "milestone_targeted": "responds to calming; develops sense of security",
+    "adapted_title": "Gentle Soothing",
+    "step_by_step_instructions": [
+      "When the baby cries, respond promptly and pick them up.",
+      "Cradle the baby in your arms and rock gently in a slow, steady rhythm.",
+      "Hum or sing softly near the baby's ear.",
+      "Check for hunger, wetness, or discomfort and address any need found.",
+      "Continue rocking until the baby is calm, then smile and make eye contact."
+    ],
+    "required_materials": [],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "togetherness",
+      "instruction_override": "Sensory sensitivity: reduce stimulation \u2013 dim lights, lower voice, limit rocking to a very gentle sway. Developmental delay: use the same soothing routine every time to build a predictable calming pattern (Navchetana 4.3)."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_motor_calming_poses_0003",
+    "source": "official_unmodified",
+    "targeted_domain": "motor_physical",
+    "age_band_months": "0-3",
+    "milestone_targeted": "raises head; moves arms and legs; body settles with support",
+    "adapted_title": "Discovering Calming Poses",
+    "step_by_step_instructions": [
+      "While holding the baby, gently massage their arms and legs.",
+      "Try holding the baby upright on your shoulder and gently rub their back.",
+      "Try different positions \u2013 cradle hold, upright hold, tummy-down on forearm \u2013 and notice which calms the baby.",
+      "Once you find the baby's favourite pose, use it consistently at fussy times.",
+      "Lay the baby on their tummy briefly while you watch and encourage them to lift their head."
+    ],
+    "required_materials": [],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "safety",
+      "instruction_override": "Motor disability/low muscle tone: avoid unsupported tummy time; instead hold the baby chest-to-chest so their head is lightly supported. Always supervise tummy time. (Navchetana 4.3)"
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_lang_imitating_sounds_0003",
+    "source": "official_unmodified",
+    "targeted_domain": "language",
+    "age_band_months": "0-3",
+    "milestone_targeted": "begins to babble; makes sounds other than when crying",
+    "adapted_title": "Imitating Sounds",
+    "step_by_step_instructions": [
+      "Sit quietly with the baby and listen for any sound they make.",
+      "When the baby makes a sound, smile and repeat it back to them.",
+      "Pause and wait for the baby to make the sound again.",
+      "Show enthusiasm whenever the baby vocalises \u2013 widen your eyes and nod.",
+      "Keep the exchange going for as long as the baby is interested."
+    ],
+    "required_materials": [],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "attunement",
+      "instruction_override": "Hearing impairment: imitate the baby's movements and facial expressions instead of sounds \u2013 turn it into a facial-mirroring game. Speech delay: accept any mouth movement or breath sound as a 'turn' and mirror it (Navchetana 4.3)."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_motor_reaching_objects_0306",
+    "source": "official_unmodified",
+    "targeted_domain": "motor_physical",
+    "age_band_months": "3-6",
+    "milestone_targeted": "attempts to reach and grasp an object",
+    "adapted_title": "Reaching for Objects",
+    "step_by_step_instructions": [
+      "Choose the baby's favourite toy or a brightly coloured object.",
+      "Dangle the toy just within the baby's arm reach to encourage them to stretch out.",
+      "Guide the baby's hand gently toward the toy if they need help.",
+      "Encourage the baby when they successfully reach out and touch the toy.",
+      "Slowly move the toy a little farther to motivate further reaching."
+    ],
+    "required_materials": [
+      "baby's favourite toy or bright object"
+    ],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "safety",
+      "instruction_override": "Fine motor difficulty: use a soft spongy ball or clay for the baby to press and hold, improving hand function (Navchetana 4.3). Visual impairment: attach a bell to the toy so the baby reaches toward the sound (auditory cue, VAKT)."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_lang_talking_baby_0306",
+    "source": "official_unmodified",
+    "targeted_domain": "language",
+    "age_band_months": "3-6",
+    "milestone_targeted": "turns head toward direction of sound; begins to babble",
+    "adapted_title": "Talking with Baby",
+    "step_by_step_instructions": [
+      "Hold the baby facing you, at eye level.",
+      "Say a simple word or phrase \u2013 the baby's name or 'Hello!'",
+      "Watch if the baby responds with a sound or movement, then repeat.",
+      "Take turns \u2013 respond to any noise the baby makes as if it is part of the conversation.",
+      "Enjoy the 'conversation'; celebrate every response with a smile."
+    ],
+    "required_materials": [],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "visibility",
+      "instruction_override": "Hearing impairment: exaggerate lip and facial movements, move close to the baby's face so they can watch your mouth. Visual impairment: rely on voice variation and gentle touch rather than facial cues (Navchetana 4.3)."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_cog_follow_bee_0306",
+    "source": "official_unmodified",
+    "targeted_domain": "cognitive",
+    "age_band_months": "3-6",
+    "milestone_targeted": "turns head to follow familiar faces or toys visually",
+    "adapted_title": "Follow the Bee",
+    "step_by_step_instructions": [
+      "Hold the baby securely and place your finger in front of their face.",
+      "Move your finger slowly from one side to the other like a bee flying.",
+      "Watch whether the baby's eyes follow the 'bee'.",
+      "Move the 'bee' up, down, and in a circle to encourage tracking in all directions.",
+      "Repeat the game every day to strengthen visual tracking skills."
+    ],
+    "required_materials": [],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "visibility",
+      "instruction_override": "Visual impairment: replace with a sound-making toy \u2013 move a rattle slowly past each ear so the baby tracks sound instead of sight (auditory-kinesthetic, Navchetana 4.3)."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_cog_walk_together_0306",
+    "source": "official_unmodified",
+    "targeted_domain": "socio_emotional",
+    "age_band_months": "3-6",
+    "milestone_targeted": "looks at and notices new surroundings; turns head toward sounds",
+    "adapted_title": "Taking a Walk Together",
+    "step_by_step_instructions": [
+      "Hold the baby facing outward so they can see the world around them.",
+      "Walk slowly around the house or outside, pointing at different things and people.",
+      "Name each object or person you show: 'Look \u2013 a tree!', 'That is a bird!'",
+      "Share simple stories or discoveries about what you see during the walk.",
+      "Enjoy a neighbourly walk and talk with baby about the environment."
+    ],
+    "required_materials": [],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "togetherness",
+      "instruction_override": "Visual impairment: describe everything in rich detail \u2013 textures, smells, sounds \u2013 and let the baby touch safe objects (tactile-auditory, Navchetana 4.3). Motor disability: conduct the walk as a supported lap session indoors, bringing objects to the baby."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_motor_gripping_fingers_0306",
+    "source": "official_unmodified",
+    "targeted_domain": "motor_physical",
+    "age_band_months": "3-6",
+    "milestone_targeted": "grasps a toy using all fingers; keeps hands open and relaxed",
+    "adapted_title": "Gripping Fingers",
+    "step_by_step_instructions": [
+      "Place your clean index finger in the middle of the baby's palm.",
+      "Encourage the baby to grip your finger by gently pressing against their fingers.",
+      "Allow the baby to hold your finger for a few seconds, then release.",
+      "Repeat with the other hand.",
+      "Celebrate the baby's achievement with praise and a smile."
+    ],
+    "required_materials": [],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "safety",
+      "instruction_override": "Fine motor difficulty: use a soft thin cloth strip instead of your finger so grip effort is reduced. Do not force the hand open \u2013 wait for the baby to engage voluntarily (Navchetana 4.3)."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_creat_dress_up_fun_0306",
+    "source": "official_unmodified",
+    "targeted_domain": "creative",
+    "age_band_months": "3-6",
+    "milestone_targeted": "responds to sensory experiences; social smile",
+    "adapted_title": "Dress-Up Fun",
+    "step_by_step_instructions": [
+      "Gather a few soft scarves, hats, or items of clothing.",
+      "Put a hat on your head and say 'Where is Dadi? Here she is!'",
+      "Put a soft scarf gently on the baby and then whisk it off playfully.",
+      "Use simple language: 'Oh! Where's baby? There baby is!'",
+      "Notice and celebrate the baby's laugh or smile."
+    ],
+    "required_materials": [
+      "soft hat or scarf",
+      "colourful clothing items"
+    ],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "attunement",
+      "instruction_override": "Sensory sensitivity: use only very soft, lightweight fabrics and keep fabric away from the face. Developmental delay: simplify to just placing and removing a soft cloth from baby's lap before moving toward the face (Navchetana 4.3)."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_lang_fingers_toes_0306",
+    "source": "official_unmodified",
+    "targeted_domain": "language",
+    "age_band_months": "3-6",
+    "milestone_targeted": "laughs aloud or makes squealing sounds; responds to touch",
+    "adapted_title": "Fingers and Toes",
+    "step_by_step_instructions": [
+      "Lay the baby on their back in a safe, comfortable place.",
+      "Gently hold each of the baby's fingers and toes in turn.",
+      "Name them using a simple rhyme or song, e.g., 'This little finger\u2026'",
+      "Gently wiggle each finger and toe while singing or counting.",
+      "Watch the baby's face \u2013 laugh together whenever they react with delight."
+    ],
+    "required_materials": [],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "attunement",
+      "instruction_override": "Hearing impairment: exaggerate facial expressions and mouth the rhyme words clearly so the baby can watch your face. Developmental delay: slow the pace and repeat each line several times (Navchetana 4.3)."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_se_sing_song_together_0609",
+    "source": "official_unmodified",
+    "targeted_domain": "creative",
+    "age_band_months": "6-9",
+    "milestone_targeted": "likes to look at self in mirror; laughs aloud; responds to caregiver",
+    "adapted_title": "Sing a Song Together",
+    "step_by_step_instructions": [
+      "Choose a short, familiar song or lullaby.",
+      "Sing the song to the baby while looking at their face and making eye contact.",
+      "Copy the baby's reactions and incorporate them into the song \u2013 pause when baby vocalises.",
+      "Enjoy the mutual interaction; make it a joyful, shared moment.",
+      "Repeat the song every day so the baby begins to anticipate and enjoy it."
+    ],
+    "required_materials": [],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "visibility",
+      "instruction_override": "Hearing impairment: supplement with bright-coloured picture cards for each verse. Visual impairment: emphasise rich vocal variation \u2013 change tone, speed, and volume to keep the baby engaged (Navchetana 4.3)."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_motor_swinging_time_0609",
+    "source": "official_unmodified",
+    "targeted_domain": "motor_physical",
+    "age_band_months": "6-9",
+    "milestone_targeted": "rolls over in both directions; postural control develops",
+    "adapted_title": "Swinging Time",
+    "step_by_step_instructions": [
+      "Place the baby on a soft cloth or in a small hammock with full support.",
+      "Gently swing the baby side to side in slow, steady movements.",
+      "Encourage the baby to reach out by holding a toy at the side.",
+      "Sing or hum along to help the baby feel comfortable and secure.",
+      "Stop gently and allow the baby to enjoy the stillness before repeating."
+    ],
+    "required_materials": [
+      "soft cloth or small hammock"
+    ],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "safety",
+      "instruction_override": "Low muscle tone or motor disability: ensure the baby's head and trunk are fully supported at all times. Reduce swing amplitude. Never leave unattended. (Navchetana 4.3)"
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_lang_soft_words_0609",
+    "source": "official_unmodified",
+    "targeted_domain": "language",
+    "age_band_months": "6-9",
+    "milestone_targeted": "responds to name; begins to babble with consonants",
+    "adapted_title": "Soft Words with Baby",
+    "step_by_step_instructions": [
+      "Hold the baby face-to-face at a comfortable distance.",
+      "Use soft, warm language \u2013 share how you feel: 'I love you so much!'",
+      "Pause and give the baby time to respond in any way.",
+      "Enjoy the connection; repeat encouraging words and facial expressions.",
+      "Allow the baby to join in the dialogue through any sounds or movements they make."
+    ],
+    "required_materials": [],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "attunement",
+      "instruction_override": "Hearing impairment: sign or gesture key words while speaking; let the baby feel the vibration of your voice by placing their hand on your throat gently (tactile-kinesthetic, Navchetana 4.3)."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_motor_cheek_balloons_0609",
+    "source": "official_unmodified",
+    "targeted_domain": "motor_physical",
+    "age_band_months": "6-9",
+    "milestone_targeted": "oral motor development; imitates facial expressions",
+    "adapted_title": "Cheek Balloons",
+    "step_by_step_instructions": [
+      "Sit facing the baby at eye level.",
+      "Puff your cheeks up with air like a balloon and hold for a moment.",
+      "Pop the air out with a fun sound and watch the baby's reaction.",
+      "Do it again; wait to see if the baby tries to copy you.",
+      "Make various mouth shapes \u2013 big smile, round mouth \u2013 to encourage imitation."
+    ],
+    "required_materials": [],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "visibility",
+      "instruction_override": "Hearing impairment: the activity is already visual \u2013 emphasise exaggerated face movements. Speech delay: this activity is a core mouth-muscle exercise from Navchetana 4.3 \u2013 puckering, smiling widely, and moving the tongue side to side develop the muscles needed for speech."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_motor_reaching_ball_0609",
+    "source": "official_unmodified",
+    "targeted_domain": "motor_physical",
+    "age_band_months": "6-9",
+    "milestone_targeted": "reaches and grasps; rolls toward desired object",
+    "adapted_title": "Reaching out to the Ball",
+    "step_by_step_instructions": [
+      "Sit the baby comfortably on the floor with support if needed.",
+      "Place a soft, lightweight ball just within arm's reach.",
+      "Encourage the baby to reach out and grasp the ball.",
+      "Gently roll the ball a little farther to encourage stretching and crawling toward it.",
+      "Celebrate each attempt with clapping and praise."
+    ],
+    "required_materials": [
+      "soft lightweight ball"
+    ],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "safety",
+      "instruction_override": "Fine motor difficulty: use soft clay or a spongy ball so the baby can press and hold it easily (Navchetana 4.3). Visual impairment: use a ball with a bell inside so the baby reaches toward the sound."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_cog_bath_time_fun_0609",
+    "source": "official_unmodified",
+    "targeted_domain": "cognitive",
+    "age_band_months": "6-9",
+    "milestone_targeted": "explores objects with hands; shows curiosity about surroundings",
+    "adapted_title": "Bath Time Fun",
+    "step_by_step_instructions": [
+      "Place the baby in a shallow, safe bath with warm water.",
+      "Fill a cup and show the baby how to splash water gently.",
+      "Teach the baby to say 'fall' and pour a cup of water into the bath.",
+      "Move a small floating toy to show cause and effect.",
+      "Name the objects you use: cup, water, splash \u2013 and prompt the baby to repeat."
+    ],
+    "required_materials": [
+      "plastic container or tub",
+      "water",
+      "small bath toys (optional)"
+    ],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "safety",
+      "instruction_override": "Never leave the baby unattended in water. Motor disability: support the baby's trunk fully throughout. Sensory sensitivity: introduce water gradually \u2013 begin with just wetting the hands before progressing to full immersion (Navchetana 4.3)."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_se_peekaboo_0609",
+    "source": "official_unmodified",
+    "targeted_domain": "socio_emotional",
+    "age_band_months": "6-9",
+    "milestone_targeted": "looks for hidden objects; responds to familiar faces",
+    "adapted_title": "Peek-a-Boo with Baby",
+    "step_by_step_instructions": [
+      "Open and playfully hide your face using both hands, saying 'Peek-a-Boo! Where am I?'",
+      "Reveal your face with a big smile and say 'There I am!'",
+      "Open and hide your face in a joyful rhythm to keep the baby engaged.",
+      "Wait for the baby's smile or laughter and celebrate with joy.",
+      "Encourage the baby to try hiding their own face with your help."
+    ],
+    "required_materials": [],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "togetherness",
+      "instruction_override": "Visual impairment: replace face-hiding with a tactile version \u2013 gently place the baby's hand over your nose and then reveal it, saying 'Found it!' Developmental delay: slow the reveal and exaggerate surprise; repeat many times (Navchetana 4.3)."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_cog_spinning_bangles_0609",
+    "source": "official_unmodified",
+    "targeted_domain": "cognitive",
+    "age_band_months": "6-9",
+    "milestone_targeted": "tracks moving objects; cause-and-effect awareness",
+    "adapted_title": "Spinning Bangles",
+    "step_by_step_instructions": [
+      "Hold a plastic or metal bangle and spin it slowly in front of the baby.",
+      "Pass the bangle in a circular path at the baby's eye level.",
+      "Encourage the baby to reach out and try to grab the bangle when it stops.",
+      "Pass the bangle to the baby to explore through touch and sound.",
+      "Spin it again and watch the baby's eye movements follow it."
+    ],
+    "required_materials": [
+      "one plastic or metal bangle"
+    ],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "visibility",
+      "instruction_override": "Visual impairment: use a bangle that makes a sound when shaken \u2013 the baby tracks by sound. Fine motor difficulty: guide the baby's hand to hold the bangle with full support (Navchetana 4.3)."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_motor_roll_reach_0912",
+    "source": "official_unmodified",
+    "targeted_domain": "motor_physical",
+    "age_band_months": "9-12",
+    "milestone_targeted": "rolls over; crawls to get desired toys",
+    "adapted_title": "Roll and Reach",
+    "step_by_step_instructions": [
+      "Place a small clear plastic bottle filled with water or colourful objects on the floor.",
+      "Lay the baby on their tummy nearby.",
+      "Roll the bottle away from the baby and encourage them to crawl toward it.",
+      "Occasionally add small pieces of paper inside the bottle to make it interesting.",
+      "Praise the baby when they successfully reach and grasp the bottle."
+    ],
+    "required_materials": [
+      "small clear plastic bottle",
+      "water or colourful small objects"
+    ],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "attunement",
+      "instruction_override": "Motor delay (cannot yet crawl): position the bottle just beside the baby's hand so they succeed in touching it without crawling; gradually increase the distance. Fine motor: use a larger bottle easier to grasp (Navchetana 4.3)."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_lang_mealtime_conv_0912",
+    "source": "official_unmodified",
+    "targeted_domain": "socio_emotional",
+    "age_band_months": "9-12",
+    "milestone_targeted": "uses one or two words; responds to simple requests",
+    "adapted_title": "Mealtime Conversations",
+    "step_by_step_instructions": [
+      "Sit with the baby during feeding time and name each food item.",
+      "Smile and respond to the baby every time they look at the food or you.",
+      "Encourage the baby to point or reach toward what they want.",
+      "Ask simple questions: 'Do you want more?' \u2013 wait for any response.",
+      "Celebrate the baby's attempts at communication with warmth."
+    ],
+    "required_materials": [
+      "baby's food"
+    ],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "attunement",
+      "instruction_override": "Speech delay: accept pointing or reaching as a valid communicative turn. Use short sentences of 2\u20133 words. Developmental delay: use the same words every meal to build recognition over time (Navchetana 4.3)."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_cog_dropping_fun_0912",
+    "source": "official_unmodified",
+    "targeted_domain": "cognitive",
+    "age_band_months": "9-12",
+    "milestone_targeted": "object permanence; cause-and-effect understanding",
+    "adapted_title": "Dropping is Fun!",
+    "step_by_step_instructions": [
+      "Sit the baby on a safe surface and place a container and small objects nearby.",
+      "Show the baby how to drop an object into the container, saying 'Down!'",
+      "Encourage the baby to try on their own.",
+      "When the baby drops an object, say 'plop!' together.",
+      "Repeat using objects of different shapes, sizes, and textures."
+    ],
+    "required_materials": [
+      "any safe object (e.g., ball, crumpled paper)",
+      "container"
+    ],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "safety",
+      "instruction_override": "Ensure all objects are too large to swallow. Fine motor difficulty: use a larger lightweight object and a wide-mouthed container. Visual impairment: use a container that makes a loud sound on impact (Navchetana 4.3)."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_motor_open_knot_0912",
+    "source": "official_unmodified",
+    "targeted_domain": "motor_physical",
+    "age_band_months": "9-12",
+    "milestone_targeted": "develops fine motor pincer grasp; hand manipulation",
+    "adapted_title": "Open the Knot",
+    "step_by_step_instructions": [
+      "Take a soft handkerchief and tie a loose, simple knot.",
+      "Place the knotted handkerchief in front of the baby.",
+      "Show the baby how to pull and tug the fabric to loosen the knot.",
+      "Guide the baby's hands gently if they need help.",
+      "Celebrate enthusiastically when the knot is undone."
+    ],
+    "required_materials": [
+      "soft handkerchief"
+    ],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "attunement",
+      "instruction_override": "Fine motor difficulty: start with a very loose, barely tied knot so minimal force is needed. Gradually make it slightly tighter across sessions. Use a thick soft rope instead of a thin handkerchief if gripping is easier (Navchetana 4.3)."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_lang_naming_family_0912",
+    "source": "official_unmodified",
+    "targeted_domain": "language",
+    "age_band_months": "9-12",
+    "milestone_targeted": "uses 1\u20132 words; recognises familiar people by name",
+    "adapted_title": "Naming Family Members",
+    "step_by_step_instructions": [
+      "Sit with the baby and introduce family members one by one using their names.",
+      "Say each name clearly \u2013 'This is Dadi', 'This is Papa' \u2013 while the person is present.",
+      "Ask the baby 'Where is Mama?' and wait for a gesture or glance.",
+      "Repeat names consistently every day so the baby associates names with faces.",
+      "Celebrate any correct response \u2013 pointing, glancing, or saying the name."
+    ],
+    "required_materials": [],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "togetherness",
+      "instruction_override": "Visual impairment: have each family member say their name first, then touch the baby's hand so the baby associates voice with person (auditory-tactile, Navchetana 4.3). Developmental delay: focus on just one or two family members before expanding."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_cog_in_and_out_0912",
+    "source": "official_unmodified",
+    "targeted_domain": "cognitive",
+    "age_band_months": "9-12",
+    "milestone_targeted": "understands in/out; develops early spatial reasoning",
+    "adapted_title": "In and Out",
+    "step_by_step_instructions": [
+      "Give the baby a box or plastic container and some safe objects.",
+      "Show the baby how to put objects in the container, saying 'In!'",
+      "Then show how to take them out, saying 'Out!'",
+      "Encourage the baby to repeat both actions.",
+      "Praise the child when they successfully put an object inside the container."
+    ],
+    "required_materials": [
+      "clear plastic box or container",
+      "small safe objects"
+    ],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "attunement",
+      "instruction_override": "Fine motor difficulty: use a wide-mouthed container and larger objects that are easier to grip. Visual impairment: use a container that makes a sound when objects land inside (Navchetana 4.3)."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_creat_fun_action_song_0912",
+    "source": "official_unmodified",
+    "targeted_domain": "creative",
+    "age_band_months": "9-12",
+    "milestone_targeted": "imitates actions; responds to familiar words with movement",
+    "adapted_title": "Fun Action Song",
+    "step_by_step_instructions": [
+      "Choose a short, familiar action rhyme (e.g., 'Chanda Mama', 'Twinkle Twinkle').",
+      "Sing each line slowly while performing the matching body action.",
+      "Encourage the baby to copy your actions.",
+      "Repeat each verse so the baby can anticipate and join in.",
+      "Use bright-coloured props if available to make the activity more engaging."
+    ],
+    "required_materials": [],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "visibility",
+      "instruction_override": "Hearing impairment: add bright-coloured picture cards for each line of the rhyme (visual). Visual impairment: emphasise voice, clapping, and guide the baby's hands through each action (tactile-kinesthetic, Navchetana 4.3)."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_se_this_is_my_face_0912",
+    "source": "official_unmodified",
+    "targeted_domain": "socio_emotional",
+    "age_band_months": "9-12",
+    "milestone_targeted": "recognises own face; develops self-awareness and body-part vocabulary",
+    "adapted_title": "This is My Face",
+    "step_by_step_instructions": [
+      "Hold the baby facing you or in front of a mirror.",
+      "Point to your own eyes and say 'These are eyes!' then gently point to the baby's eyes.",
+      "Do the same for nose, mouth, ears, and chin \u2013 name each clearly.",
+      "Ask 'Where is baby's nose?' and guide their hand to touch it.",
+      "Celebrate every correct response with a warm smile and praise."
+    ],
+    "required_materials": [],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "togetherness",
+      "instruction_override": "Visual impairment: guide the child's hand to feel each facial feature on their own face while naming it (tactile-auditory, Navchetana 4.3). Developmental delay: focus on one feature per session and repeat many times before moving to the next."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_motor_self_feeding_1218",
+    "source": "official_unmodified",
+    "targeted_domain": "motor_physical",
+    "age_band_months": "12-18",
+    "milestone_targeted": "picks up small objects; self-feeds finger food",
+    "adapted_title": "Self-Feeding Adventure",
+    "step_by_step_instructions": [
+      "Place a few pieces of child-friendly finger food on a clean surface in front of the child.",
+      "Encourage the child to pick up the food and bring it to their mouth.",
+      "Observe and respond to the child's attempts; resist doing it for them.",
+      "Celebrate each attempt and positive outcome with warmth.",
+      "Gradually introduce food of different textures to challenge the child's grip."
+    ],
+    "required_materials": [
+      "child-friendly food items (e.g., soft fruit pieces, boiled vegetables)"
+    ],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "safety",
+      "instruction_override": "Fine motor difficulty: use slightly larger pieces so they are easier to grip, or offer food on a spoon with a thick handle. Always supervise to prevent choking. Developmental delay: sit beside the child and guide hand-to-mouth movement using backward chaining (Navchetana 4.3)."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_cog_household_exploration_1218",
+    "source": "official_unmodified",
+    "targeted_domain": "cognitive",
+    "age_band_months": "12-18",
+    "milestone_targeted": "explores surroundings; identifies familiar objects",
+    "adapted_title": "Household Exploration",
+    "step_by_step_instructions": [
+      "Allow the child to walk or crawl around the house with you beside them.",
+      "Point out different things and name them: 'Look \u2013 this is a door!'",
+      "Let the child touch safe, everyday objects and feel their textures.",
+      "Ask 'What is this?' and wait before supplying the answer.",
+      "Guide the child away from unsafe areas gently while narrating the space."
+    ],
+    "required_materials": [],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "togetherness",
+      "instruction_override": "Visual impairment: describe the house verbally in as much detail as possible and help the child feel safe objects to stimulate their remaining senses (tactile-auditory, Navchetana 4.3). Motor disability: conduct exploration from a safe seated position, bringing objects to the child."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_cog_hide_discover_1218",
+    "source": "official_unmodified",
+    "targeted_domain": "cognitive",
+    "age_band_months": "12-18",
+    "milestone_targeted": "object permanence; searches for hidden objects",
+    "adapted_title": "Hide and Discover",
+    "step_by_step_instructions": [
+      "Choose a safe toy the child enjoys and show it to them.",
+      "While the child watches, hide the toy under a cloth or behind your back.",
+      "Ask 'Where is the toy?' and encourage the child to find it.",
+      "Celebrate when the child finds the toy; gradually make hiding places more complex.",
+      "Let the child take a turn hiding the toy for you to find."
+    ],
+    "required_materials": [
+      "baby's favourite toy",
+      "cloth or small container"
+    ],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "attunement",
+      "instruction_override": "Non-mobile child: hide the toy in a spot reachable from their position. Visual impairment: use a toy that makes a sound \u2013 partially cover it so sound leaks out as a clue. Developmental delay: downgrade to activities for younger children (Navchetana 4.3 Example 1)."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_lang_i_can_read_1218",
+    "source": "official_unmodified",
+    "targeted_domain": "language",
+    "age_band_months": "12-18",
+    "milestone_targeted": "names and identifies objects in pictures; vocabulary building",
+    "adapted_title": "I Can Read",
+    "step_by_step_instructions": [
+      "Sit with the child and open a picture book or show colourful picture cards.",
+      "Point to each picture and tell the child its name clearly.",
+      "Ask the child to point to a picture you name: 'Show me the cat!'",
+      "Share stories about the pictures to make the activity engaging.",
+      "Encourage the child to turn the pages and choose their favourite pictures."
+    ],
+    "required_materials": [
+      "colourful picture cards or picture book"
+    ],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "visibility",
+      "instruction_override": "Hearing impairment: use extra-bright, large pictures and point slowly. Visual impairment: replace pictures with real objects the child can touch and feel while you name them (tactile, Navchetana 4.3)."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_se_copying_actions_1218",
+    "source": "official_unmodified",
+    "targeted_domain": "socio_emotional",
+    "age_band_months": "12-18",
+    "milestone_targeted": "imitates actions of caregivers; social turn-taking",
+    "adapted_title": "Copying Actions",
+    "step_by_step_instructions": [
+      "Sit facing the child and perform a simple action \u2013 wave, clap, pat your head.",
+      "Say what you are doing: 'I'm clapping! Can you clap?'",
+      "Pause and wait for the child to copy the action.",
+      "Follow the child's lead too \u2013 copy whatever action they do and say 'I'm doing what you do!'",
+      "Take turns leading so the child experiences both imitating and being imitated."
+    ],
+    "required_materials": [],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "togetherness",
+      "instruction_override": "Non-verbal child: downgrade to a gesture-return version such as 'Hide and Discover' where the child returns gestures instead of speaking, as recommended in Navchetana 4.3 Example 2. Motor disability: choose actions within the child's range of movement."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_se_babys_baby_1218",
+    "source": "official_unmodified",
+    "targeted_domain": "socio_emotional",
+    "age_band_months": "12-18",
+    "milestone_targeted": "shows empathy; engages in simple pretend care",
+    "adapted_title": "Baby's Baby",
+    "step_by_step_instructions": [
+      "Give the child a doll or soft toy.",
+      "Show the child how to rock and hug the doll, saying 'Baby is crying \u2013 give it a hug!'",
+      "Encourage the child to feed, wrap, and soothe the doll.",
+      "Narrate what the child is doing: 'You are taking good care of the baby!'",
+      "Praise the child for showing kindness and care."
+    ],
+    "required_materials": [
+      "doll or soft toy"
+    ],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "attunement",
+      "instruction_override": "Visual impairment: use a soft toy with distinct texture features. Developmental delay: guide the child's hands through rocking motions first (kinesthetic-tactile, Navchetana 4.3). Accept any caring gesture as success."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_lang_following_instr_14m_1218",
+    "source": "official_unmodified",
+    "targeted_domain": "language",
+    "age_band_months": "12-18",
+    "milestone_targeted": "responds to simple 2-step instructions",
+    "adapted_title": "Following Instructions",
+    "step_by_step_instructions": [
+      "Give the child a simple, clear, one-step command like 'Come here' or 'Sit down.'",
+      "Show the child what the instruction means if they seem unsure.",
+      "Add a second step once they master the first: 'Pick up the ball and give it to me.'",
+      "Celebrate every time they follow the instruction correctly.",
+      "Gradually increase the number of steps as the child's comprehension grows."
+    ],
+    "required_materials": [],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "visibility",
+      "instruction_override": "Hearing impairment: repeat every instruction multiple times while pointing to your mouth; teach the child to lip-read and watch mouth movements (Navchetana 4.3). Developmental delay: break each instruction into one step at a time; demonstrate each step clearly."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_motor_hide_seek_1218",
+    "source": "official_unmodified",
+    "targeted_domain": "motor_physical",
+    "age_band_months": "12-18",
+    "milestone_targeted": "walks independently; crawls to explore",
+    "adapted_title": "Hide and Seek",
+    "step_by_step_instructions": [
+      "Ask the child to close or cover their eyes while you hide somewhere simple.",
+      "Encourage the child to walk or crawl to find you.",
+      "Celebrate with a big hug when the child finds you.",
+      "Take turns \u2013 let the child hide while you search.",
+      "Gradually choose more complex hiding spots as the child's mobility grows."
+    ],
+    "required_materials": [],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "attunement",
+      "instruction_override": "Motor delay (cannot walk independently at 14m): downgrade to 'Reaching out to the Ball' or 'In and Out', which require only crawling (Navchetana 4.3 Example 1). Visual impairment: call out periodically 'I'm over here!' so the child can follow your voice."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_lang_animal_sounds_1218",
+    "source": "official_unmodified",
+    "targeted_domain": "language",
+    "age_band_months": "12-18",
+    "milestone_targeted": "imitates sounds; builds vocabulary of familiar words",
+    "adapted_title": "Let's Make Animal Sounds",
+    "step_by_step_instructions": [
+      "Gather pictures of familiar animals or use household toy animals.",
+      "Show the child a picture and make the animal's sound: 'Dog \u2013 woof! woof!'",
+      "Encourage the child to repeat the sound.",
+      "Make corresponding movements too \u2013 flap arms for a bird, stomp for an elephant.",
+      "Ask 'What sound does the cow make?' and wait for the child's response."
+    ],
+    "required_materials": [],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "visibility",
+      "instruction_override": "Hearing impairment: use bright pictures of animals and pair each with an exaggerated action (visual-kinesthetic). Visual impairment: focus entirely on sounds and tactile toy animals (auditory-tactile, Navchetana 4.3)."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_creat_playing_dough_1218",
+    "source": "official_unmodified",
+    "targeted_domain": "creative",
+    "age_band_months": "12-18",
+    "milestone_targeted": "develops fine motor skills through play; sensory exploration",
+    "adapted_title": "Playing with Dough",
+    "step_by_step_instructions": [
+      "Give the child a small piece of soft dough or clay.",
+      "Show them how to roll it, press it flat, and poke holes.",
+      "Encourage the child to make simple shapes \u2013 a ball, a snake, a flat disc.",
+      "Name what they make and celebrate their creativity.",
+      "Allow free exploration as the child builds confidence with the material."
+    ],
+    "required_materials": [
+      "soft dough or clay (non-toxic)"
+    ],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "attunement",
+      "instruction_override": "Fine motor difficulty: provide wetter, softer dough requiring less force. Guide the child's hands through rolling and pressing (kinesthetic-tactile, Navchetana 4.3). Ensure the child does not put dough in their mouth."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_lang_body_parts_1824",
+    "source": "official_unmodified",
+    "targeted_domain": "language",
+    "age_band_months": "18-24",
+    "milestone_targeted": "names and points to body parts; vocabulary grows",
+    "adapted_title": "Discovering Body Parts",
+    "step_by_step_instructions": [
+      "Sit with the child and ask 'Where is your nose?' while pointing to your own nose.",
+      "Wait for the child to point to their nose; help them if needed.",
+      "Move through other body parts: eyes, ears, mouth, hands, feet.",
+      "Play faster each time, saying 'Touch your ear! Now your tummy!'",
+      "Give positive feedback whenever the child correctly identifies a body part."
+    ],
+    "required_materials": [],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "visibility",
+      "instruction_override": "Hearing impairment: pair each body-part name with a point and touch so the child understands through vision and touch. Visual impairment: guide the child's hand to feel their own body part and name it (tactile-auditory, Navchetana 4.3)."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_creat_joyful_songtime_1824",
+    "source": "official_unmodified",
+    "targeted_domain": "creative",
+    "age_band_months": "18-24",
+    "milestone_targeted": "uses familiar gestures; participates in group singing",
+    "adapted_title": "Joyful Songtime",
+    "step_by_step_instructions": [
+      "Sit or stand with the child in a comfortable position.",
+      "Choose a song the child already knows and begin singing together.",
+      "Encourage the child to sing along with any words they know.",
+      "Add hand movements, clapping, or stomping to make it more enjoyable.",
+      "Together with others if possible \u2013 singing in groups builds togetherness."
+    ],
+    "required_materials": [],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "togetherness",
+      "instruction_override": "Hearing impairment: use a percussion instrument the child can feel vibrating; pair singing with exaggerated movements. Visual impairment: no change needed \u2013 this activity is already strongly auditory-kinesthetic (Navchetana 4.3)."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_creat_shadow_play_1824",
+    "source": "official_unmodified",
+    "targeted_domain": "creative",
+    "age_band_months": "18-24",
+    "milestone_targeted": "engages in simple imaginative play; visual curiosity",
+    "adapted_title": "Shadow Play Delight",
+    "step_by_step_instructions": [
+      "Set up a light source shining on a flat wall in a darkened room.",
+      "Place your hand between the light and wall to make a shadow animal.",
+      "Name the animal and make its sound: 'This is a bird \u2013 tweet tweet!'",
+      "Encourage the child to wave their hand and make shadows.",
+      "Name and describe whatever shadow shapes the child creates."
+    ],
+    "required_materials": [
+      "light source (torch or lamp)",
+      "flat wall or surface"
+    ],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "togetherness",
+      "instruction_override": "Visual impairment: replace with tactile puppet play \u2013 use puppets made of different textures on the child's hands and give each a distinct voice. Motor disability: the caregiver makes shadows while the child narrates (Navchetana 4.3)."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_cog_open_close_1824",
+    "source": "official_unmodified",
+    "targeted_domain": "cognitive",
+    "age_band_months": "18-24",
+    "milestone_targeted": "understands open/close; cause-and-effect; fine motor manipulation",
+    "adapted_title": "Open and Close",
+    "step_by_step_instructions": [
+      "Give the child an empty box or jar with a lid.",
+      "Show the child how to open and close the container, naming each action.",
+      "Encourage them to try on their own.",
+      "Place a small surprise inside to motivate the child to open it.",
+      "Introduce other containers \u2013 zip bags, boxes with flaps \u2013 for variety."
+    ],
+    "required_materials": [
+      "empty box or jar with a lid"
+    ],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "attunement",
+      "instruction_override": "Fine motor difficulty: start with a box that has a loose-fitting lid requiring minimal force. Developmental delay: hand-over-hand guidance to open then immediately reward the discovery inside (Navchetana 4.3)."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_se_sweeping_together_1824",
+    "source": "official_unmodified",
+    "targeted_domain": "socio_emotional",
+    "age_band_months": "18-24",
+    "milestone_targeted": "imitates household chores; cooperative play with caregiver",
+    "adapted_title": "Sweeping Together",
+    "step_by_step_instructions": [
+      "Take the child to help you sweep a floor area.",
+      "Give the child a small broom or let them hold the handle with you.",
+      "Ask the child to hold the broom while you sweep together.",
+      "Encourage them to try sweeping on their own and guide them lovingly.",
+      "Celebrate the finished task together: 'We did it! The floor is clean!'"
+    ],
+    "required_materials": [
+      "broom",
+      "dustpan",
+      "dustbin"
+    ],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "togetherness",
+      "instruction_override": "Motor disability: substitute with wiping a low table with a cloth \u2013 seated participation. Developmental delay: break the task into one small step (e.g., only pushing the pile into the dustpan) using backward chaining (Navchetana 4.3)."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_cog_sorting_same_1824",
+    "source": "official_unmodified",
+    "targeted_domain": "cognitive",
+    "age_band_months": "18-24",
+    "milestone_targeted": "sorts and categorises objects by similarity",
+    "adapted_title": "Sorting Same Objects",
+    "step_by_step_instructions": [
+      "Collect two sets of two or three different items (e.g., two spoons and two cups).",
+      "Mix them up in front of the child.",
+      "Show the child how to sort them: 'All spoons go here, all cups go there.'",
+      "Encourage the child to complete the sorting.",
+      "Praise every correct placement and gently correct mistakes together."
+    ],
+    "required_materials": [
+      "2 sets of 2\u20133 different everyday objects"
+    ],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "attunement",
+      "instruction_override": "Developmental delay: begin with sorting only 2 items of 1 category before introducing a second category. Visual impairment: choose objects with very different textures so sorting is done by touch (tactile, Navchetana 4.3)."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_cog_cup_tower_1824",
+    "source": "official_unmodified",
+    "targeted_domain": "cognitive",
+    "age_band_months": "18-24",
+    "milestone_targeted": "stacks objects; understands height and balance",
+    "adapted_title": "Cup Tower",
+    "step_by_step_instructions": [
+      "Collect a few plastic cups of similar size.",
+      "Show the child how to stack the cups one on top of another.",
+      "Encourage the child to build their own tower as tall as possible.",
+      "Celebrate when the tower falls: 'Boom! Let's build it again!'",
+      "Discuss the tower: 'How many cups? Which is at the top?'"
+    ],
+    "required_materials": [
+      "3\u20135 plastic cups"
+    ],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "attunement",
+      "instruction_override": "Fine motor difficulty: use wider, heavier cups that are more stable. Developmental delay: begin with stacking only 2 cups successfully before increasing the height (Navchetana 4.3)."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_motor_play_ball_1824",
+    "source": "official_unmodified",
+    "targeted_domain": "motor_physical",
+    "age_band_months": "18-24",
+    "milestone_targeted": "throws and kicks a ball; gross motor coordination",
+    "adapted_title": "Play with a Ball",
+    "step_by_step_instructions": [
+      "Give the child a soft ball or rolled-up pair of socks.",
+      "Roll the ball to the child and encourage them to roll it back.",
+      "Then throw the ball gently underarm and encourage them to catch it.",
+      "Give the ball to the child and encourage them to kick it.",
+      "Celebrate every attempt and gradually increase the distance."
+    ],
+    "required_materials": [
+      "soft ball or rolled-up socks"
+    ],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "attunement",
+      "instruction_override": "Motor disability: substitute throwing with a push along the floor at close range. Visual impairment: use a ball with a bell inside so the child can track by sound (Navchetana 4.3)."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_creat_colorful_hands_1824",
+    "source": "official_unmodified",
+    "targeted_domain": "creative",
+    "age_band_months": "18-24",
+    "milestone_targeted": "creative expression through art; colour identification",
+    "adapted_title": "Colorful Hands",
+    "step_by_step_instructions": [
+      "Prepare safe colour mixtures using kumkum, haldi, or food colouring in water.",
+      "Lay a large sheet of paper on the floor.",
+      "Show the child how to dip their palm in colour and press it on the paper.",
+      "Encourage them to use both hands and different colours freely.",
+      "Let the child explore mixing colours and making different patterns."
+    ],
+    "required_materials": [
+      "kumkum, haldi or safe food colouring",
+      "water",
+      "large paper or cardboard"
+    ],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "safety",
+      "instruction_override": "Ensure all colouring materials are non-toxic and safe for skin. Supervise to prevent the child from putting hands in their mouth. Sensory sensitivity: start with a small amount of colour on just one finger (Navchetana 4.3)."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_lang_describing_foods_1824",
+    "source": "official_unmodified",
+    "targeted_domain": "language",
+    "age_band_months": "18-24",
+    "milestone_targeted": "uses 2\u20133 word sentences; describes objects with adjectives",
+    "adapted_title": "Describing Foods",
+    "step_by_step_instructions": [
+      "Place a few familiar foods in front of the child: biscuit, banana, boiled egg.",
+      "Pick up one and describe it: 'This banana is yellow and soft.'",
+      "Ask the child to describe another food item.",
+      "Introduce taste words: sweet, sour, salty, crunchy.",
+      "Ask the child to find all the yellow or round foods on the table."
+    ],
+    "required_materials": [
+      "familiar foods (biscuits, boiled eggs, fruit, etc.)"
+    ],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "attunement",
+      "instruction_override": "Speech delay: begin with one-word descriptions; use mouth-muscle warm-up exercises (puckering, moving the tongue side to side) before the activity (Navchetana 4.3). Developmental delay: use shorter sentences of 1\u20132 words."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_lang_sing_nursery_rhyme_2436",
+    "source": "official_unmodified",
+    "targeted_domain": "language",
+    "age_band_months": "24-36",
+    "milestone_targeted": "makes 3-word sentences; joins in familiar rhymes",
+    "adapted_title": "Sing a Nursery Rhyme",
+    "step_by_step_instructions": [
+      "Choose a short, familiar nursery rhyme the child already knows part of.",
+      "Sing it slowly with the child, leaving gaps for them to fill in.",
+      "Use hand movements to accompany each line of the rhyme.",
+      "Encourage the child to lead the song while you follow.",
+      "Repeat the rhyme a number of times so the child gains confidence."
+    ],
+    "required_materials": [],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "visibility",
+      "instruction_override": "Hearing impairment: pair each verse with a picture card and exaggerated action (visual-kinesthetic). Visual impairment: emphasise rhythm and touch \u2013 clap the child's hands with yours on each beat (tactile-auditory, Navchetana 4.3)."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_lang_pretend_phone_2436",
+    "source": "official_unmodified",
+    "targeted_domain": "language",
+    "age_band_months": "24-36",
+    "milestone_targeted": "uses two-word phrases; takes turns in simple conversation",
+    "adapted_title": "Pretend Play: Talking on the Phone",
+    "step_by_step_instructions": [
+      "Give the child a toy phone or use your hand as a pretend phone.",
+      "Model a short conversation: 'Hello! How are you today?'",
+      "Pause and encourage the child to respond with words.",
+      "Take turns 'calling' each other to build back-and-forth conversation.",
+      "Use short sentences and encourage the child to observe your mouth and repeat words slowly."
+    ],
+    "required_materials": [
+      "toy phone (optional)"
+    ],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "attunement",
+      "instruction_override": "Non-verbal child: downgrade to a gesture-return activity such as 'Copying Actions' or 'Hide and Discover' where the child returns gestures instead of speaking (Navchetana 4.3 Example 2). Speech delay: practise mouth-muscle exercises before starting; use short 2-word sentences."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_creat_sensory_play_2436",
+    "source": "official_unmodified",
+    "targeted_domain": "creative",
+    "age_band_months": "24-36",
+    "milestone_targeted": "explores textures; imaginative play with materials",
+    "adapted_title": "Sensory Play",
+    "step_by_step_instructions": [
+      "Fill a container or tray with sand, mud, or rice.",
+      "Give the child cups, spoons, and small containers to play with.",
+      "Encourage scooping, pouring, and moulding.",
+      "Discuss the textures, colours, and feelings: 'Is it wet? Dry? Rough?'",
+      "Allow free imaginative play without directing \u2013 observe what the child creates."
+    ],
+    "required_materials": [
+      "sand, mud, or rice",
+      "cups",
+      "buckets",
+      "containers"
+    ],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "attunement",
+      "instruction_override": "Sensory sensitivity: offer just a small tray with dry rice first; increase the material and wetness gradually. Visual impairment: the activity is already strongly tactile \u2013 describe each texture as the child explores (Navchetana 4.3)."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_creat_dance_together_2436",
+    "source": "official_unmodified",
+    "targeted_domain": "creative",
+    "age_band_months": "24-36",
+    "milestone_targeted": "moves in rhythm; expresses self through movement",
+    "adapted_title": "Let's Dance Together",
+    "step_by_step_instructions": [
+      "Put on some familiar music or hum a favourite tune.",
+      "Hold the child's hands and move together to the music.",
+      "Encourage the child to move their body freely.",
+      "Create a simple dance routine together.",
+      "Invite other family members to join and make it a joyful group activity."
+    ],
+    "required_materials": [
+      "music (radio, phone, or humming)"
+    ],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "togetherness",
+      "instruction_override": "Hearing impairment: use a drum or tambourine the child can feel vibrating on the floor through their feet; dance to the beat they feel. Motor disability: adapt movements to those within the child's ability \u2013 arm swaying while seated is valid (Navchetana 4.3)."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_cog_fast_slow_2436",
+    "source": "official_unmodified",
+    "targeted_domain": "cognitive",
+    "age_band_months": "24-36",
+    "milestone_targeted": "understands opposites; describes speed of movement",
+    "adapted_title": "Fast and Slow",
+    "step_by_step_instructions": [
+      "Explain the words 'fast' and 'slow' using your hands \u2013 wave them quickly and then slowly.",
+      "Ask the child to clap fast, then slow.",
+      "Walk together at a normal pace, then run fast, then creep slow.",
+      "Say 'fast' and 'slow' clearly and let the child respond in kind.",
+      "Give the child positive encouragement for understanding each opposite."
+    ],
+    "required_materials": [],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "visibility",
+      "instruction_override": "Hearing impairment: hold up a picture of a running cheetah for 'fast' and a picture of a snail for 'slow' to reinforce the concept visually. Motor disability: use hand movements only \u2013 fast and slow clapping (Navchetana 4.3)."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_cog_objects_uses_2436",
+    "source": "official_unmodified",
+    "targeted_domain": "cognitive",
+    "age_band_months": "24-36",
+    "milestone_targeted": "understands function of objects; uses object names consistently",
+    "adapted_title": "Objects and Their Uses",
+    "step_by_step_instructions": [
+      "Collect 4\u20135 safe everyday objects: a cup, spoon, brush, cloth, and key.",
+      "Hold up each object and ask the child 'What is this for?'",
+      "Encourage the child to explain or demonstrate its use.",
+      "Name each object and its use yourself if the child is unsure.",
+      "Let the child pick an object to teach you about."
+    ],
+    "required_materials": [
+      "4\u20135 safe everyday household objects"
+    ],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "attunement",
+      "instruction_override": "Visual impairment: use strongly tactile objects with distinct textures and sizes; guide hands and describe each one verbally (tactile-auditory, Navchetana 4.3). Developmental delay: focus on one object per session."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_creat_mud_masterpiece_2436",
+    "source": "official_unmodified",
+    "targeted_domain": "creative",
+    "age_band_months": "24-36",
+    "milestone_targeted": "uses hands in creative expression; finger-painting / sculpting",
+    "adapted_title": "Mud Masterpiece",
+    "step_by_step_instructions": [
+      "Take the child outside or use a tray with wet soil or outdoor mud.",
+      "Show the child how to press their fingers and palms into the mud to make marks.",
+      "Encourage them to draw lines, circles, and shapes freely.",
+      "Let the child make 3D shapes \u2013 balls, snakes \u2013 with the mud.",
+      "Allow the child to explore and create without strict direction."
+    ],
+    "required_materials": [
+      "outdoor mud or wet soil",
+      "flat tray (optional)"
+    ],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "safety",
+      "instruction_override": "Ensure mud is free from sharp objects or stones. Supervise to prevent the child eating the mud. For children with skin sensitivities: use safe, non-toxic wet sand or dough instead (Navchetana 4.3)."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_se_folding_clothes_2436",
+    "source": "official_unmodified",
+    "targeted_domain": "socio_emotional",
+    "age_band_months": "24-36",
+    "milestone_targeted": "imitates household chores; develops responsibility",
+    "adapted_title": "Folding Clothes Together",
+    "step_by_step_instructions": [
+      "Place a pile of clean clothes in front of the child.",
+      "Show the child how to fold a simple piece of clothing.",
+      "Encourage the child to try folding on their own.",
+      "Provide positive encouragement and interactive advice.",
+      "Celebrate the finished pile of neatly folded clothes together."
+    ],
+    "required_materials": [
+      "clean clothes"
+    ],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "togetherness",
+      "instruction_override": "Motor disability: offer the child a small, light cloth to fold rather than heavy items. Developmental delay: use backward chaining \u2013 the caregiver does all folds except the last tuck, which the child completes (Navchetana 4.3)."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_cog_solving_puzzle_2436",
+    "source": "official_unmodified",
+    "targeted_domain": "cognitive",
+    "age_band_months": "24-36",
+    "milestone_targeted": "identifies shapes; problem-solving; spatial awareness",
+    "adapted_title": "Solving a Puzzle",
+    "step_by_step_instructions": [
+      "Cut a simple picture or drawing into 3\u20134 large pieces.",
+      "Scramble the pieces in front of the child.",
+      "Show the child the complete picture first, then ask them to reassemble it.",
+      "Give hints if needed: 'Look for the piece with the sky!'",
+      "Praise the child at each step and when the puzzle is complete."
+    ],
+    "required_materials": [
+      "paper or cardboard",
+      "drawing utensils",
+      "scissors (adult use only)"
+    ],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "attunement",
+      "instruction_override": "Developmental delay: begin with a 2-piece puzzle only. Visual impairment: use puzzle pieces of different textures on each piece so the child can feel which piece fits (tactile, Navchetana 4.3)."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_motor_stringing_adv_2436",
+    "source": "official_unmodified",
+    "targeted_domain": "motor_physical",
+    "age_band_months": "24-36",
+    "milestone_targeted": "develops fine motor pincer grip; hand-eye coordination",
+    "adapted_title": "Stringing Adventure",
+    "step_by_step_instructions": [
+      "Give the child a lace and a few large coloured beads or pasta pieces.",
+      "Show the child how to thread a bead onto the lace.",
+      "Encourage the child to thread beads one by one.",
+      "Celebrate each successful bead; count them together.",
+      "Increase the difficulty by using smaller beads as the child's skill improves."
+    ],
+    "required_materials": [
+      "thick lace or string",
+      "large beads or pasta shapes"
+    ],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "safety",
+      "instruction_override": "Ensure beads are large enough not to be swallowed. Fine motor difficulty: use even larger beads and a stiff wire instead of string so threading requires less precision (Navchetana 4.3)."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_cog_counting_fun_2436",
+    "source": "official_unmodified",
+    "targeted_domain": "cognitive",
+    "age_band_months": "24-36",
+    "milestone_targeted": "identifies colours; counts with one-to-one correspondence",
+    "adapted_title": "Counting is Fun",
+    "step_by_step_instructions": [
+      "Place 3 small objects in front of the child.",
+      "Point to each object as you count aloud together: 'One, two, three!'",
+      "Remove one and count again to show the new total.",
+      "Ask the child to count on their own.",
+      "Repeat the counting exercise using fingers, stones, or toys."
+    ],
+    "required_materials": [
+      "3 small safe objects (toys, stones, etc.)"
+    ],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "visibility",
+      "instruction_override": "Visual impairment: count using the child's fingers \u2013 touch each finger as you count (tactile-auditory, Navchetana 4.3). Developmental delay: begin with counting to 2 and increase slowly over many sessions."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_se_learning_each_other_2436",
+    "source": "official_unmodified",
+    "targeted_domain": "socio_emotional",
+    "age_band_months": "24-36",
+    "milestone_targeted": "observes and learns from peers; social cooperation",
+    "adapted_title": "Learning from Each Other",
+    "step_by_step_instructions": [
+      "Ask the child 'What can you do on the earth?'",
+      "Encourage them to demonstrate an activity they enjoy.",
+      "Ask a peer or sibling to show the child something new they can do.",
+      "Celebrate both children and encourage them to try something the other showed.",
+      "Think about interesting and challenging things you can learn from each other."
+    ],
+    "required_materials": [],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "togetherness",
+      "instruction_override": "Developmental delay: pair the child with a patient, slightly younger or same-age peer so the activity pace matches their ability. Caregiver should facilitate and scaffold the turn-taking (Navchetana 4.3)."
+    },
+    "provenance": {
+      "generated_offline": false,
+      "rules_fired": [],
+      "fallback_tier": "none"
+    }
+  }
+]

@@ -1,0 +1,11 @@
+{
+  "_doc": "P(L0) = prior probability a child of this age has ALREADY attained the milestone, used to seed BKT. Hand this table to Dev 3. Fixed params apply to every skill.",
+  "fixed_params": { "P_T_learn": 0.15, "P_G_guess": 0.20, "P_S_slip": 0.10 },
+  "priors": [
+    {"milestone":"reaches for and grasps an object","age_band_months":"6-9","domain":"motor_physical","P_L0":0.25},
+    {"milestone":"imitates actions and follows simple words","age_band_months":"12-18","domain":"cognitive","P_L0":0.20},
+    {"milestone":"uses two-word phrases","age_band_months":"18-24","domain":"language","P_L0":0.15},
+    {"milestone":"plays simple turn-taking games","age_band_months":"18-24","domain":"socio_emotional","P_L0":0.20}
+  ],
+  "_note": "Seed extract. Complete one prior per milestone in the Navchetana milestone pool - see DEV4_ROADMAP.md, Step 3."
+}
