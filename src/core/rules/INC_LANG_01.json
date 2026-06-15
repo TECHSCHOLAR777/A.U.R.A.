@@ -1,0 +1,29 @@
+{
+  "rule_id": "INC_LANG_01",
+  "type": "inclusion",
+  "description": "Flags language activities when language concern child present and no instruction override provided",
+  "trigger": {
+    "domains": ["language"]
+  },
+  "condition": {
+    "type": "compound_and",
+    "conditions": [
+      {
+        "type": "flag_check",
+        "flag": "language_concern",
+        "present": true
+      },
+      {
+        "type": "domain_check",
+        "domain": "language"
+      },
+      {
+        "type": "vast_check",
+        "parameter": "none"
+      }
+    ]
+  },
+  "action": "flag_modify",
+  "message": "🗨️ Inclusion: Language concern child in room — add visual cues, picture cards, or simplified verbal prompts. Avoid complex multi-step verbal instructions.",
+  "severity": "warn"
+}

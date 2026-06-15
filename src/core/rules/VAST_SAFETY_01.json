@@ -1,0 +1,26 @@
+{
+  "rule_id": "VAST_SAFETY_01",
+  "type": "safety",
+  "description": "Ensures safety-tagged VAST activities have safety_guard_applied flag set — validates safety pipeline integrity",
+  "trigger": {
+    "vast_parameters": ["safety"]
+  },
+  "condition": {
+    "type": "compound_and",
+    "conditions": [
+      {
+        "type": "vast_check",
+        "parameter": "safety"
+      },
+      {
+        "type": "age_check",
+        "operator": "lt",
+        "field": "min_age_months",
+        "value": 12
+      }
+    ]
+  },
+  "action": "flag_modify",
+  "message": "🛡️ VAST Safety: Safety-tagged activity for children under 12 months — verify all materials have been safety-checked and supervision instructions are explicit.",
+  "severity": "warn"
+}

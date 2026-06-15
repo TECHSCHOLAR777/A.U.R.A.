@@ -1,0 +1,27 @@
+{
+  "rule_id": "AGE_FINE_MOTOR_01",
+  "type": "age_appropriateness",
+  "description": "Flags fine motor activities for infants under 6 months — fine motor skills not yet developmentally appropriate",
+  "trigger": {
+    "age_bands": ["0-3", "3-6"],
+    "domains": ["motor"]
+  },
+  "condition": {
+    "type": "compound_and",
+    "conditions": [
+      {
+        "type": "domain_check",
+        "domain": "motor"
+      },
+      {
+        "type": "age_check",
+        "operator": "lt",
+        "field": "min_age_months",
+        "value": 6
+      }
+    ]
+  },
+  "action": "flag_modify",
+  "message": "👶 Age: Fine motor activities are not appropriate for infants under 6 months. Substitute with gross motor / sensory exploration (tummy time, grasping reflex).",
+  "severity": "warn"
+}

@@ -1,10 +1,37 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Diagnostic reports
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
 # Dependency directories
 node_modules/
+jspm_packages/
+bower_components/
 
-# Auto-generated build and output directories
+# Build and output directories
 dist/
 build/
 out/
+build/Release
+.next
+.nuxt
+.vuepress/dist
+.serverless/
+.fusebox/
+.dynamodb/
 
 # Environment variables
 .env
@@ -12,16 +39,11 @@ out/
 .env.development.local
 .env.test.local
 .env.production.local
+.env.test
+.env*.local
 
 # Config files
 web/config.js
-
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 
 # Database files
 *.db
@@ -45,5 +67,26 @@ Thumbs.db
 *.swp
 *.swo
 
+# TypeScript cache
+*.tsbuildinfo
+typings/
+
 # Downloaded ML Models (e.g. Whisper)
 web/ml_pipeline/models/
+
+# Coverage
+coverage
+*.lcov
+.nyc_output
+
+# Cache directories
+.cache/
+.eslintcache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+.npm
+.node_repl_history
+*.tgz
+.yarn-integrity

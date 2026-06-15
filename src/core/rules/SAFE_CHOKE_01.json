@@ -1,0 +1,27 @@
+{
+  "rule_id": "SAFE_CHOKE_01",
+  "type": "safety",
+  "description": "Blocks activities using small objects that pose choking hazard for children under 36 months",
+  "trigger": {
+    "age_bands": ["0-3", "3-6", "6-9", "9-12", "12-18", "18-24", "24-36"]
+  },
+  "condition": {
+    "type": "compound_and",
+    "conditions": [
+      {
+        "type": "material_check",
+        "operator": "in",
+        "values": ["pebbles", "beads", "small_stones", "buttons", "coins", "marbles"]
+      },
+      {
+        "type": "age_check",
+        "operator": "lt",
+        "field": "min_age_months",
+        "value": 36
+      }
+    ]
+  },
+  "action": "block_and_substitute",
+  "message": "⚠️ Choking hazard: Activity uses small objects unsafe for children under 36 months. Substitute with larger, age-appropriate materials.",
+  "severity": "block"
+}

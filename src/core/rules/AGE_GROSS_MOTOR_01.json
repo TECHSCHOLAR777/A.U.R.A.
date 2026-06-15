@@ -1,0 +1,27 @@
+{
+  "rule_id": "AGE_GROSS_MOTOR_01",
+  "type": "age_appropriateness",
+  "description": "Flags socio-emotional activities for newborns 0-3 months — parallel play concepts not yet applicable",
+  "trigger": {
+    "age_bands": ["0-3"],
+    "domains": ["socio_emotional"]
+  },
+  "condition": {
+    "type": "compound_and",
+    "conditions": [
+      {
+        "type": "domain_check",
+        "domain": "socio_emotional"
+      },
+      {
+        "type": "age_check",
+        "operator": "lte",
+        "field": "max_age_months",
+        "value": 3
+      }
+    ]
+  },
+  "action": "flag_modify",
+  "message": "👶 Age: Socio-emotional / parallel play activities are not applicable for infants 0-3 months. Focus on caregiver bonding, eye contact, and skin-to-skin.",
+  "severity": "warn"
+}

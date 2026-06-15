@@ -1,0 +1,35 @@
+{
+  "rule_id": "VAST_TOGETHERNESS_01",
+  "type": "inclusion",
+  "description": "Flags togetherness-tagged activities for rooms with mixed inclusion flags — ensure all children can participate together",
+  "trigger": {
+    "vast_parameters": ["togetherness"]
+  },
+  "condition": {
+    "type": "compound_and",
+    "conditions": [
+      {
+        "type": "vast_check",
+        "parameter": "togetherness"
+      },
+      {
+        "type": "compound_or",
+        "conditions": [
+          {
+            "type": "flag_check",
+            "flag": "non_verbal",
+            "present": true
+          },
+          {
+            "type": "flag_check",
+            "flag": "motor_concern",
+            "present": true
+          }
+        ]
+      }
+    ]
+  },
+  "action": "flag_modify",
+  "message": "🤝 VAST Togetherness: Mixed-ability room — adapt group activity so non-verbal / motor-concern children can participate equally. Use buddy pairing and role rotation.",
+  "severity": "warn"
+}

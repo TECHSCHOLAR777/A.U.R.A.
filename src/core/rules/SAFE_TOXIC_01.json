@@ -1,0 +1,27 @@
+{
+  "rule_id": "SAFE_TOXIC_01",
+  "type": "safety",
+  "description": "Flags activities using potentially toxic art supplies for infants 0-3 months (warn, not block)",
+  "trigger": {
+    "age_bands": ["0-3"]
+  },
+  "condition": {
+    "type": "compound_and",
+    "conditions": [
+      {
+        "type": "material_check",
+        "operator": "in",
+        "values": ["paint", "glue", "marker", "chalk_dust"]
+      },
+      {
+        "type": "age_check",
+        "operator": "lte",
+        "field": "max_age_months",
+        "value": 3
+      }
+    ]
+  },
+  "action": "flag_modify",
+  "message": "⚡ Caution: Art supplies (paint, glue, marker, chalk dust) may be harmful for infants 0-3 months. Consider non-toxic sensory alternatives.",
+  "severity": "warn"
+}
