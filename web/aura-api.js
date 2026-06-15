@@ -408,25 +408,6 @@ export const AURA_API = {
     }
   },
 
-  /* ── [BROWSER] YOLOv8n headcount — runs fully client-side ───────────────
-     Uses vision_engine.js + onnxruntime-web from CDN.
-     The function is called with an HTMLCanvasElement. */
-  countHeadsByCamera: async (imageCanvas) => {
-    try {
-      // Dynamically import the ES module (CDN ort is loaded via importmap in index.html)
-      const { analyzeClassroomPhoto } = await import('./ml_pipeline/vision_engine.js');
-      const res = await analyzeClassroomPhoto(imageCanvas, '/ml_pipeline/yolov8n.onnx');
-      return {
-        success: res.success,
-        count: res.headcount !== undefined ? res.headcount : 0,
-        confidence: res.confidenceAvg !== undefined ? res.confidenceAvg : 0.0,
-        message: res.message
-      };
-    } catch (err) {
-      console.warn('[vision] fallback:', err.message);
-      return { success: false, count: 24, confidence: 0.91, message: err.message };
-    }
-  },
 
   /* ── [SERVER] submit attendance ──────────────────────────────────────────
      POST /api/attendance */
@@ -509,54 +490,6 @@ export const AURA_API = {
     }
   },
 
-  /* ── [SERVER] Reflection Audit — human-gate commit ───────────────────────
-     POST /api/audit/commit */
-  commitAudit: async ({ centreId, approvedItems }) => {
-    AURA_DB.set('lastAuditTs', Date.now());
-    AURA_DB.queue({ op: 'audit_commit', centreId, approvedItems, ts: Date.now() });
-    try {
-      return await _apiFetch('/api/audit/commit', {
-        method: 'POST',
-        body: JSON.stringify({ centreId, approvedItems })
-      });
-    } catch {
-      return { success: true, pdfUrl: null, syncStatus: 'queued' };
-    }
-  },
-
-  /* ── [SERVER] generate register PDF ──────────────────────────────────────*/
-  generatePDF: async ({ registerType, month, year }) => {
-    try {
-      return await _apiFetch('/api/pdf/generate', {
-        method: 'POST',
-        body: JSON.stringify({ registerType, month, year })
-      });
-    } catch {
-      return { success: false, error: 'Offline / Server Down' };
-    }
-  },
-
-  /* ── [SERVER] list generated PDFs ────────────────────────────────────────*/
-  listPDFs: async () => {
-    try {
-      return await _apiFetch('/api/pdf/list');
-    } catch {
-      return [];
-    }
-  },
-
-  /* ── [SERVER] file infrastructure grievance ──────────────────────────────*/
-  fileGrievance: async ({ centreId, issueType, description, photoData }) => {
-    AURA_DB.queue({ op: 'grievance', centreId, issueType, description, photoData, ts: Date.now() });
-    try {
-      return await _apiFetch('/api/grievance', {
-        method: 'POST',
-        body: JSON.stringify({ centreId, issueType, description, photoData })
-      });
-    } catch {
-      return { success: true, syncStatus: 'queued' };
-    }
-  },
 
   /* ── [NOT BUILT] PaddleOCR Aadhaar scan ──────────────────────────────────*/
   ocrAadhaar: async (imageBlob) => {
@@ -578,9 +511,7 @@ export const AURA_API = {
       try {
         const path = op.op === 'attendance' ? '/api/attendance'
           : op.op === 'meal' ? '/api/meal'
-            : op.op === 'audit_commit' ? '/api/audit/commit'
-              : op.op === 'grievance' ? '/api/grievance'
-                : null;
+            : null;
         if (path) {
           await _apiFetch(path, { method: 'POST', body: JSON.stringify(op) });
           await AURA_DB.markSynced(op.id);
