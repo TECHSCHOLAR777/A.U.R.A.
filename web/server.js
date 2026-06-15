@@ -537,11 +537,64 @@ app.post('/api/mastery/tap', (req, res) => {
 
   try {
     const result = serverTapMastery(child_id.trim(), node_id.trim(), got_it);
-    return res.status(200).json(result); // { p_mastery, trajectory_flag }
+    return res.status(200).json(result);
   } catch (err) {
     console.error('[/api/mastery/tap] Error:', err.message);
     return res.status(500).json({ error: 'Internal server error.' });
   }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Star 1a — GET /api/health/:childId (Growth screener backend endpoint)
+// ─────────────────────────────────────────────────────────────────────────────
+app.get('/api/health/:childId', (req, res) => {
+  const childId = req.params.childId;
+
+  if (childId === 'JH-003' || childId === 'C003') {
+    return res.status(200).json({
+      childId: childId,
+      name: "Suresh Oraon",
+      zscore: -3.5,
+      category: "SAM",
+      vitals: {
+        weight: "10.1",
+        height: "95.5",
+        arm: "10.8",
+        attendance: "14/20 days"
+      },
+      mlFeatures: {
+        z_velocity: -0.2,
+        attendance_rate: 0.45,
+        missed_vaccine_streak: 2,
+        migrant_flag: 0,
+        z_acceleration: 0.0,
+        zwfl_min_3: -3.1,
+        cumulative_low_visits: 3
+      }
+    });
+  }
+
+  return res.status(200).json({
+    childId: childId,
+    name: childId === 'JH-001' ? 'Rahul Munda' : 'Typical Child',
+    zscore: 0.1,
+    category: "normal",
+    vitals: {
+      weight: "14.2",
+      height: "102.5",
+      arm: "14.5",
+      attendance: "19/20 days"
+    },
+    mlFeatures: {
+      z_velocity: 0.05,
+      attendance_rate: 0.95,
+      missed_vaccine_streak: 0,
+      migrant_flag: 0,
+      z_acceleration: 0.0,
+      zwfl_min_3: 0.0,
+      cumulative_low_visits: 0
+    }
+  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
