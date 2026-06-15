@@ -1,0 +1,330 @@
+{
+  "instrument": "Navchetana Disability Screening Schedule (DSS)",
+  "age_range_months": "0-72",
+  "scoring": "Any 'yes' is a red flag -> refer the child for diagnosis and treatment (RBSK -> District Early Intervention Centre).",
+  "result_logic": "red_flag_count == 0 -> typical; 1 red flag -> monitor; >= 2 red flags -> refer",
+  "source": "Navchetana: National Framework for Early Childhood Stimulation 2024, Annexure II (pp. 81-85)",
+  "items": [
+    {
+      "item_id": "dss_01",
+      "part": "A",
+      "question": "Did you experience any complications during your pregnancy? For example, high blood pressure, diabetes, anemia, or diseases like measles, mumps, or rubella?",
+      "response_type": "yes_no",
+      "red_flag_if": "yes",
+      "action": "refer_for_diagnosis_and_treatment"
+    },
+    {
+      "item_id": "dss_02",
+      "part": "A",
+      "question": "Did you experience any of the following complications during childbirth? For example: very long delivery, surgery, forceps delivery, premature delivery, or baby born with low birth weight?",
+      "response_type": "yes_no",
+      "red_flag_if": "yes",
+      "action": "refer_for_diagnosis_and_treatment"
+    },
+    {
+      "item_id": "dss_03",
+      "part": "A",
+      "question": "Did the child have any problems at birth or soon after? For example, delayed birth cry, jaundice, blueness, or high fever?",
+      "response_type": "yes_no",
+      "red_flag_if": "yes",
+      "action": "refer_for_diagnosis_and_treatment"
+    },
+    {
+      "item_id": "dss_04",
+      "part": "A",
+      "question": "Was the colour of the child unusual at birth? (Blue / Yellow / Pale)",
+      "response_type": "yes_no",
+      "red_flag_if": "yes",
+      "action": "refer_for_diagnosis_and_treatment"
+    },
+    {
+      "item_id": "dss_05",
+      "part": "A",
+      "question": "Did the child have feeding difficulties such as suckling or swallowing during mother's feeding?",
+      "response_type": "yes_no",
+      "red_flag_if": "yes",
+      "action": "refer_for_diagnosis_and_treatment"
+    },
+    {
+      "item_id": "dss_06",
+      "part": "A",
+      "question": "Has the child ever had fits or lost consciousness since birth?",
+      "response_type": "yes_no",
+      "red_flag_if": "yes",
+      "action": "refer_for_diagnosis_and_treatment"
+    },
+    {
+      "item_id": "dss_07",
+      "part": "A",
+      "question": "Do the child's eyes frequently turn red or water?",
+      "response_type": "yes_no",
+      "red_flag_if": "yes",
+      "action": "refer_for_diagnosis_and_treatment"
+    },
+    {
+      "item_id": "dss_08",
+      "part": "A",
+      "question": "Is there frequent pus or watery discharge from the child's ears?",
+      "response_type": "yes_no",
+      "red_flag_if": "yes",
+      "action": "refer_for_diagnosis_and_treatment"
+    },
+    {
+      "item_id": "dss_09",
+      "part": "A",
+      "question": "Does the child frequently complain about ear aches or headaches?",
+      "response_type": "yes_no",
+      "red_flag_if": "yes",
+      "action": "refer_for_diagnosis_and_treatment"
+    },
+    {
+      "item_id": "dss_10",
+      "part": "A",
+      "question": "Does the child have any missing or deformed body parts?",
+      "response_type": "yes_no",
+      "red_flag_if": "yes",
+      "action": "refer_for_diagnosis_and_treatment"
+    },
+    {
+      "item_id": "dss_11",
+      "part": "A",
+      "question": "Is the child too small or too weak compared to other children of similar age?",
+      "response_type": "yes_no",
+      "red_flag_if": "yes",
+      "action": "refer_for_diagnosis_and_treatment"
+    },
+    {
+      "item_id": "dss_12",
+      "part": "A",
+      "question": "Does the child's body have uncoordinated or jerky movements, or does the child have poor balance while walking?",
+      "response_type": "yes_no",
+      "red_flag_if": "yes",
+      "action": "refer_for_diagnosis_and_treatment"
+    },
+    {
+      "item_id": "dss_13",
+      "part": "A",
+      "question": "Does the child walk with a limp?",
+      "response_type": "yes_no",
+      "red_flag_if": "yes",
+      "action": "refer_for_diagnosis_and_treatment"
+    },
+    {
+      "item_id": "dss_14",
+      "part": "A",
+      "question": "Can the child not walk, or did the child start walking much later than other children?",
+      "response_type": "yes_no",
+      "red_flag_if": "yes",
+      "action": "refer_for_diagnosis_and_treatment"
+    },
+    {
+      "item_id": "dss_15",
+      "part": "A",
+      "question": "Is there a lump or bump on the child's backbone?",
+      "response_type": "yes_no",
+      "red_flag_if": "yes",
+      "action": "refer_for_diagnosis_and_treatment"
+    },
+    {
+      "item_id": "dss_16",
+      "part": "A",
+      "question": "Do the child's eyes squint?",
+      "response_type": "yes_no",
+      "red_flag_if": "yes",
+      "action": "refer_for_diagnosis_and_treatment"
+    },
+    {
+      "item_id": "dss_17",
+      "part": "A",
+      "question": "Are the pupils of the child's eyes gray or white?",
+      "response_type": "yes_no",
+      "red_flag_if": "yes",
+      "action": "refer_for_diagnosis_and_treatment"
+    },
+    {
+      "item_id": "dss_18",
+      "part": "A",
+      "question": "Does the child often bang into objects while walking, or do they fall frequently? Do they have difficulty seeing at night?",
+      "response_type": "yes_no",
+      "red_flag_if": "yes",
+      "action": "refer_for_diagnosis_and_treatment"
+    },
+    {
+      "item_id": "dss_19",
+      "part": "A",
+      "question": "Are the child's ears deformed or missing?",
+      "response_type": "yes_no",
+      "red_flag_if": "yes",
+      "action": "refer_for_diagnosis_and_treatment"
+    },
+    {
+      "item_id": "dss_20",
+      "part": "A",
+      "question": "Move any object (such as a toy or pen) about 12–20 inches in front of the child and within their visual field. Does the child fail to move their head with the movement of the object?",
+      "response_type": "yes_no",
+      "red_flag_if": "yes",
+      "action": "refer_for_diagnosis_and_treatment"
+    },
+    {
+      "item_id": "dss_21",
+      "part": "A",
+      "question": "Take a rattle, bell, or utensil about 1–3 feet from the child's ear (ensure the child is not looking toward you) and make a sound by shaking or banging it. Does the child fail to turn their head toward the source of the sound?",
+      "response_type": "yes_no",
+      "red_flag_if": "yes",
+      "action": "refer_for_diagnosis_and_treatment"
+    },
+    {
+      "item_id": "dss_b01",
+      "part": "B",
+      "milestone_due": "6 months",
+      "question": "Does the child show no big smiles or other warm, joyful expressions by 6 months?",
+      "response_type": "yes_no",
+      "red_flag_if": "yes",
+      "action": "refer_for_diagnosis_and_treatment"
+    },
+    {
+      "item_id": "dss_b02",
+      "part": "B",
+      "milestone_due": "6 months",
+      "question": "Has the child NOT yet supported their own neck by 6 months?",
+      "response_type": "yes_no",
+      "red_flag_if": "yes",
+      "action": "refer_for_diagnosis_and_treatment"
+    },
+    {
+      "item_id": "dss_b03",
+      "part": "B",
+      "milestone_due": "7-8 months",
+      "question": "Has the child NOT yet turned from belly to back and back to belly by 7–8 months?",
+      "response_type": "yes_no",
+      "red_flag_if": "yes",
+      "action": "refer_for_diagnosis_and_treatment"
+    },
+    {
+      "item_id": "dss_b04",
+      "part": "B",
+      "milestone_due": "9 months",
+      "question": "Has the child NOT yet sat without support by 9 months?",
+      "response_type": "yes_no",
+      "red_flag_if": "yes",
+      "action": "refer_for_diagnosis_and_treatment"
+    },
+    {
+      "item_id": "dss_b05",
+      "part": "B",
+      "milestone_due": "9 months",
+      "question": "Does the child NOT yet provide back-and-forth responses with sounds, smiles, or other facial expressions by 9 months?",
+      "response_type": "yes_no",
+      "red_flag_if": "yes",
+      "action": "refer_for_diagnosis_and_treatment"
+    },
+    {
+      "item_id": "dss_b06",
+      "part": "B",
+      "milestone_due": "12 months",
+      "question": "Has the child NOT yet made babbling sounds like 'ba ba', 'ma ma', or 'da da' by 12 months?",
+      "response_type": "yes_no",
+      "red_flag_if": "yes",
+      "action": "refer_for_diagnosis_and_treatment"
+    },
+    {
+      "item_id": "dss_b07",
+      "part": "B",
+      "milestone_due": "12 months",
+      "question": "Does the child NOT yet respond to their own name by 12 months?",
+      "response_type": "yes_no",
+      "red_flag_if": "yes",
+      "action": "refer_for_diagnosis_and_treatment"
+    },
+    {
+      "item_id": "dss_b08",
+      "part": "B",
+      "milestone_due": "12 months",
+      "question": "Has the child NOT yet made back-and-forth gestures such as pointing, showing, reaching, or waving by 12 months?",
+      "response_type": "yes_no",
+      "red_flag_if": "yes",
+      "action": "refer_for_diagnosis_and_treatment"
+    },
+    {
+      "item_id": "dss_b09",
+      "part": "B",
+      "milestone_due": "16 months",
+      "question": "Has the child NOT yet spoken a few words by 16 months?",
+      "response_type": "yes_no",
+      "red_flag_if": "yes",
+      "action": "refer_for_diagnosis_and_treatment"
+    },
+    {
+      "item_id": "dss_b10",
+      "part": "B",
+      "milestone_due": "18 months",
+      "question": "Has the child NOT yet walked without support by 18 months?",
+      "response_type": "yes_no",
+      "red_flag_if": "yes",
+      "action": "refer_for_diagnosis_and_treatment"
+    },
+    {
+      "item_id": "dss_b11",
+      "part": "B",
+      "milestone_due": "18 months",
+      "question": "Does the child NOT yet follow simple instructions such as 'come here' or 'give me the glass' by 18 months?",
+      "response_type": "yes_no",
+      "red_flag_if": "yes",
+      "action": "refer_for_diagnosis_and_treatment"
+    },
+    {
+      "item_id": "dss_b12",
+      "part": "B",
+      "milestone_due": "24 months",
+      "question": "Has the child NOT yet spoken a few words by 24 months?",
+      "response_type": "yes_no",
+      "red_flag_if": "yes",
+      "action": "refer_for_diagnosis_and_treatment"
+    },
+    {
+      "item_id": "dss_b13",
+      "part": "B",
+      "milestone_due": "3 years",
+      "question": "Can the child NOT yet say their own name by 3 years?",
+      "response_type": "yes_no",
+      "red_flag_if": "yes",
+      "action": "refer_for_diagnosis_and_treatment"
+    },
+    {
+      "item_id": "dss_b14",
+      "part": "B",
+      "milestone_due": "4 years",
+      "question": "Has the child NOT yet achieved toilet control by 4 years?",
+      "response_type": "yes_no",
+      "red_flag_if": "yes",
+      "action": "refer_for_diagnosis_and_treatment"
+    },
+    {
+      "item_id": "dss_b15",
+      "part": "B",
+      "milestone_due": "4 years",
+      "question": "Does the child NOT yet avoid simple hazards by 4 years?",
+      "response_type": "yes_no",
+      "red_flag_if": "yes",
+      "action": "refer_for_diagnosis_and_treatment"
+    },
+    {
+      "item_id": "dss_b16",
+      "part": "B",
+      "milestone_due": "4 years",
+      "question": "Does the child NOT yet eat by themselves by 4 years?",
+      "response_type": "yes_no",
+      "red_flag_if": "yes",
+      "action": "refer_for_diagnosis_and_treatment"
+    },
+    {
+      "item_id": "dss_b17",
+      "part": "B",
+      "milestone_due": "5 years",
+      "question": "Does the child NOT yet dress up on their own by 5 years?",
+      "response_type": "yes_no",
+      "red_flag_if": "yes",
+      "action": "refer_for_diagnosis_and_treatment"
+    }
+  ]
+}
