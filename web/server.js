@@ -482,6 +482,7 @@ function buildStaticFallback(nodeId, childProfiles) {
 
 const app = express();
 app.use(express.json());
+app.use(express.static(__dirname));
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Sub-task 5.1 — POST /api/mastery/tap
