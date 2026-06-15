@@ -356,8 +356,8 @@ function _getClinicalDiagnosis(z) {
    AURA_API — The main communication layer between frontend & offline/cloud
    ============================================================================ */
 
-const SUPABASE_URL = window.ENV.SUPABASE_URL;
-const SUPABASE_KEY = window.ENV.SUPABASE_KEY;
+const SUPABASE_URL = (typeof window !== 'undefined' && window.ENV) ? window.ENV.SUPABASE_URL : '';
+const SUPABASE_KEY = (typeof window !== 'undefined' && window.ENV) ? window.ENV.SUPABASE_KEY : '';
 
 let cachedAWC = null;
 
