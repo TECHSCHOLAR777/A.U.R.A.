@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#1e40af" />
+  <title>AURA — Anganwadi Universal Response Assistant</title>
+  <meta name="description" content="AURA offline-first PWA for Anganwadi workers" />
+
+  <!-- PWA manifest placeholder — sw.js registers the service worker -->
+  <!-- <link rel="manifest" href="./manifest.json" /> -->
+
+  <style>
+    /* ─── Reset & base ─────────────────────────────────────────────── */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --color-brand:    #1e40af;
+      --color-surface:  #f8fafc;
+      --color-card:     #ffffff;
+      --color-border:   #e2e8f0;
+      --color-text:     #1e293b;
+      --color-muted:    #64748b;
+
+      /* Badge colours — Req 9.1 */
+      --badge-mastered: #22c55e;   /* green  */
+      --badge-rising:   #3b82f6;   /* blue   */
+      --badge-stalled:  #f59e0b;   /* amber  */
+      --badge-at_risk:  #ef4444;   /* red    */
+      --badge-none:     #9ca3af;   /* grey   */
+
+      --radius:  0.5rem;
+      --shadow:  0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08);
+    }
+
+    body {
+      font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+      background: var(--color-surface);
+      color: var(--color-text);
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ─── Header ───────────────────────────────────────────────────── */
+    header {
+      background: var(--color-brand);
+      color: #fff;
+      padding: 0.875rem 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      box-shadow: var(--shadow);
+    }
+
+    header h1 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    header .header-subtitle {
+      font-size: 0.75rem;
+      opacity: 0.8;
+      margin-top: 0.1rem;
+    }
+
+    /* ─── Main layout ───────────────────────────────────────────────── */
+    main {
+      flex: 1;
+      padding: 1rem;
+      max-width: 900px;
+      width: 100%;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    /* ─── Card shell ────────────────────────────────────────────────── */
+    .card {
+      background: var(--color-card);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 1.25rem;
+    }
+
+    .card h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      color: var(--color-text);
+    }
+
+    /* ─── Activity section ──────────────────────────────────────────── */
+    #activity-section {
+      min-height: 8rem;
+    }
+
+    #activity-card {
+      color: var(--color-muted);
+      font-size: 0.9rem;
+    }
+
+    /* Guardrail chip placeholder — Task 7 will inject renderGuardrailChip here */
+    #guardrail-chip-container {
+      margin-top: 0.75rem;
+      /* PLACEHOLDER: Task 7 — renderGuardrailChip(rules_fired) output goes here */
+    }
+
+    /* ─── Post-session section ──────────────────────────────────────── */
+    #post-session {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    /* ─── Node selector ─────────────────────────────────────────────── */
+    #node-selector {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    #node-selector label {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--color-text);
+    }
+
+    #activeNodeSelect {
+      font-size: 0.875rem;
+      padding: 0.35rem 0.6rem;
+      border: 1px solid var(--color-border);
+      border-radius: calc(var(--radius) / 2);
+      background: var(--color-card);
+      color: var(--color-text);
+      cursor: pointer;
+    }
+
+    #activeNodeSelect:focus {
+      outline: 2px solid var(--color-brand);
+      outline-offset: 1px;
+    }
+
+    /* ─── Avatar grid ───────────────────────────────────────────────── */
+    #avatar-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .avatar-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.75rem 0.5rem;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      background: var(--color-card);
+      cursor: pointer;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: none;            /* needed for reliable pointer events */
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+    }
+
+    .avatar-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,.12);
+    }
+
+    .avatar-card:active {
+      transform: scale(0.96);
+    }
+
+    .avatar-card.pending {
+      opacity: 0.7;
+    }
+
+    /* The circular coloured badge */
+    .avatar-badge {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: 3px solid rgba(0,0,0,.08);
+      transition: background-color 0.25s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      /* Default icon — overridden by JS using a child initials approach */
+    }
+
+    .avatar-badge.badge-mastered { background: var(--badge-mastered); }
+    .avatar-badge.badge-rising   { background: var(--badge-rising);   }
+    .avatar-badge.badge-stalled  { background: var(--badge-stalled);  }
+    .avatar-badge.badge-at_risk  { background: var(--badge-at_risk);  }
+    .avatar-badge.badge-none     { background: var(--badge-none);     }
+
+    .avatar-name {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-align: center;
+      color: var(--color-text);
+    }
+
+    /* ─── Complete session button ───────────────────────────────────── */
+    #session-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 0.25rem;
+    }
+
+    #btn-mark-complete {
+      background: var(--color-brand);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      padding: 0.625rem 1.25rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+
+    #btn-mark-complete:hover  { background: #1e3a8a; }
+    #btn-mark-complete:active { background: #1e3a8a; transform: scale(0.98); }
+    #btn-mark-complete:focus-visible {
+      outline: 2px solid var(--color-brand);
+      outline-offset: 3px;
+    }
+
+    /* ─── Toast / feedback messages ─────────────────────────────────── */
+    #toast {
+      position: fixed;
+      bottom: 1.25rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(4rem);
+      background: #1e293b;
+      color: #fff;
+      padding: 0.55rem 1rem;
+      border-radius: var(--radius);
+      font-size: 0.85rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      white-space: nowrap;
+      z-index: 999;
+    }
+
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ─── Accessibility helpers ──────────────────────────────────────── */
+    .sr-only {
+      position: absolute;
+      width: 1px; height: 1px;
+      padding: 0; margin: -1px;
+      overflow: hidden;
+      clip: rect(0,0,0,0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    /* ─── Guardrail Chip ─────────────────────────────────────────────── */
+    .guardrail-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.35rem 0.7rem;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+      flex-wrap: wrap;
+      margin-top: 0.5rem;
+    }
+
+    .guardrail-chip.chip-amber { background: #f59e0b; color: #fff; }
+    .guardrail-chip.chip-blue  { background: #3b82f6; color: #fff; }
+
+    .chip-toggle {
+      font-size: 0.65rem;
+      margin-left: 0.1rem;
+    }
+
+    .chip-detail {
+      position: absolute;
+      top: calc(100% + 0.4rem);
+      left: 0;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,.12);
+      padding: 0.5rem;
+      min-width: 280px;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .chip-detail[hidden] { display: none; }
+
+    .rule-pill {
+      display: grid;
+      grid-template-columns: auto auto 1fr;
+      gap: 0.4rem;
+      align-items: start;
+      padding: 0.4rem 0.5rem;
+      background: #f8fafc;
+      border-radius: 0.35rem;
+      font-size: 0.75rem;
+    }
+
+    .pill-id   { font-weight: 700; color: #1e293b; white-space: nowrap; }
+    .pill-type { 
+      font-size: 0.65rem; 
+      padding: 0.1rem 0.35rem; 
+      border-radius: 9999px;
+      font-weight: 600;
+      white-space: nowrap;
+      align-self: center;
+    }
+    .pill-type.type-safety    { background: #fef3c7; color: #92400e; }
+    .pill-type.type-inclusion { background: #dbeafe; color: #1e40af; }
+    .pill-msg  { color: #64748b; font-size: 0.73rem; line-height: 1.3; }
+
+    /* ─── Activity card content ───────────────────────────────────────── */
+    .activity-content h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--color-text);
+      margin-bottom: 0.5rem;
+    }
+
+    .activity-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .activity-meta span {
+      font-size: 0.75rem;
+      padding: 0.15rem 0.5rem;
+      background: #f1f5f9;
+      border-radius: 9999px;
+      color: var(--color-muted);
+      font-weight: 500;
+    }
+
+    .activity-steps {
+      font-size: 0.85rem;
+      color: var(--color-text);
+      padding-left: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .activity-steps li { line-height: 1.45; }
+
+    .activity-materials {
+      margin-top: 0.6rem;
+      font-size: 0.8rem;
+      color: var(--color-muted);
+    }
+
+    /* ─── Load demo button ────────────────────────────────────────────── */
+    #btn-load-activity {
+      background: #0f766e;
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      padding: 0.55rem 1.1rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s ease;
+      margin-top: 0.75rem;
+    }
+
+    #btn-load-activity:hover  { background: #0d6158; }
+    #btn-load-activity:active { background: #0d6158; transform: scale(0.98); }
+    #btn-load-activity:focus-visible {
+      outline: 2px solid #0f766e;
+      outline-offset: 3px;
+    }
+    #btn-load-activity:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══ Header ═══════════════════════════════════════════════════════════ -->
+  <header>
+    <div>
+      <h1>AURA</h1>
+      <div class="header-subtitle">Anganwadi Universal Response Assistant</div>
+    </div>
+  </header>
+
+  <!-- ═══ Main content ═════════════════════════════════════════════════════ -->
+  <main>
+
+    <!-- Activity section — filled by JS when a C1 activity is loaded -->
+    <section id="activity-section" class="card" aria-label="Current activity">
+      <h2>Current Activity</h2>
+      <div id="activity-card">
+        <p>No activity loaded. Tap "Load Demo Activity" to begin.</p>
+      </div>
+      <!-- Guardrail chip rendered here via renderGuardrailChip() — Req 10.1 -->
+      <div id="guardrail-chip-container" aria-live="polite"></div>
+      <button id="btn-load-activity" type="button">🎯 Load Demo Activity</button>
+    </section>
+
+    <!-- Post-session section — Req 9.1 -->
+    <section id="post-session" class="card" aria-label="Post-session mastery grid">
+      <h2>Session Complete</h2>
+
+      <!-- Node selector — lets AWW change the active knowledge node -->
+      <div id="node-selector">
+        <label for="activeNodeSelect">Active Node:
+          <select id="activeNodeSelect" aria-label="Select active knowledge node">
+            <option value="FM-3">FM-3 — Fine Motor</option>
+            <option value="FM-2">FM-2 — Fine Motor (Prerequisite)</option>
+            <option value="CG-2">CG-2 — Cognitive</option>
+            <option value="CG-3">CG-3 — Cognitive</option>
+            <option value="LL-1">LL-1 — Language &amp; Literacy</option>
+            <option value="SE-1">SE-1 — Socio-Emotional</option>
+          </select>
+        </label>
+      </div>
+
+      <!-- Avatar grid — populated by renderAvatarGrid() -->
+      <div id="avatar-grid" role="list" aria-label="Children mastery grid">
+        <!-- Avatar cards are injected by JS -->
+      </div>
+
+      <!-- Session actions -->
+      <div id="session-actions">
+        <button id="btn-mark-complete" type="button">
+          Mark Session Complete
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Toast notification -->
+  <div id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- ═══ Application script ════════════════════════════════════════════════ -->
+  <script type="module">
+    import { BKTEngine }   from './bkt_engine.js';
+    import { MasteryStore } from './aura-api.js';
+    import { GuardrailEngine } from './guardrail_engine.js';
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Demo children (hardcoded for prototype — Req 9.1)
+    // In production this would be fetched from an IndexedDB children store.
+    // ─────────────────────────────────────────────────────────────────────────
+    const demoChildren = [
+      { child_id: 'C001', name: 'Raju',  age_months: 42 },
+      { child_id: 'C002', name: 'Priya', age_months: 38 },
+      { child_id: 'C003', name: 'Meena', age_months: 45 },
+      { child_id: 'C004', name: 'Arjun', age_months: 36 },
+      { child_id: 'C005', name: 'Sita',  age_months: 48 },
+      { child_id: 'C006', name: 'Kiran', age_months: 40 },
+    ];
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // State
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /** The currently active knowledge node being assessed. */
+    let activeNode = 'FM-3';
+
+    /**
+     * Map<child_id, MasteryRecord|null> — populated by loadMasteryMap().
+     * null means no record exists yet for this child × activeNode pair.
+     */
+    let masteryMap = new Map();
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Badge class helpers
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /** All valid badge CSS class names. */
+    const BADGE_CLASSES = [
+      'badge-mastered',
+      'badge-rising',
+      'badge-stalled',
+      'badge-at_risk',
+      'badge-none',
+    ];
+
+    /**
+     * Return the CSS badge class for a given trajectory_flag value.
+     *
+     * @param {string|null|undefined} flag
+     * @returns {string}
+     */
+    function badgeClass(flag) {
+      switch (flag) {
+        case 'mastered': return 'badge-mastered';
+        case 'rising':   return 'badge-rising';
+        case 'stalled':  return 'badge-stalled';
+        case 'at_risk':  return 'badge-at_risk';
+        default:         return 'badge-none';
+      }
+    }
+
+    /**
+     * Human-readable label for the trajectory flag (used in aria-label).
+     *
+     * @param {string|null|undefined} flag
+     * @returns {string}
+     */
+    function badgeLabel(flag) {
+      switch (flag) {
+        case 'mastered': return 'mastered';
+        case 'rising':   return 'rising';
+        case 'stalled':  return 'stalled';
+        case 'at_risk':  return 'at risk';
+        default:         return 'no record';
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Sub-task 6.1 — Load mastery records (batched IDB read — Req 9.1)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * loadMasteryMap — Batch-fetch all mastery records for activeNode in a
+     * single `getAllByNode` call, then build a Map keyed by child_id.
+     *
+     * This satisfies the Req 9.1 requirement to "batch the IDB read as a single
+     * getAllByChild call per node rather than one call per child".
+     */
+    async function loadMasteryMap() {
+      // One IDB index scan for the whole node — O(n_records) not O(n_children).
+      const records = await MasteryStore.getAllByNode(activeNode);
+
+      masteryMap = new Map();
+
+      // Seed all known children as null (no record) first.
+      for (const child of demoChildren) {
+        masteryMap.set(child.child_id, null);
+      }
+
+      // Overwrite with real records where they exist.
+      for (const record of records) {
+        if (masteryMap.has(record.child_id)) {
+          masteryMap.set(record.child_id, record);
+        }
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Sub-task 6.2 — Render avatar grid (Req 9.1, colour-coding)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * renderAvatarGrid — Build and insert all avatar card elements.
+     * Called on initial load and after every node change.
+     */
+    function renderAvatarGrid() {
+      const grid = document.getElementById('avatar-grid');
+      grid.innerHTML = '';
+
+      for (const child of demoChildren) {
+        const record = masteryMap.get(child.child_id);
+        const flag   = record ? record.trajectory_flag : null;
+        const cls    = badgeClass(flag);
+        const label  = badgeLabel(flag);
+
+        // Build avatar card — Req 9.1 (role="button" + aria-label)
+        const card = document.createElement('div');
+        card.className = 'avatar-card';
+        card.setAttribute('role', 'button');
+        card.setAttribute('tabindex', '0');
+        card.setAttribute('data-child-id', child.child_id);
+        card.setAttribute(
+          'aria-label',
+          `${child.name}, age ${child.age_months} months, mastery: ${label}. ` +
+          `Tap to mark as understood, long-press to mark as not understood.`
+        );
+
+        // Badge element
+        const badge = document.createElement('div');
+        badge.className = `avatar-badge ${cls}`;
+        badge.setAttribute(
+          'aria-label',
+          `Mastery status: ${label}`
+        );
+        // Show first initial inside the badge circle for easy identification
+        badge.textContent = child.name.charAt(0).toUpperCase();
+        badge.style.color = '#fff';
+        badge.style.fontWeight = '700';
+        badge.style.fontSize = '1.1rem';
+
+        // Name label
+        const nameEl = document.createElement('span');
+        nameEl.className = 'avatar-name';
+        nameEl.textContent = child.name;
+
+        card.appendChild(badge);
+        card.appendChild(nameEl);
+
+        // Wire interaction handlers (sub-tasks 6.3, 6.4)
+        attachTapHandlers(card, child.child_id);
+
+        // Keyboard activation support for accessibility
+        card.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleShortTap(child.child_id, card);
+          }
+        });
+
+        grid.appendChild(card);
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Sub-task 6.3 — Short-tap handler (Req 9.2 — optimistic update)
+    // Sub-task 6.4 — Long-press handler (Req 9.3)
+    // Sub-task 6.5 — Promise reconciliation (Req 9.4)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /** Duration in ms that distinguishes a long-press from a short tap. */
+    const LONG_PRESS_MS = 500;
+
+    /**
+     * attachTapHandlers — Wire short-tap and long-press pointer events to a
+     * given avatar card element.
+     *
+     * Short tap  → tapMastery(child_id, activeNode, true)   with optimistic badge
+     * Long press → tapMastery(child_id, activeNode, false)  on timer expiry
+     *
+     * @param {HTMLElement} card       — The .avatar-card DOM element
+     * @param {string}      child_id   — Identifier for the child
+     */
+    function attachTapHandlers(card, child_id) {
+      let longPressTimer = null;
+      let longPressFired = false;
+
+      // ── pointerdown: start long-press countdown ─────────────────────────
+      card.addEventListener('pointerdown', (e) => {
+        // Capture the pointer so we receive pointerup even if the finger moves.
+        card.setPointerCapture(e.pointerId);
+        longPressFired = false;
+
+        longPressTimer = setTimeout(() => {
+          longPressFired = true;
+          handleLongPress(child_id, card);
+        }, LONG_PRESS_MS);
+      });
+
+      // ── pointerup: short tap if long press has NOT fired yet ─────────────
+      card.addEventListener('pointerup', () => {
+        if (longPressTimer !== null) {
+          clearTimeout(longPressTimer);
+          longPressTimer = null;
+        }
+
+        if (!longPressFired) {
+          handleShortTap(child_id, card);
+        }
+
+        longPressFired = false;
+      });
+
+      // ── pointerleave / pointercancel: cancel without firing either ────────
+      const cancelPress = () => {
+        if (longPressTimer !== null) {
+          clearTimeout(longPressTimer);
+          longPressTimer = null;
+        }
+        longPressFired = false;
+      };
+
+      card.addEventListener('pointerleave',  cancelPress);
+      card.addEventListener('pointercancel', cancelPress);
+
+      // Prevent context-menu on long-press (mobile browsers)
+      card.addEventListener('contextmenu', (e) => e.preventDefault());
+    }
+
+    /**
+     * handleShortTap — Optimistically flip the badge to green (mastered) then
+     * call tapMastery(child_id, activeNode, true). On Promise resolution,
+     * reconcile with the actual trajectory_flag (Req 9.2, 9.4).
+     *
+     * @param {string}      child_id
+     * @param {HTMLElement} card
+     */
+    async function handleShortTap(child_id, card) {
+      if (card.classList.contains('pending')) return; // debounce
+
+      // ── Sub-task 6.3: optimistic update — flip badge to green immediately ─
+      card.classList.add('pending');
+      const badge = card.querySelector('.avatar-badge');
+      setBadge(badge, 'mastered', card.getAttribute('aria-label'));
+
+      showToast(`Marked ${getChildName(child_id)} ✓`);
+
+      try {
+        // Call BKT engine
+        const record = await BKTEngine.tapMastery(child_id, activeNode, true);
+
+        // ── Sub-task 6.5: reconcile optimistic badge with actual flag ────────
+        masteryMap.set(child_id, record);
+        setBadge(badge, record.trajectory_flag, buildAriaLabel(child_id, record.trajectory_flag));
+        updateCardAriaLabel(card, child_id, record.trajectory_flag);
+      } catch (err) {
+        console.error('[index.html] tapMastery(true) failed:', err);
+        showToast('Error saving — please retry');
+        // Revert to last known badge on failure
+        const existing = masteryMap.get(child_id);
+        const flag = existing ? existing.trajectory_flag : null;
+        setBadge(badge, flag, buildAriaLabel(child_id, flag));
+        updateCardAriaLabel(card, child_id, flag);
+      } finally {
+        card.classList.remove('pending');
+      }
+    }
+
+    /**
+     * handleLongPress — Call tapMastery(child_id, activeNode, false) and update
+     * the badge with the returned trajectory_flag (Req 9.3, 9.4).
+     *
+     * No optimistic update for long-press per spec (Req 9.3 says "update the
+     * badge on Promise resolution").
+     *
+     * @param {string}      child_id
+     * @param {HTMLElement} card
+     */
+    async function handleLongPress(child_id, card) {
+      if (card.classList.contains('pending')) return;
+
+      card.classList.add('pending');
+      const badge = card.querySelector('.avatar-badge');
+
+      showToast(`Marking ${getChildName(child_id)} as not understood…`);
+
+      try {
+        const record = await BKTEngine.tapMastery(child_id, activeNode, false);
+
+        // ── Sub-task 6.4 + 6.5: update badge with actual flag on resolution ─
+        masteryMap.set(child_id, record);
+        setBadge(badge, record.trajectory_flag, buildAriaLabel(child_id, record.trajectory_flag));
+        updateCardAriaLabel(card, child_id, record.trajectory_flag);
+
+        showToast(`Updated ${getChildName(child_id)}`);
+      } catch (err) {
+        console.error('[index.html] tapMastery(false) failed:', err);
+        showToast('Error saving — please retry');
+      } finally {
+        card.classList.remove('pending');
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Badge DOM helpers
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * setBadge — Apply the correct colour class and aria-label to a badge element.
+     *
+     * @param {HTMLElement}         badgeEl — The .avatar-badge element
+     * @param {string|null}         flag    — trajectory_flag value
+     * @param {string}              ariaLabel
+     */
+    function setBadge(badgeEl, flag, ariaLabel) {
+      // Remove all badge colour classes, then add the correct one.
+      badgeEl.classList.remove(...BADGE_CLASSES);
+      badgeEl.classList.add(badgeClass(flag));
+      badgeEl.setAttribute('aria-label', `Mastery status: ${badgeLabel(flag)}`);
+    }
+
+    /**
+     * updateCardAriaLabel — Refresh the card's top-level aria-label after
+     * a badge change so screen-readers describe the new state.
+     */
+    function updateCardAriaLabel(card, child_id, flag) {
+      card.setAttribute('aria-label', buildAriaLabel(child_id, flag));
+    }
+
+    /**
+     * buildAriaLabel — Construct the full descriptive aria-label for a card.
+     */
+    function buildAriaLabel(child_id, flag) {
+      const child = demoChildren.find(c => c.child_id === child_id);
+      const name  = child ? child.name : child_id;
+      return (
+        `${name}, mastery: ${badgeLabel(flag)}. ` +
+        `Tap to mark as understood, long-press to mark as not understood.`
+      );
+    }
+
+    /**
+     * getChildName — Look up a display name from the demo children array.
+     */
+    function getChildName(child_id) {
+      const child = demoChildren.find(c => c.child_id === child_id);
+      return child ? child.name : child_id;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Toast notification
+    // ─────────────────────────────────────────────────────────────────────────
+
+    let _toastTimer = null;
+
+    /**
+     * showToast — Display a brief message at the bottom of the screen.
+     *
+     * @param {string} message
+     * @param {number} [duration=2000]
+     */
+    function showToast(message, duration = 2000) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+
+      if (_toastTimer) clearTimeout(_toastTimer);
+      _toastTimer = setTimeout(() => {
+        toast.classList.remove('show');
+      }, duration);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Node selector wiring
+    // ─────────────────────────────────────────────────────────────────────────
+
+    async function onNodeChange(newNode) {
+      activeNode = newNode;
+      await loadMasteryMap();
+      renderAvatarGrid();
+    }
+
+    document.getElementById('activeNodeSelect').addEventListener('change', async (e) => {
+      await onNodeChange(e.target.value);
+    });
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Session Complete button
+    // ─────────────────────────────────────────────────────────────────────────
+
+    document.getElementById('btn-mark-complete').addEventListener('click', () => {
+      showToast('Session saved ✓', 3000);
+      // Future: POST session summary to server.js
+    });
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Task 7 — Guardrail Chip UI (Req 10.1–10.4)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * renderGuardrailChip — Build an HTML string for the guardrail chip.
+     *
+     * Sub-task 7.1: Returns '' when rules_fired is null, undefined, or empty.
+     * Sub-task 7.2: Renders chip with safety/inclusion counts and amber/blue colour.
+     * Sub-task 7.3: Detail panel with per-rule pills is toggled by a click handler
+     *               attached after the chip is injected into the DOM (see wiring below).
+     *
+     * @param {string[]|null|undefined} rules_fired — array of rule_id strings
+     * @returns {string} — HTML string or '' if nothing to render
+     *
+     * Satisfies Req 10.1, 10.2, 10.4
+     */
+    function renderGuardrailChip(rules_fired) {
+      // Sub-task 7.1 — empty / absent → no chip
+      if (!Array.isArray(rules_fired) || rules_fired.length === 0) {
+        return '';
+      }
+
+      // Sub-task 7.2 — count by prefix
+      const safety_count    = rules_fired.filter(id => id.startsWith('SAFE_')).length;
+      const inclusion_count = rules_fired.filter(id => id.startsWith('INC_')).length;
+
+      const colorClass = safety_count > 0 ? 'chip-amber' : 'chip-blue';
+      const ariaLabel  = `${safety_count} safety, ${inclusion_count} inclusion guardrail rules applied`;
+
+      // Build the pill HTML for each fired rule, looking up type + message from the catalogue
+      const rulesMap = new Map(GuardrailEngine.getRules().map(r => [r.rule_id, r]));
+
+      const pillsHtml = rules_fired.map(rule_id => {
+        const rule = rulesMap.get(rule_id);
+        const type    = rule ? rule.type    : 'unknown';
+        const message = rule ? rule.message : rule_id;
+        const typeClass = type === 'safety' ? 'type-safety' : 'type-inclusion';
+        return `<div class="rule-pill" data-rule-id="${escapeAttr(rule_id)}">
+          <span class="pill-id">${escapeHtml(rule_id)}</span>
+          <span class="pill-type ${typeClass}">${escapeHtml(type)}</span>
+          <span class="pill-msg">${escapeHtml(message)}</span>
+        </div>`;
+      }).join('');
+
+      return `<div class="guardrail-chip ${colorClass}" data-rules='${JSON.stringify(rules_fired)}' aria-label="${escapeAttr(ariaLabel)}" role="button" tabindex="0">
+  <span class="chip-icon" aria-hidden="true">🛡</span>
+  <span class="chip-label">${safety_count} safety · ${inclusion_count} inclusion</span>
+  <span class="chip-toggle" aria-hidden="true">▼</span>
+  <div class="chip-detail" hidden>
+    ${pillsHtml}
+  </div>
+</div>`;
+    }
+
+    /**
+     * escapeHtml — Escape characters that have special meaning in HTML text content.
+     */
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
+    /**
+     * escapeAttr — Escape characters that have special meaning inside HTML attribute values.
+     */
+    function escapeAttr(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
+    /**
+     * wireChipToggle — Attach the click/keydown toggle handler to a rendered chip element.
+     *
+     * Sub-task 7.3: Toggles the chip-detail hidden attribute and flips the toggle arrow.
+     *
+     * @param {HTMLElement} chipEl — The .guardrail-chip DOM element
+     *
+     * Satisfies Req 10.3
+     */
+    function wireChipToggle(chipEl) {
+      if (!chipEl) return;
+
+      function toggle() {
+        const detail = chipEl.querySelector('.chip-detail');
+        const arrow  = chipEl.querySelector('.chip-toggle');
+        if (!detail) return;
+
+        const isHidden = detail.hasAttribute('hidden');
+        if (isHidden) {
+          detail.removeAttribute('hidden');
+          if (arrow) arrow.textContent = '▲';
+          chipEl.setAttribute('aria-expanded', 'true');
+        } else {
+          detail.setAttribute('hidden', '');
+          if (arrow) arrow.textContent = '▼';
+          chipEl.setAttribute('aria-expanded', 'false');
+        }
+      }
+
+      chipEl.addEventListener('click', toggle);
+      chipEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          toggle();
+        }
+      });
+    }
+
+    /**
+     * renderActivityCard — Display a C1 activity object in #activity-card and
+     * inject the guardrail chip into #guardrail-chip-container.
+     *
+     * Sub-task 7.4: Calls renderGuardrailChip with c1.provenance.rules_fired and
+     * wires the toggle handler after insertion.
+     *
+     * @param {object} c1 — C1ActivityObject
+     *
+     * Satisfies Req 10.2, 10.3, 10.4
+     */
+    function renderActivityCard(c1) {
+      // ── Render the activity card content ─────────────────────────────────
+      const cardEl = document.getElementById('activity-card');
+
+      const stepsHtml = Array.isArray(c1.step_by_step_instructions)
+        ? `<ol class="activity-steps">${
+            c1.step_by_step_instructions
+              .map(s => `<li>${escapeHtml(s)}</li>`)
+              .join('')
+          }</ol>`
+        : '';
+
+      const materialsHtml = Array.isArray(c1.required_materials) && c1.required_materials.length > 0
+        ? `<div class="activity-materials">🧰 <strong>Materials:</strong> ${escapeHtml(c1.required_materials.join(', '))}</div>`
+        : '';
+
+      cardEl.innerHTML = `<div class="activity-content">
+  <h3>${escapeHtml(c1.adapted_title || 'Activity')}</h3>
+  <div class="activity-meta">
+    <span>📚 ${escapeHtml(c1.targeted_domain || '')}</span>
+    <span>🎂 ${escapeHtml(c1.age_band_months || '')} months</span>
+    <span>🎯 ${escapeHtml(c1.milestone_targeted || '')}</span>
+    ${c1.safety_guard_applied ? '<span style="background:#fef3c7;color:#92400e">🛡 Guardrails applied</span>' : ''}
+  </div>
+  ${stepsHtml}
+  ${materialsHtml}
+</div>`;
+
+      // ── Sub-task 7.4: inject the guardrail chip ───────────────────────────
+      const chipContainer = document.getElementById('guardrail-chip-container');
+      const rules_fired = c1.provenance && Array.isArray(c1.provenance.rules_fired)
+        ? c1.provenance.rules_fired
+        : [];
+
+      const chipHtml = renderGuardrailChip(rules_fired);
+      chipContainer.innerHTML = chipHtml;
+
+      // Wire the toggle handler to the newly injected chip (sub-task 7.3)
+      const chipEl = chipContainer.querySelector('.guardrail-chip');
+      if (chipEl) wireChipToggle(chipEl);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // "Load Demo Activity" button — calls POST /api/activity/next and renders
+    // ─────────────────────────────────────────────────────────────────────────
+
+    document.getElementById('btn-load-activity').addEventListener('click', async () => {
+      const btn = document.getElementById('btn-load-activity');
+      btn.disabled = true;
+      btn.textContent = '⏳ Loading…';
+
+      try {
+        const response = await fetch('/api/activity/next', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            child_profiles: demoChildren,
+            node_id: activeNode,
+            age_band_months: '36-48',
+          }),
+        });
+
+        if (!response.ok) {
+          const err = await response.text();
+          throw new Error(`HTTP ${response.status}: ${err}`);
+        }
+
+        const c1 = await response.json();
+        renderActivityCard(c1);
+        showToast('Activity loaded ✓');
+      } catch (err) {
+        console.error('[index.html] Load activity failed:', err);
+        document.getElementById('activity-card').innerHTML =
+          `<p style="color:#ef4444;font-size:0.85rem">Could not load activity: ${escapeHtml(err.message)}</p>`;
+        showToast('Failed to load activity');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '🎯 Load Demo Activity';
+      }
+    });
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Boot — load mastery data and render the grid
+    // ─────────────────────────────────────────────────────────────────────────
+
+    (async () => {
+      try {
+        await loadMasteryMap();
+        renderAvatarGrid();
+      } catch (err) {
+        console.error('[index.html] Boot error:', err);
+        document.getElementById('avatar-grid').innerHTML =
+          '<p style="color:#ef4444;font-size:0.85rem">Could not load mastery data. Please refresh.</p>';
+      }
+    })();
+
+  </script>
+
+</body>
+</html>
