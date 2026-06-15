@@ -1,0 +1,263 @@
+[
+  {
+    "id": "ACT_001",
+    "domain": "fine_motor",
+    "aadharshila_ref": "FM-3",
+    "materials": ["leaves", "twigs"],
+    "duration_min": 15,
+    "inclusion_tags": ["visual_impaired_ok", "stutter_ok", "motor_delay_partial"],
+    "exclusion_tags": [],
+    "choking_hazard": false,
+    "keywords": ["sort", "group", "arrange"],
+    "differentiation": {
+      "3-4": "Give child a pile of leaves. Ask them to put big ones here and small ones there. Show with hands.",
+      "4-5": "Sort leaves into three groups: big, medium, small. Count each group aloud.",
+      "5-6": "Sort by size AND by shape (round vs pointy). Write or draw the number in each group."
+    },
+    "teacher_tip": "Walk around and name each group. Do not correct — naming is the learning.",
+    "inclusion_adaptations": {
+      "visual_impaired": "Use leaves with very different textures (smooth vs rough). Guide hands gently.",
+      "motor_delay": "Provide a tray with raised edges so leaves don't scatter. Give more time.",
+      "stutter": "Do not ask child to announce results aloud. A nod or pointing counts.",
+      "shy": "Let child sort independently first, then show one peer when ready."
+    }
+  },
+  {
+    "id": "ACT_002",
+    "domain": "gross_motor",
+    "aadharshila_ref": "GM-5",
+    "materials": ["open_floor"],
+    "duration_min": 10,
+    "inclusion_tags": ["stutter_ok", "visual_impaired_partial"],
+    "exclusion_tags": ["mobility_impaired"],
+    "choking_hazard": false,
+    "keywords": ["jump", "hop", "move", "balance"],
+    "differentiation": {
+      "3-4": "Jump with both feet together on the spot 5 times. Clap for each jump.",
+      "4-5": "Hop on one foot 3 times, switch. Walk heel-to-toe along a chalk line.",
+      "5-6": "Hopscotch grid with 6 squares. Count each square. Lead the group."
+    },
+    "teacher_tip": "Start seated children clapping to keep them engaged while others move.",
+    "inclusion_adaptations": {
+      "visual_impaired": "Hold hands for the heel-to-toe walk. Describe each step verbally.",
+      "shy": "Pair with a trusted peer. Let them go together rather than alone.",
+      "stutter": "No verbal performance required. Smiling and doing = full participation."
+    }
+  },
+  {
+    "id": "ACT_003",
+    "domain": "cognitive_sorting",
+    "aadharshila_ref": "CG-2",
+    "materials": ["pebbles", "leaves", "twigs"],
+    "duration_min": 15,
+    "inclusion_tags": ["stutter_ok", "visual_impaired_partial", "motor_delay_ok"],
+    "exclusion_tags": [],
+    "choking_hazard": false,
+    "keywords": ["sort", "group", "match", "same", "different"],
+    "differentiation": {
+      "3-4": "Sort objects into two bowls: nature things vs non-nature things. Use a pebble as example.",
+      "4-5": "Sort by colour AND by material. Use three bowls.",
+      "5-6": "Create own sorting rule. Explain the rule to one peer."
+    },
+    "teacher_tip": "Never tell a child their sort is wrong. Ask: 'Why did you put it here?' to surface thinking.",
+    "inclusion_adaptations": {
+      "visual_impaired": "Use objects with strong texture contrast. Guide exploration with touch.",
+      "motor_delay": "Larger objects, wider bowls. Sort by pointing if picking up is hard.",
+      "stutter": "Explain rule by pointing or drawing instead of speaking."
+    }
+  },
+  {
+    "id": "ACT_004",
+    "domain": "language",
+    "aadharshila_ref": "LA-7",
+    "materials": ["picture_cards"],
+    "duration_min": 20,
+    "inclusion_tags": ["visual_impaired_partial", "motor_delay_ok"],
+    "exclusion_tags": [],
+    "choking_hazard": false,
+    "keywords": ["name", "describe", "story", "tell", "speak"],
+    "differentiation": {
+      "3-4": "Show a picture. Ask: 'What is this?' One word answers are fine. Repeat the word clearly.",
+      "4-5": "Show a picture. Ask: 'What is happening?' Encourage a full sentence.",
+      "5-6": "Three pictures in a row. Ask child to make a short story connecting all three."
+    },
+    "teacher_tip": "For shy children: let them whisper to you privately before sharing with the group.",
+    "inclusion_adaptations": {
+      "visual_impaired": "Describe the picture aloud first. Ask child to imagine and respond.",
+      "stutter": "Give extra wait time. Never finish sentences for them. A thumbs-up counts as participation.",
+      "shy": "Start with private whisper. Graduate to pair share before group share."
+    }
+  },
+  {
+    "id": "ACT_005",
+    "domain": "numeracy",
+    "aadharshila_ref": "NM-4",
+    "materials": ["pebbles", "sticks"],
+    "duration_min": 15,
+    "inclusion_tags": ["stutter_ok", "motor_delay_partial"],
+    "exclusion_tags": [],
+    "choking_hazard": false,
+    "keywords": ["count", "number", "how many", "more", "less"],
+    "differentiation": {
+      "3-4": "Count pebbles 1 to 5. Touch each one and say the number aloud.",
+      "4-5": "Count 1 to 10. Make two groups and say which has more.",
+      "5-6": "Add two groups together. Write the number in sand or on paper."
+    },
+    "teacher_tip": "Touch-counting is the key skill. Never rush. Let the child set the pace.",
+    "inclusion_adaptations": {
+      "visual_impaired": "Large pebbles or stones, guided hand-over-hand counting.",
+      "motor_delay": "Use a container. Child drops pebbles in one at a time, counts drops.",
+      "stutter": "Counting aloud is optional. Pointing counts."
+    }
+  },
+  {
+    "id": "ACT_006",
+    "domain": "social_emotional",
+    "aadharshila_ref": "SE-3",
+    "materials": ["open_floor", "music_optional"],
+    "duration_min": 10,
+    "inclusion_tags": ["stutter_ok", "motor_delay_partial"],
+    "exclusion_tags": [],
+    "choking_hazard": false,
+    "keywords": ["share", "take turns", "wait", "friend", "together"],
+    "differentiation": {
+      "3-4": "Pass a pebble around the circle. Each child holds it for 3 seconds then passes. Smile at the person they pass to.",
+      "4-5": "Take turns completing one part of a drawing (sun, cloud, house, tree). Ask: 'What did your friend add?'",
+      "5-6": "Work in pairs to build the tallest twig tower. Discuss strategy before starting."
+    },
+    "teacher_tip": "Name the positive behaviour: 'Raju, you waited so patiently!' This is more powerful than correction.",
+    "inclusion_adaptations": {
+      "shy": "Let shy child start — being first removes the anxiety of waiting and watching.",
+      "stutter": "No verbal turn required. Physical passing or nodding counts.",
+      "motor_delay": "Seated in the circle. Adapted role: holds a special item (the 'score keeper' stone)."
+    }
+  },
+  {
+    "id": "ACT_007",
+    "domain": "creative",
+    "aadharshila_ref": "CR-2",
+    "materials": ["clay", "mud"],
+    "duration_min": 20,
+    "inclusion_tags": ["visual_impaired_ok", "stutter_ok", "motor_delay_partial"],
+    "exclusion_tags": [],
+    "choking_hazard": false,
+    "keywords": ["shape", "make", "create", "press", "roll"],
+    "differentiation": {
+      "3-4": "Squeeze, roll, flatten clay freely. Name what you made after.",
+      "4-5": "Make a roti shape (flat circle) and a ball shape. Compare sizes.",
+      "5-6": "Make an animal or object using three pieces. Give it a name and tell one thing about it."
+    },
+    "teacher_tip": "Display every child's creation. Naming it on display is a powerful identity moment.",
+    "inclusion_adaptations": {
+      "visual_impaired": "Fully tactile. Describe textures as child works. Let them feel others' creations.",
+      "motor_delay": "Softer clay. Use palm press instead of finger pinch. Seat at a stable table.",
+      "shy": "Work next to worker first. Sharing with group is optional."
+    }
+  },
+  {
+    "id": "ACT_008",
+    "domain": "fine_motor",
+    "aadharshila_ref": "FM-8",
+    "materials": ["paper", "leaves"],
+    "duration_min": 15,
+    "inclusion_tags": ["stutter_ok", "visual_impaired_partial"],
+    "exclusion_tags": [],
+    "choking_hazard": false,
+    "keywords": ["tear", "fold", "press", "pattern"],
+    "differentiation": {
+      "3-4": "Tear paper into small pieces. Glue (or press with mud) onto a leaf outline.",
+      "4-5": "Fold paper in half and half again. Cut or tear a simple fringe.",
+      "5-6": "Create a leaf print by rubbing a pencil or chalk over a leaf under paper."
+    },
+    "teacher_tip": "Tearing paper builds the same pincer grip as writing. Frame it as art, not exercise.",
+    "inclusion_adaptations": {
+      "visual_impaired": "Feel the leaf edges first. Focus on tearing and texture collage.",
+      "motor_delay": "Pre-score paper for easier tearing. Wide crayon for rubbings."
+    }
+  },
+  {
+    "id": "ACT_009",
+    "domain": "language",
+    "aadharshila_ref": "LA-3",
+    "materials": [],
+    "duration_min": 10,
+    "inclusion_tags": ["visual_impaired_ok", "motor_delay_ok"],
+    "exclusion_tags": [],
+    "choking_hazard": false,
+    "keywords": ["listen", "story", "repeat", "remember", "rhyme"],
+    "differentiation": {
+      "3-4": "Tell a 3-sentence story with animal sounds. Ask: 'What sound did the cow make?'",
+      "4-5": "Tell a 5-sentence story. Ask children to repeat the last line together.",
+      "5-6": "Tell half a story. Ask a child to finish it. Accept any ending."
+    },
+    "teacher_tip": "Use local names and local animals in the story. Familiarity doubles engagement.",
+    "inclusion_adaptations": {
+      "stutter": "Answering with animal sounds (moo, baa) removes pressure of words.",
+      "shy": "Whisper the animal sound to worker — no group performance needed."
+    }
+  },
+  {
+    "id": "ACT_010",
+    "domain": "cognitive_matching",
+    "aadharshila_ref": "CG-5",
+    "materials": ["leaves", "sticks"],
+    "duration_min": 15,
+    "inclusion_tags": ["stutter_ok", "visual_impaired_partial", "motor_delay_ok"],
+    "exclusion_tags": [],
+    "choking_hazard": false,
+    "keywords": ["match", "same", "pair", "find"],
+    "differentiation": {
+      "3-4": "Give two identical leaves. Ask child to find the matching one from a pile of three.",
+      "4-5": "Match leaves by shape from a pile of six. Group identical ones together.",
+      "5-6": "Match shadow cards to objects. Describe why they match."
+    },
+    "teacher_tip": "Self-correction is the goal — not checking with the worker. Turn it away from you.",
+    "inclusion_adaptations": {
+      "visual_impaired": "Match by texture or size instead of visual shape.",
+      "motor_delay": "Point to match instead of picking up."
+    }
+  },
+  {
+    "id": "ACT_011",
+    "domain": "gross_motor",
+    "aadharshila_ref": "GM-2",
+    "materials": ["open_floor"],
+    "duration_min": 10,
+    "inclusion_tags": ["stutter_ok", "visual_impaired_partial"],
+    "exclusion_tags": ["mobility_impaired"],
+    "choking_hazard": false,
+    "keywords": ["throw", "catch", "roll", "ball"],
+    "differentiation": {
+      "3-4": "Roll a ball (or pebble on a flat surface) back and forth with a partner.",
+      "4-5": "Throw a ball underarm to a partner 1 meter away. Count successful catches.",
+      "5-6": "Three-person passing in a triangle. Count without dropping."
+    },
+    "teacher_tip": "Every child should get at least 3 turns. Count turns, not just successes.",
+    "inclusion_adaptations": {
+      "visual_impaired": "Use a rustling ball or shake seeds in a tied cloth bag so sound guides catching.",
+      "shy": "Start with worker as partner before child-to-child.",
+      "motor_delay": "Seated rolling. Lower the distance to 50 cm."
+    }
+  },
+  {
+    "id": "ACT_012",
+    "domain": "social_emotional",
+    "aadharshila_ref": "SE-6",
+    "materials": [],
+    "duration_min": 10,
+    "inclusion_tags": ["visual_impaired_ok", "stutter_ok", "motor_delay_ok"],
+    "exclusion_tags": [],
+    "choking_hazard": false,
+    "keywords": ["name", "greet", "hello", "introduce", "remember"],
+    "differentiation": {
+      "3-4": "Say your name and one thing you like. Worker demonstrates first.",
+      "4-5": "Say your name and your friend's name next to you. Say one thing they did today.",
+      "5-6": "Introduce a friend to the group: name, age, one thing they are good at."
+    },
+    "teacher_tip": "This builds identity. Use it especially for children returning after absence.",
+    "inclusion_adaptations": {
+      "stutter": "Let the peer introduce the child with stutter, or let them hold up a picture they drew.",
+      "shy": "Worker introduces the shy child first as a model. Participation is never forced."
+    }
+  }
+]
