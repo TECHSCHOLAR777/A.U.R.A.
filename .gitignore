@@ -13,6 +13,9 @@ out/
 .env.test.local
 .env.production.local
 
+# Config files
+web/config.js
+
 # Logs
 logs
 *.log
