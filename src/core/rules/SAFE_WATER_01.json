@@ -1,0 +1,27 @@
+{
+  "rule_id": "SAFE_WATER_01",
+  "type": "safety",
+  "description": "Blocks activities involving large water containers for infants 0-3 months due to drowning risk",
+  "trigger": {
+    "age_bands": ["0-3"]
+  },
+  "condition": {
+    "type": "compound_and",
+    "conditions": [
+      {
+        "type": "material_check",
+        "operator": "in",
+        "values": ["water_bucket", "large_water_container"]
+      },
+      {
+        "type": "age_check",
+        "operator": "lte",
+        "field": "max_age_months",
+        "value": 3
+      }
+    ]
+  },
+  "action": "block_and_substitute",
+  "message": "⚠️ Drowning risk: Large water containers are unsafe for infants 0-3 months. Use damp cloth or spray bottle instead.",
+  "severity": "block"
+}

@@ -1,0 +1,29 @@
+{
+  "rule_id": "INC_ATTUNE_01",
+  "type": "inclusion",
+  "description": "Flags language activities for non-verbal children that lack instruction overrides for alternative communication",
+  "trigger": {
+    "domains": ["language"]
+  },
+  "condition": {
+    "type": "compound_and",
+    "conditions": [
+      {
+        "type": "flag_check",
+        "flag": "non_verbal",
+        "present": true
+      },
+      {
+        "type": "domain_check",
+        "domain": "language"
+      },
+      {
+        "type": "vast_check",
+        "parameter": "none"
+      }
+    ]
+  },
+  "action": "flag_modify",
+  "message": "🗣️ Inclusion: Non-verbal child in room — language activity needs gesture/visual communication alternatives. Add instruction override with signing or picture-based prompts.",
+  "severity": "warn"
+}

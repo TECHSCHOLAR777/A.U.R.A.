@@ -1,0 +1,27 @@
+{
+  "rule_id": "SAFE_SHARP_01",
+  "type": "safety",
+  "description": "Blocks sharp objects for children under 36 months due to injury risk",
+  "trigger": {
+    "age_bands": ["0-3", "3-6", "6-9", "9-12", "12-18", "18-24", "24-36"]
+  },
+  "condition": {
+    "type": "compound_and",
+    "conditions": [
+      {
+        "type": "material_check",
+        "operator": "in",
+        "values": ["scissors", "knife", "nail", "pin", "wire"]
+      },
+      {
+        "type": "age_check",
+        "operator": "lt",
+        "field": "min_age_months",
+        "value": 36
+      }
+    ]
+  },
+  "action": "block_and_substitute",
+  "message": "⚠️ Injury risk: Sharp objects (scissors, knife, nail, pin, wire) are unsafe for children under 36 months. Use blunt, rounded alternatives.",
+  "severity": "block"
+}
