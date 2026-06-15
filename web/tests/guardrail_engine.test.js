@@ -63,7 +63,7 @@ import { buildStaticFallback } from '../server.js';
 /** A minimal activity that triggers no rules. */
 const safeActivity = Object.freeze({
   id:                   'SAFE_TEST',
-  domain:               'social_emotional',
+  targeted_domain:      'socio_emotional',
   materials:            [],
   choking_hazard:       false,
   inclusion_tags:       ['adult_supervision'],
@@ -281,13 +281,13 @@ describe('9.5 Clean path — no rules fire (Req 5.5)', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe('9.6 Static fallback contract (Req 7.7)', () => {
-  it('buildStaticFallback returns correct structure with fallback_tier=2 and source=safe_default', () => {
+  it("buildStaticFallback returns correct structure with fallback_tier='safe_default' and source='safe_default'", () => {
     const fallback = buildStaticFallback(
       'FM-3',
       [{ child_id: 'C001', age_months: 40, needs: [] }]
     );
 
-    assert.equal(fallback.provenance.fallback_tier, 2);
+    assert.equal(fallback.provenance.fallback_tier, 'safe_default');
     assert.equal(fallback.source, 'safe_default');
     assert.ok(
       Array.isArray(fallback.step_by_step_instructions),

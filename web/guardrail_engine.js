@@ -350,8 +350,8 @@ const _rules = Object.freeze([
       if (activity.recent_domains.length < 3) return false;
       const last3 = activity.recent_domains.slice(-3);
       return (
-        typeof activity.domain === 'string' &&
-        last3.every(d => d === activity.domain)
+        typeof activity.targeted_domain === 'string' &&
+        last3.every(d => d === activity.targeted_domain)
       );
     },
     action:  'flag_modify',

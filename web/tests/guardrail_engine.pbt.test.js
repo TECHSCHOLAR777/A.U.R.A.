@@ -68,7 +68,7 @@ function forAll(label, samples, gen, prop) {
 function genSafeActivity(seed) {
   return {
     id: `ACT_${seed}`,
-    domain: ['fine_motor', 'language', 'cognitive', 'social'][seed % 4],
+    targeted_domain: ['motor_physical', 'language', 'cognitive', 'socio_emotional'][seed % 4],
     materials: [],
     choking_hazard: false,
     inclusion_tags: ['adult_supervision'],

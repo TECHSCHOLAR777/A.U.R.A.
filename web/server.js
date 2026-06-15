@@ -63,7 +63,7 @@ const masteryStore = new Map();
 let activityBank = [];
 
 try {
-  const bankPath = join(__dirname, 'ml_pipeline', 'activity_bank.json');
+  const bankPath = join(__dirname, 'data', 'activity_bank.json');
   const raw = readFileSync(bankPath, 'utf8');
   activityBank = JSON.parse(raw);
   console.log(`[server] Loaded ${activityBank.length} activities from activity_bank.json`);
@@ -411,12 +411,12 @@ function buildC1(candidate, validationResult, childProfiles, nodeId, offline) {
   const source = 'activity_bank';
 
   // adapted_title: first keyword + domain
-  const adapted_title = `${(candidate.keywords || ['activity'])[0]} — ${candidate.domain || 'general'}`;
+  const adapted_title = `${(candidate.keywords || ['activity'])[0]} — ${candidate.targeted_domain || 'general'}`;
 
   return {
     activity_id,
     source,
-    targeted_domain:             candidate.domain || '',
+    targeted_domain:             candidate.targeted_domain || '',
     age_band_months:             age_band,
     milestone_targeted:          nodeId,
     adapted_title,
@@ -428,7 +428,7 @@ function buildC1(candidate, validationResult, childProfiles, nodeId, offline) {
       generated_offline: offline === true,
       rules_fired:       validationResult.rules_fired || [],
       cache_key:         cacheKey(candidate.id, nodeId, age_band),
-      fallback_tier:     0, // primary
+      fallback_tier:     'none', // primary
     },
   };
 }
@@ -455,10 +455,10 @@ function buildStaticFallback(nodeId, childProfiles) {
   return {
     activity_id:   `SAFE_FALLBACK_${nodeId}_${Date.now()}`,
     source:        'safe_default',
-    targeted_domain:             'social_emotional',
+    targeted_domain:             'socio_emotional',
     age_band_months:             age_band,
     milestone_targeted:          nodeId,
-    adapted_title:               'Free Play — social_emotional',
+    adapted_title:               'Free Play — socio_emotional',
     step_by_step_instructions: [
       'Allow children to engage in free, child-led play.',
       'Observe and take notes on interactions.',
@@ -471,7 +471,7 @@ function buildStaticFallback(nodeId, childProfiles) {
       generated_offline: false,
       rules_fired:       [],
       cache_key:         cacheKey('SAFE_FALLBACK', nodeId, age_band),
-      fallback_tier:     2,
+      fallback_tier:     'safe_default',
     },
   };
 }
