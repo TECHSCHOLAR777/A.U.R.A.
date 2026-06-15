@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AURA Activity Node (C1)",
+  "type": "object",
+  "required": ["activity_id","source","targeted_domain","age_band_months","milestone_targeted","adapted_title","step_by_step_instructions","required_materials","safety_guard_applied","inclusion_modifications","provenance"],
+  "properties": {
+    "schema_version": {"type":"string"},
+    "activity_id": {"type":"string"},
+    "source": {"enum":["cloud_llm","local_template","last_cache","safe_default","official_unmodified"]},
+    "targeted_domain": {"enum":["cognitive","language","motor_physical","socio_emotional","creative"]},
+    "age_band_months": {"enum":["0-3","3-6","6-9","9-12","12-18","18-24","24-36"]},
+    "milestone_targeted": {"type":"string"},
+    "adapted_title": {"type":"string"},
+    "step_by_step_instructions": {"type":"array","items":{"type":"string"},"minItems":1},
+    "required_materials": {"type":"array","items":{"type":"string"}},
+    "safety_guard_applied": {"type":"boolean"},
+    "inclusion_modifications": {
+      "type":"object",
+      "required":["vast_parameter","instruction_override"],
+      "properties":{
+        "vast_parameter":{"enum":["visibility","attunement","safety","togetherness","none"]},
+        "instruction_override":{"type":"string"}
+      },
+      "additionalProperties": false
+    },
+    "provenance": {
+      "type":"object",
+      "required":["generated_offline","rules_fired","fallback_tier"],
+      "properties":{
+        "generated_offline":{"type":"boolean"},
+        "rules_fired":{"type":"array","items":{"type":"string"}},
+        "cache_key":{"type":"string"},
+        "fallback_tier":{"enum":["none","last_cache","safe_default","official"]}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

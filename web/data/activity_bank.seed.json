@@ -1,0 +1,65 @@
+[
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_phys_reach_ball_0609",
+    "source": "official_unmodified",
+    "targeted_domain": "motor_physical",
+    "age_band_months": "6-9",
+    "milestone_targeted": "reaches for and grasps an object",
+    "adapted_title": "Reaching out to the ball",
+    "step_by_step_instructions": [
+      "Sit the child comfortably on the floor.",
+      "Place a soft ball just within arm's reach.",
+      "Encourage the child to reach out and grasp the ball.",
+      "Slowly move the ball a little farther to encourage stretching and crawling toward it."
+    ],
+    "required_materials": ["soft ball"],
+    "safety_guard_applied": true,
+    "inclusion_modifications": { "vast_parameter": "none", "instruction_override": "" },
+    "provenance": { "generated_offline": false, "rules_fired": [], "fallback_tier": "none" }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_lang_phone_1824",
+    "source": "official_unmodified",
+    "targeted_domain": "language",
+    "age_band_months": "18-24",
+    "milestone_targeted": "uses two-word phrases / takes turns in simple conversation",
+    "adapted_title": "Talking on the phone",
+    "step_by_step_instructions": [
+      "Give the child a toy phone (or use your hand as a pretend phone).",
+      "Model a short call: 'Hello! How are you?'",
+      "Pause and encourage the child to respond with words.",
+      "Take turns 'calling' each other to build back-and-forth conversation."
+    ],
+    "required_materials": ["toy phone (optional)"],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "attunement",
+      "instruction_override": "Non-verbal child: downgrade to a gesture-return activity such as 'Copying Actions' or 'Hide and Discover' (Navchetana 4.3) - the child returns gestures instead of speaking."
+    },
+    "provenance": { "generated_offline": false, "rules_fired": [], "fallback_tier": "none" }
+  },
+  {
+    "schema_version": "1.0",
+    "activity_id": "nav_cog_action_rhyme_1218",
+    "source": "official_unmodified",
+    "targeted_domain": "cognitive",
+    "age_band_months": "12-18",
+    "milestone_targeted": "imitates actions and follows simple words",
+    "adapted_title": "Action rhyme (speak and move together)",
+    "step_by_step_instructions": [
+      "Choose a short rhyme with simple hand and body actions.",
+      "Say each line slowly (auditory) while doing the matching action (kinesthetic).",
+      "Encourage the child to copy the actions.",
+      "Repeat several times so the child anticipates each action."
+    ],
+    "required_materials": [],
+    "safety_guard_applied": true,
+    "inclusion_modifications": {
+      "vast_parameter": "visibility",
+      "instruction_override": "Hearing impairment: add bright-coloured picture cards for each action (visual). Visual impairment: emphasise voice, sound and touch - sing, clap and guide the child's hands (VAKT, Navchetana 4.3)."
+    },
+    "provenance": { "generated_offline": false, "rules_fired": [], "fallback_tier": "none" }
+  }
+]
