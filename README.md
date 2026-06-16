@@ -8,6 +8,12 @@ AURA is an offline-first, performance-optimized EdTech application designed spec
 *   **Contextual Bandit Engine:** Features a local machine learning implementation utilizing an epsilon-greedy algorithm (eps=0.1) and Stochastic Gradient Descent (SGD) to adjust and optimize activity recommendations based on a dynamic context vector (`[age-mix, materials, domain]`).
 *   **Zero-PII Cloud Sync:** Security and privacy are paramount. Absolutely no Personally Identifiable Information (no child names, UUIDs, or sensitive health data) leaves the device. The application exclusively pushes aggregated, anonymous weight vectors to the cloud.
 
+## Offline Identity & Zero-PII Authentication
+
+The application implements a purely local identity system for "First Run Setup" and "PIN Lock" functionality. 
+* **Local Storage:** Worker details, Centre assignment, and Language preferences are securely stored exclusively on-device within an IndexedDB (Dexie) `identity` store.
+* **Cryptographic Security:** To ensure secure access without compromising offline capabilities, the user's 4-digit PIN is hashed locally using the browser's native `crypto.subtle.digest('SHA-256')` API.
+* **Zero-PII Guarantee:** In strict adherence to our Zero-PII policy, no plain-text PINs, hashes, or any identity configuration data are *ever* synced to the Supabase cloud layer. This guarantees complete data sovereignty on the device.
 ## 🏗 Architecture & Tech Stack
 
 AURA operates under strict memory constraints (sub-300MB tab budget). To achieve this, we have deliberately bypassed modern bundlers.
