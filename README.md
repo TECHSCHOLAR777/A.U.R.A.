@@ -130,3 +130,4 @@ npm run test:ts   # Runs Vitest tests
 
 - **Zero-PII Compliance**: No names or PII leave the device. IndexedDB records use opaque, local child UUIDs.
 - **Offline Integrity**: The BKT math and Guardrail logic evaluate locally. Remote sync triggers only when online and pushes anonymous, aggregated bandit weight updates.
+- **Offline Identity & PIN Lock**: Worker details, Centre assignment, and Language preferences are stored locally in IndexedDB (`identity` store). The 4-digit setup PIN is hashed locally using SHA-256 for secure cryptographic access. No plain-text PINs, hashes, or setup configurations are ever synced to the cloud, guaranteeing complete device-level data sovereignty.

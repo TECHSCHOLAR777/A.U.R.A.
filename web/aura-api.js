@@ -565,7 +565,8 @@ if (db) {
   db.version(1).stores({
     kv: 'key',
     syncQueue: 'id, op, status',
-    banditWeights: 'key'
+    banditWeights: 'key',
+    identity: 'id'
   });
 }
 
@@ -617,6 +618,38 @@ export const AURA_DB = {
     const weights = {};
     records.forEach(r => { weights[r.key] = r.value; });
     return weights;
+  },
+
+  // Identity management (Zero-PII)
+  setupIdentity: async (workerData, pin, centreData, language) => {
+    const enc = new TextEncoder();
+    const data = enc.encode(pin);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const pinHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    if (!db) return false;
+    await db.identity.put({ id: 'config', worker: workerData, pinHash, centre: centreData, language });
+    return true;
+  },
+
+  verifyPin: async (enteredPin) => {
+    if (!db) return false;
+    const record = await db.identity.get('config');
+    if (!record) return false;
+    const enc = new TextEncoder();
+    const data = enc.encode(enteredPin);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const enteredHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    return enteredHash === record.pinHash;
+  },
+
+  getIdentity: async () => {
+    if (!db) return null;
+    const record = await db.identity.get('config');
+    if (!record) return null;
+    const { worker, centre, language } = record;
+    return { worker, centre, language };
   }
 };
 
