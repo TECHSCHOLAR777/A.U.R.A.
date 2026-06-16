@@ -45,40 +45,72 @@ const HISTORY_WINDOW = 5;
  *
  * @type {Promise<Map<string, object>>}
  */
+function _parseNodes(nodes) {
+  const map = new Map();
+  if (Array.isArray(nodes)) {
+    for (const node of nodes) {
+      if (node && typeof node.node_id === 'string') {
+        map.set(node.node_id, node);
+      }
+    }
+  } else if (nodes && typeof nodes === 'object') {
+    for (const [key, node] of Object.entries(nodes)) {
+      if (node && typeof node === 'object') {
+        map.set(key, node);
+      }
+    }
+  }
+  return map;
+}
+
 const _dagPromise = (async () => {
   try {
-    // In a browser, fetch is always available.  In Node.js test environments
-    // the caller can polyfill globalThis.fetch or the try/catch handles it.
-    const response = await fetch('./knowledge_dag.json');
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-    const nodes = await response.json();
+    const isNode = typeof process !== 'undefined' && process.versions && process.versions.node;
+    if (typeof window === 'undefined' || isNode) {
+      const fs = await import('fs');
+      const path = await import('path');
+      const pathsToTry = [
+        path.join(process.cwd(), 'knowledge_dag.json'),
+        path.join(process.cwd(), 'web', 'knowledge_dag.json')
+      ];
 
-    // Build a Map for O(1) look-ups by node_id.
-    const map = new Map();
-    if (Array.isArray(nodes)) {
-      for (const node of nodes) {
-        if (node && typeof node.node_id === 'string') {
-          map.set(node.node_id, node);
+      try {
+        const { fileURLToPath } = await import('url');
+        const __filename = fileURLToPath(import.meta.url);
+        const __dirname = path.dirname(__filename);
+        pathsToTry.push(path.join(__dirname, 'knowledge_dag.json'));
+      } catch (e) {
+        // Ignore if url/import.meta.url is not supported in this environment
+      }
+
+      let foundPath = null;
+      for (const p of pathsToTry) {
+        if (fs.existsSync(p)) {
+          foundPath = p;
+          break;
         }
       }
-    } else if (nodes && typeof nodes === 'object') {
-      // Accept either an array or an object keyed by node_id.
-      for (const [key, node] of Object.entries(nodes)) {
-        if (node && typeof node === 'object') {
-          map.set(key, node);
-        }
-      }
-    }
 
-    return map;
+      if (foundPath) {
+        const content = fs.readFileSync(foundPath, 'utf8');
+        return _parseNodes(JSON.parse(content));
+      } else {
+        throw new Error('File not found (knowledge_dag.json)');
+      }
+    } else {
+      const response = await fetch('./knowledge_dag.json');
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      const nodes = await response.json();
+      return _parseNodes(nodes);
+    }
   } catch (err) {
     console.warn(
       '[bkt_engine] Could not load knowledge_dag.json; using default BKT params for all nodes.',
       err && err.message ? err.message : err
     );
-    return new Map(); // empty → callers fall back to DEFAULT_PARAMS
+    return new Map();
   }
 })();
 

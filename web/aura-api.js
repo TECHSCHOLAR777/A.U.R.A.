@@ -608,12 +608,25 @@ export const AURA_DB = {
     await db.syncQueue.update(id, { status: 'synced' });
   },
   saveBanditWeights: async (weights) => {
-    if (!db) return;
+    if (!db) {
+      try {
+        localStorage.setItem('aura::banditWeights', JSON.stringify(weights));
+      } catch (e) {
+        console.warn('[DB]', e);
+      }
+      return;
+    }
     const entries = Object.keys(weights).map(k => ({ key: k, value: weights[k] }));
     await db.banditWeights.bulkPut(entries);
   },
   loadBanditWeights: async () => {
-    if (!db) return {};
+    if (!db) {
+      try {
+        return JSON.parse(localStorage.getItem('aura::banditWeights')) || {};
+      } catch {
+        return {};
+      }
+    }
     const records = await db.banditWeights.toArray();
     const weights = {};
     records.forEach(r => { weights[r.key] = r.value; });
@@ -627,14 +640,30 @@ export const AURA_DB = {
     const hashBuffer = await crypto.subtle.digest('SHA-256', data);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     const pinHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    if (!db) return false;
+    if (!db) {
+      try {
+        localStorage.setItem('aura::identity', JSON.stringify({ id: 'config', worker: workerData, pinHash, centre: centreData, language }));
+        return true;
+      } catch (e) {
+        console.warn('[DB]', e);
+        return false;
+      }
+    }
     await db.identity.put({ id: 'config', worker: workerData, pinHash, centre: centreData, language });
     return true;
   },
 
   verifyPin: async (enteredPin) => {
-    if (!db) return false;
-    const record = await db.identity.get('config');
+    let record;
+    if (!db) {
+      try {
+        record = JSON.parse(localStorage.getItem('aura::identity'));
+      } catch {
+        return false;
+      }
+    } else {
+      record = await db.identity.get('config');
+    }
     if (!record) return false;
     const enc = new TextEncoder();
     const data = enc.encode(enteredPin);
@@ -645,8 +674,16 @@ export const AURA_DB = {
   },
 
   getIdentity: async () => {
-    if (!db) return null;
-    const record = await db.identity.get('config');
+    let record;
+    if (!db) {
+      try {
+        record = JSON.parse(localStorage.getItem('aura::identity'));
+      } catch {
+        return null;
+      }
+    } else {
+      record = await db.identity.get('config');
+    }
     if (!record) return null;
     const { worker, centre, language } = record;
     return { worker, centre, language };

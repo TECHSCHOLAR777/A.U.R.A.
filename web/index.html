@@ -1,1096 +1,1427 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#1e40af" />
-  <title>AURA — Anganwadi Universal Response Assistant</title>
-  <meta name="description" content="AURA offline-first PWA for Anganwadi workers" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1B3A2D">
+<meta name="description" content="A.U.R.A. Anganwadi Unified Resource Assistant. Offline-first field tool for Anganwadi workers.">
+<title>A.U.R.A. Anganwadi Unified Resource Assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --forest:#1B3A2D; --forest-d:#11261C; --green:#216A3F; --green-d:#1A5733; --red:#C0392B;
+    --amber:#CC6A1A; --orange:#D67424; --purple:#6B5296; --navy:#13384D;
+    --ink:#161616; --muted:#6B6B6B; --line:#E2E2E2; --card:#F6F6F6;
+    --bg:#FFFFFF; --rl:#FCEBE9; --al:#FCF3E3; --gl:#E9F3EC; --pl:#F0EDF7;
+    --saffron:#E8821E; --indiagreen:#1A7A3C;
+    --r-card:16px; --r-tile:11px; --tap:48px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html{-webkit-text-size-adjust:100%}
+  body{font-family:'Inter','Segoe UI',system-ui,-apple-system,sans-serif;background:#0d0d0d;color:var(--ink);
+    min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:24px 12px 60px}
+  .hindi *{font-family:'Noto Sans Devanagari','Inter',sans-serif}
+  button{font-family:inherit}
+  :focus-visible{outline:3px solid var(--saffron);outline-offset:2px}
+  @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
 
-  <!-- PWA manifest placeholder — sw.js registers the service worker -->
-  <!-- <link rel="manifest" href="./manifest.json" /> -->
+  .top{width:100%;max-width:430px;color:#eee;margin-bottom:18px}
+  .top h1{font-size:20px;font-weight:800;letter-spacing:.5px}
+  .top p{font-size:12px;color:#999;margin-top:3px}
+  .langtoggle{display:inline-flex;margin-top:12px;background:#1c1c1c;border-radius:10px;padding:3px;gap:2px}
+  .langtoggle button{background:none;border:none;color:#888;font-size:13px;font-weight:600;padding:9px 18px;border-radius:8px;cursor:pointer;min-height:var(--tap)}
+  .langtoggle button.on{background:var(--green);color:#fff}
 
-  <style>
-    /* ─── Reset & base ─────────────────────────────────────────────── */
-    *, *::before, *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+  .phone{width:390px;max-width:96vw;height:800px;background:var(--bg);border-radius:38px;overflow:hidden;position:relative;
+    box-shadow:0 0 0 11px #1a1a1a, 0 0 0 13px #2a2a2a, 0 30px 70px rgba(0,0,0,.6)}
+  .screen{position:absolute;inset:0;display:none;flex-direction:column;background:var(--bg);overflow:hidden}
+  .screen.active{display:flex}
+  .scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+  .scroll::-webkit-scrollbar{width:0}
 
-    :root {
-      --color-brand:    #1e40af;
-      --color-surface:  #f8fafc;
-      --color-card:     #ffffff;
-      --color-border:   #e2e8f0;
-      --color-text:     #1e293b;
-      --color-muted:    #64748b;
+  svg{width:20px;height:20px;flex-shrink:0;display:block}
+  .nav .tab svg{width:22px;height:22px}
+  .nav .fab svg{width:26px;height:26px}
+  .dark .logo svg{width:40px;height:40px}
+  .globewrap svg{width:30px;height:30px}
 
-      /* Badge colours — Req 9.1 */
-      --badge-mastered: #22c55e;   /* green  */
-      --badge-rising:   #3b82f6;   /* blue   */
-      --badge-stalled:  #f59e0b;   /* amber  */
-      --badge-at_risk:  #ef4444;   /* red    */
-      --badge-none:     #9ca3af;   /* grey   */
+  .statusbar{height:42px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font-size:13px;font-weight:600;flex-shrink:0}
+  .statusbar .r{color:var(--muted);font-size:11px;font-weight:500;display:flex;gap:6px;align-items:center}
+  .govbar{height:26px;background:var(--forest-d);color:#cfe3d8;font-size:9px;font-weight:600;letter-spacing:.3px;
+    display:flex;align-items:center;justify-content:center;gap:7px;flex-shrink:0;text-align:center;padding:0 10px}
+  .govbar .tri{width:14px;height:10px;border-radius:2px;overflow:hidden;display:inline-flex;flex-direction:column;flex-shrink:0}
+  .govbar .tri i{flex:1}
+  .header{height:56px;display:flex;align-items:center;padding:0 18px;gap:10px;flex-shrink:0;border-bottom:1px solid var(--line)}
+  .avatar{width:36px;height:36px;border-radius:50%;background:var(--forest);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;position:relative;flex-shrink:0}
+  .avatar::after{content:'';position:absolute;right:-2px;bottom:-2px;width:12px;height:12px;border-radius:50%;background:var(--indiagreen);border:2px solid #fff}
+  .brand{font-size:18px;font-weight:800;color:var(--forest);letter-spacing:.5px}
+  .brand small{display:block;font-size:8px;font-weight:600;color:var(--muted);letter-spacing:.3px}
+  .header .right{margin-left:auto;display:flex;align-items:center;gap:10px}
+  .pill-lang{border:1px solid var(--line);border-radius:12px;padding:7px 11px;font-size:11px;font-weight:700;cursor:pointer;min-height:38px;background:#fff;color:var(--ink)}
+  .bellbtn{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink);position:relative}
+  .bellbtn .dotn{position:absolute;top:7px;right:8px;width:7px;height:7px;border-radius:50%;background:var(--red)}
+  .body{padding:0 20px 26px}
 
-      --radius:  0.5rem;
-      --shadow:  0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08);
-    }
+  .greet{font-size:16px;color:var(--muted);margin-top:12px}
+  .greet small{display:block;font-size:13px;margin-top:2px}
+  .kw{margin:18px 0 4px;font-size:23px;font-weight:800;line-height:1.3}
+  .kw .hl{color:#fff;padding:1px 10px;border-radius:7px;display:inline-block}
+  .sub{font-size:12.5px;color:var(--muted);margin:6px 0 14px;line-height:1.55}
 
-    body {
-      font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
-      background: var(--color-surface);
-      color: var(--color-text);
-      min-height: 100dvh;
-      display: flex;
-      flex-direction: column;
-    }
+  .nowcard{background:var(--forest);border-radius:var(--r-card);padding:18px;color:#fff;position:relative;overflow:hidden;margin-top:6px}
+  .nowcard::after{content:'';position:absolute;right:-40px;top:-40px;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.04)}
+  .nowcard .nclock{font-size:11px;color:#bcd8cb;display:flex;align-items:center;gap:6px;margin-bottom:8px}
+  .nowcard .nclock svg{width:14px;height:14px;color:#bcd8cb}
+  .nowcard .nlabel{font-size:11px;color:#9fc3b1;font-weight:600;letter-spacing:.4px}
+  .nowcard h2{font-size:25px;font-weight:800;margin-top:2px}
+  .nowcard .ntask{font-size:14px;color:#d7ece1;margin-top:4px}
+  .nowbtn{margin-top:16px;background:var(--green);color:#fff;border:none;border-radius:11px;width:100%;padding:14px;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:space-between;min-height:var(--tap);position:relative;z-index:1}
+  .nowbtn span.arrow{font-size:18px}
 
-    /* ─── Header ───────────────────────────────────────────────────── */
-    header {
-      background: var(--color-brand);
-      color: #fff;
-      padding: 0.875rem 1.25rem;
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      box-shadow: var(--shadow);
-    }
+  .alert{display:flex;align-items:center;gap:12px;background:var(--rl);border:1px solid var(--red);border-left:4px solid var(--red);border-radius:11px;padding:14px;margin-top:16px;cursor:pointer;min-height:var(--tap)}
+  .alert .ai{width:22px;height:22px;flex-shrink:0;color:var(--red)}
+  .alert .ai svg{width:22px;height:22px}
+  .alert .t{font-size:13px;font-weight:700;color:var(--red);flex:1;line-height:1.35}
+  .alert .chev{color:var(--red);font-weight:700;flex-shrink:0;font-size:18px}
 
-    header h1 {
-      font-size: 1.1rem;
-      font-weight: 700;
-      letter-spacing: 0.02em;
-    }
+  .sectionlabel{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.5px;margin:22px 0 10px;text-transform:uppercase}
+  .slot{display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-left:4px solid var(--line);border-radius:11px;padding:12px;margin-bottom:9px;background:var(--card);cursor:pointer;transition:transform .15s;min-height:var(--tap)}
+  .slot:hover{transform:translateX(2px)}
+  .slot.now{background:#fff;border:2px solid var(--green);border-left:4px solid var(--green)}
+  .slot .dot{width:32px;height:32px;border-radius:50%;background:#e3e3e3;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff}
+  .slot .dot svg{width:16px;height:16px}
+  .slot.now .dot{background:var(--green)}
+  .slot .meta{flex:1}
+  .slot .meta .a{font-size:13.5px;font-weight:700;color:var(--muted)}
+  .slot.now .meta .a{color:var(--ink)}
+  .slot .meta .b{font-size:10.5px;color:var(--muted);margin-top:1px}
+  .slot .nowtag{background:var(--green);color:#fff;font-size:9px;font-weight:700;padding:5px 10px;border-radius:11px}
+  .slot .stt{margin-left:auto;font-size:9px;font-weight:700;color:var(--muted)}
 
-    header .header-subtitle {
-      font-size: 0.75rem;
-      opacity: 0.8;
-      margin-top: 0.1rem;
-    }
+  .blockh{display:flex;align-items:center;gap:8px;padding:9px 14px;border-left:6px solid;margin:0 -20px}
+  .blockh .num{font-size:12px;font-weight:800}
+  .blockh .ti{font-size:13px;font-weight:700}
+  .blockh .su{margin-left:auto;font-size:9px;font-weight:500}
+  .crow{display:flex;gap:12px;border:1px solid var(--line);border-left:4px solid;border-radius:11px;padding:12px;margin:9px 0;background:#fff;cursor:pointer;align-items:flex-start;min-height:var(--tap)}
+  .crow .ic{width:22px;height:22px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;margin-top:2px}
+  .crow .info{flex:1}
+  .crow .info .nm{font-size:14px;font-weight:700}
+  .crow .info .ag{font-size:9.5px;color:var(--muted);margin:2px 0}
+  .crow .info .ds{font-size:10.5px;line-height:1.45}
+  .crow .tag{font-size:8px;font-weight:600;padding:3px 8px;border-radius:9px;height:fit-content;white-space:nowrap}
 
-    /* ─── Main layout ───────────────────────────────────────────────── */
-    main {
-      flex: 1;
-      padding: 1rem;
-      max-width: 900px;
-      width: 100%;
-      margin: 0 auto;
-      display: flex;
-      flex-direction: column;
-      gap: 1.25rem;
-    }
+  .transcript{background:#fff;border:2px solid var(--green);border-left:4px solid var(--green);border-radius:13px;padding:14px;margin-bottom:16px}
+  .transcript .q{font-size:14px;line-height:1.5}
+  .transcript .h{font-size:10px;font-weight:600;color:var(--green);margin-top:10px;display:flex;align-items:center;gap:6px}
+  .bar{height:5px;background:#e6e6e6;border-radius:3px;margin-top:6px;overflow:hidden}
+  .bar i{display:block;height:100%;background:var(--green)}
+  .reg{display:flex;align-items:center;border-radius:11px;padding:11px 12px;margin-bottom:9px;border-left:4px solid;min-height:46px}
+  .reg .l{font-size:9px;font-weight:600}
+  .reg .v{font-size:13px;font-weight:700;color:var(--ink)}
+  .reg .st{margin-left:auto;font-size:8px;font-weight:700;color:#fff;padding:5px 11px;border-radius:10px}
+  .tier{display:flex;align-items:center;border-radius:11px;padding:11px 12px;margin-bottom:9px;border:1px solid var(--line);border-left:4px solid var(--line)}
+  .tier.on{border-width:1px}
+  .tier .tl{font-size:12px;font-weight:700}
+  .tier .td{font-size:9.5px;color:var(--muted)}
+  .tier .ck{margin-left:auto;width:22px;height:22px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center}
+  .tier .ck svg{width:12px;height:12px}
 
-    /* ─── Card shell ────────────────────────────────────────────────── */
-    .card {
-      background: var(--color-card);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 1.25rem;
-    }
+  .hero{border-radius:14px;padding:16px;color:#fff;position:relative;overflow:hidden}
+  .hero h2{font-size:22px;font-weight:800}
+  .hero p{font-size:12px;margin-top:4px;opacity:.92}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+  .vital{border:1px solid var(--line);border-radius:12px;padding:12px}
+  .vital .l{font-size:9.5px;color:var(--muted)}
+  .vital .v{font-size:16px;font-weight:800;margin-top:3px}
+  .vital .d{font-size:9.5px;margin-top:3px}
 
-    .card h2 {
-      font-size: 1rem;
-      font-weight: 600;
-      margin-bottom: 0.75rem;
-      color: var(--color-text);
-    }
+  .btn{border:none;border-radius:11px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;width:100%;min-height:var(--tap);display:flex;align-items:center;justify-content:center;gap:8px}
+  .btn svg{width:18px;height:18px}
+  .btn.primary{background:var(--forest);color:#fff}
+  .btn.green{background:var(--green);color:#fff}
+  .btn.red{background:var(--red);color:#fff}
+  .btn.ghost{background:#fff;border:1.5px solid var(--forest);color:var(--forest)}
+  .btn.outline{background:#fff;border:1px solid var(--line);color:var(--muted)}
 
-    /* ─── Activity section ──────────────────────────────────────────── */
-    #activity-section {
-      min-height: 8rem;
-    }
+  .vcard{border:1px solid var(--line);border-left:4px solid;border-radius:11px;padding:12px;margin-bottom:9px}
+  .vcard .mh{display:flex;gap:8px;align-items:center;margin-bottom:6px}
+  .vcard .mh svg{width:18px;height:18px}
+  .item{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-left:4px solid;border-radius:10px;padding:11px 12px;margin-bottom:8px;min-height:44px}
+  .item .b{width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#fff;flex-shrink:0}
+  .item .x{font-size:10.5px;line-height:1.4}
+  .camline{background:#161616;border-radius:11px;padding:13px;margin-top:12px;display:flex;gap:10px;align-items:center;cursor:pointer;min-height:var(--tap)}
+  .camline .ci{width:20px;height:20px;flex-shrink:0;color:#8fe6c0}
 
-    #activity-card {
-      color: var(--color-muted);
-      font-size: 0.9rem;
-    }
+  .nav{height:72px;background:#fff;border-top:1px solid var(--line);display:flex;position:relative;flex-shrink:0}
+  .nav .tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;color:var(--muted);position:relative;min-height:var(--tap)}
+  .nav .tab.on{color:var(--forest)}
+  .nav .tab.on::before{content:'';position:absolute;top:0;width:34px;height:3px;background:var(--forest);border-radius:2px}
+  .nav .tab .lab{font-size:9.5px;font-weight:600}
+  .nav .fab{position:absolute;left:50%;top:-22px;transform:translateX(-50%);width:58px;height:58px;border-radius:50%;background:var(--forest);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(27,58,45,.45);cursor:pointer;border:4px solid #fff}
+  .nav .fab svg{color:#fff}
+  .navspacer{flex:1.4}
 
-    /* Guardrail chip placeholder — Task 7 will inject renderGuardrailChip here */
-    #guardrail-chip-container {
-      margin-top: 0.75rem;
-      /* PLACEHOLDER: Task 7 — renderGuardrailChip(rules_fired) output goes here */
-    }
+  .screen.dark{position:absolute;inset:0}
+  .dark{background:var(--forest);color:#fff;justify-content:center;align-items:center;text-align:center;padding:44px 32px;overflow:hidden}
+  .dark::before{content:'';position:absolute;top:-80px;left:50%;transform:translateX(-50%);width:380px;height:380px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.05),transparent 70%);pointer-events:none}
+  .dark .logo{width:96px;height:96px;border-radius:50%;background:var(--forest-d);display:flex;align-items:center;justify-content:center;margin-bottom:24px;box-shadow:0 0 0 1px rgba(255,255,255,.12),0 0 0 11px rgba(255,255,255,.04);position:relative;z-index:1}
+  .dark .logo svg{color:#fff}
+  .dark h1{font-size:48px;font-weight:800;letter-spacing:4px;line-height:1}
+  .dark .fullform{font-size:11px;color:#9fc3b1;margin-top:12px;letter-spacing:2px;text-transform:uppercase;font-weight:600;line-height:1.6}
+  .dark .rule{width:42px;height:2px;background:rgba(255,255,255,.22);border-radius:2px;margin:22px 0}
+  .dark .chip{display:inline-flex;align-items:center;gap:7px;border:1px solid rgba(255,255,255,.22);border-radius:20px;padding:7px 14px;font-size:11px;font-weight:600;color:#cfe3d8;letter-spacing:.3px}
+  .dark .chip .pulse{width:7px;height:7px;border-radius:50%;background:#6fd29b;box-shadow:0 0 0 0 rgba(111,210,155,.6);animation:pulse 2s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(111,210,155,.5)}70%{box-shadow:0 0 0 8px rgba(111,210,155,0)}100%{box-shadow:0 0 0 0 rgba(111,210,155,0)}}
+  .dark .tag{font-size:13px;color:#9fc3b1;margin-top:10px;max-width:250px;line-height:1.5}
+  .dark .startbtn{margin-top:30px;background:#fff;color:var(--forest);border:none;border-radius:30px;padding:17px 38px;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:11px;box-shadow:0 10px 24px rgba(0,0,0,.22);position:relative;z-index:1;min-height:var(--tap)}
+  .dark .startbtn svg{width:21px;height:21px}
+  .dark .fine{font-size:12px;color:#8fb9a3;margin-top:20px;max-width:260px;line-height:1.5}
+  .dark .govstrip{position:absolute;bottom:22px;left:0;right:0;font-size:10px;color:#5f8a73;letter-spacing:.3px;line-height:1.5;padding:0 24px}
 
-    /* ─── Post-session section ──────────────────────────────────────── */
-    #post-session {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
+  /* profile select */
+  .pselect{padding:34px 26px 26px}
+  .pselect .ttl{font-size:21px;font-weight:800;color:var(--forest)}
+  .pselect .ttls{font-size:12.5px;color:var(--muted);margin-top:6px;line-height:1.5}
+  .prow{display:flex;align-items:center;gap:13px;border:1px solid var(--line);border-radius:13px;padding:14px;margin-top:11px;cursor:pointer;min-height:var(--tap)}
+  .prow.on{border:2px solid var(--green);background:var(--gl)}
+  .prow .pa{width:46px;height:46px;border-radius:50%;background:var(--forest);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;flex-shrink:0}
+  .prow .pinf{flex:1}
+  .prow .pinf .pn{font-size:15px;font-weight:700}
+  .prow .pinf .pc{font-size:10.5px;color:var(--muted);margin-top:2px}
+  .prow .pck{width:24px;height:24px;border-radius:50%;border:2px solid var(--line);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff}
+  .prow.on .pck{background:var(--green);border-color:var(--green)}
+  .prow .pck svg{width:13px;height:13px}
 
-    /* ─── Node selector ─────────────────────────────────────────────── */
-    #node-selector {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-    }
+  .modal{position:absolute;inset:0;background:rgba(17,38,28,.72);display:none;align-items:center;justify-content:center;z-index:40;padding:30px}
+  .modal.show{display:flex}
+  .micbox{background:#fff;border-radius:22px;padding:30px 26px;text-align:center;width:100%;max-width:300px}
+  .micring{width:96px;height:96px;border-radius:50%;background:var(--gl);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;position:relative}
+  .micring::before{content:'';position:absolute;inset:0;border-radius:50%;border:3px solid var(--green);animation:ripple 1.6s infinite}
+  @keyframes ripple{0%{transform:scale(1);opacity:.7}100%{transform:scale(1.35);opacity:0}}
+  .micring svg{width:40px;height:40px;color:var(--green)}
+  .micbox .ml{font-size:15px;font-weight:700;color:var(--ink)}
+  .micbox .ms{font-size:11.5px;color:var(--muted);margin-top:6px;line-height:1.5}
+  .micbox .mc{margin-top:18px;background:#fff;border:1.5px solid var(--line);color:var(--muted);border-radius:11px;padding:12px;font-weight:700;cursor:pointer;width:100%;min-height:44px}
 
-    #node-selector label {
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: var(--color-text);
-    }
-
-    #activeNodeSelect {
-      font-size: 0.875rem;
-      padding: 0.35rem 0.6rem;
-      border: 1px solid var(--color-border);
-      border-radius: calc(var(--radius) / 2);
-      background: var(--color-card);
-      color: var(--color-text);
-      cursor: pointer;
-    }
-
-    #activeNodeSelect:focus {
-      outline: 2px solid var(--color-brand);
-      outline-offset: 1px;
-    }
-
-    /* ─── Avatar grid ───────────────────────────────────────────────── */
-    #avatar-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-      gap: 0.75rem;
-    }
-
-    .avatar-card {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.4rem;
-      padding: 0.75rem 0.5rem;
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius);
-      background: var(--color-card);
-      cursor: pointer;
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
-      touch-action: none;            /* needed for reliable pointer events */
-      transition: transform 0.1s ease, box-shadow 0.1s ease;
-    }
-
-    .avatar-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(0,0,0,.12);
-    }
-
-    .avatar-card:active {
-      transform: scale(0.96);
-    }
-
-    .avatar-card.pending {
-      opacity: 0.7;
-    }
-
-    /* The circular coloured badge */
-    .avatar-badge {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      border: 3px solid rgba(0,0,0,.08);
-      transition: background-color 0.25s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.25rem;
-      /* Default icon — overridden by JS using a child initials approach */
-    }
-
-    .avatar-badge.badge-mastered { background: var(--badge-mastered); }
-    .avatar-badge.badge-rising   { background: var(--badge-rising);   }
-    .avatar-badge.badge-stalled  { background: var(--badge-stalled);  }
-    .avatar-badge.badge-at_risk  { background: var(--badge-at_risk);  }
-    .avatar-badge.badge-none     { background: var(--badge-none);     }
-
-    .avatar-name {
-      font-size: 0.75rem;
-      font-weight: 600;
-      text-align: center;
-      color: var(--color-text);
-    }
-
-    /* ─── Complete session button ───────────────────────────────────── */
-    #session-actions {
-      display: flex;
-      justify-content: flex-end;
-      margin-top: 0.25rem;
-    }
-
-    #btn-mark-complete {
-      background: var(--color-brand);
-      color: #fff;
-      border: none;
-      border-radius: var(--radius);
-      padding: 0.625rem 1.25rem;
-      font-size: 0.9rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.15s ease;
-    }
-
-    #btn-mark-complete:hover  { background: #1e3a8a; }
-    #btn-mark-complete:active { background: #1e3a8a; transform: scale(0.98); }
-    #btn-mark-complete:focus-visible {
-      outline: 2px solid var(--color-brand);
-      outline-offset: 3px;
-    }
-
-    /* ─── Toast / feedback messages ─────────────────────────────────── */
-    #toast {
-      position: fixed;
-      bottom: 1.25rem;
-      left: 50%;
-      transform: translateX(-50%) translateY(4rem);
-      background: #1e293b;
-      color: #fff;
-      padding: 0.55rem 1rem;
-      border-radius: var(--radius);
-      font-size: 0.85rem;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s ease, transform 0.2s ease;
-      white-space: nowrap;
-      z-index: 999;
-    }
-
-    #toast.show {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-
-    /* ─── Accessibility helpers ──────────────────────────────────────── */
-    .sr-only {
-      position: absolute;
-      width: 1px; height: 1px;
-      padding: 0; margin: -1px;
-      overflow: hidden;
-      clip: rect(0,0,0,0);
-      white-space: nowrap;
-      border: 0;
-    }
-
-    /* ─── Guardrail Chip ─────────────────────────────────────────────── */
-    .guardrail-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      padding: 0.35rem 0.7rem;
-      border-radius: 9999px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      cursor: pointer;
-      user-select: none;
-      position: relative;
-      flex-wrap: wrap;
-      margin-top: 0.5rem;
-    }
-
-    .guardrail-chip.chip-amber { background: #f59e0b; color: #fff; }
-    .guardrail-chip.chip-blue  { background: #3b82f6; color: #fff; }
-
-    .chip-toggle {
-      font-size: 0.65rem;
-      margin-left: 0.1rem;
-    }
-
-    .chip-detail {
-      position: absolute;
-      top: calc(100% + 0.4rem);
-      left: 0;
-      background: #fff;
-      border: 1px solid #e2e8f0;
-      border-radius: 0.5rem;
-      box-shadow: 0 4px 12px rgba(0,0,0,.12);
-      padding: 0.5rem;
-      min-width: 280px;
-      z-index: 100;
-      display: flex;
-      flex-direction: column;
-      gap: 0.35rem;
-    }
-
-    .chip-detail[hidden] { display: none; }
-
-    .rule-pill {
-      display: grid;
-      grid-template-columns: auto auto 1fr;
-      gap: 0.4rem;
-      align-items: start;
-      padding: 0.4rem 0.5rem;
-      background: #f8fafc;
-      border-radius: 0.35rem;
-      font-size: 0.75rem;
-    }
-
-    .pill-id   { font-weight: 700; color: #1e293b; white-space: nowrap; }
-    .pill-type { 
-      font-size: 0.65rem; 
-      padding: 0.1rem 0.35rem; 
-      border-radius: 9999px;
-      font-weight: 600;
-      white-space: nowrap;
-      align-self: center;
-    }
-    .pill-type.type-safety    { background: #fef3c7; color: #92400e; }
-    .pill-type.type-inclusion { background: #dbeafe; color: #1e40af; }
-    .pill-msg  { color: #64748b; font-size: 0.73rem; line-height: 1.3; }
-
-    /* ─── Activity card content ───────────────────────────────────────── */
-    .activity-content h3 {
-      font-size: 1rem;
-      font-weight: 700;
-      color: var(--color-text);
-      margin-bottom: 0.5rem;
-    }
-
-    .activity-meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.4rem;
-      margin-bottom: 0.75rem;
-    }
-
-    .activity-meta span {
-      font-size: 0.75rem;
-      padding: 0.15rem 0.5rem;
-      background: #f1f5f9;
-      border-radius: 9999px;
-      color: var(--color-muted);
-      font-weight: 500;
-    }
-
-    .activity-steps {
-      font-size: 0.85rem;
-      color: var(--color-text);
-      padding-left: 1.25rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-    }
-
-    .activity-steps li { line-height: 1.45; }
-
-    .activity-materials {
-      margin-top: 0.6rem;
-      font-size: 0.8rem;
-      color: var(--color-muted);
-    }
-
-    /* ─── Load demo button ────────────────────────────────────────────── */
-    #btn-load-activity {
-      background: #0f766e;
-      color: #fff;
-      border: none;
-      border-radius: var(--radius);
-      padding: 0.55rem 1.1rem;
-      font-size: 0.875rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.15s ease;
-      margin-top: 0.75rem;
-    }
-
-    #btn-load-activity:hover  { background: #0d6158; }
-    #btn-load-activity:active { background: #0d6158; transform: scale(0.98); }
-    #btn-load-activity:focus-visible {
-      outline: 2px solid #0f766e;
-      outline-offset: 3px;
-    }
-    #btn-load-activity:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-  </style>
+  .globewrap{width:60px;height:60px;border-radius:50%;background:var(--gl);display:flex;align-items:center;justify-content:center;margin:0 auto;color:var(--green)}
+  .backbtn{background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:20px;padding:8px 13px;font-size:12px;font-weight:600;cursor:pointer;margin-bottom:10px;min-height:38px;display:inline-flex;align-items:center;gap:4px}
+  .hint{font-size:11px;color:#bbb;text-align:center;margin-top:16px;max-width:430px;line-height:1.6}
+  .form-group{margin-bottom:14px;text-align:left}
+  .form-group label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:6px;display:block}
+  .form-group input{width:100%;border:1.5px solid var(--line);border-radius:11px;padding:12px 14px;font-size:14px;color:var(--ink);background:#fff;min-height:var(--tap);transition:border-color .15s}
+  .form-group input:focus{border-color:var(--green);outline:none}
+  .mode-switch{display:flex;gap:18px;margin-bottom:20px;border-bottom:1.5px solid var(--line);padding-bottom:10px}
+  .mode-switch span{font-size:14px;font-weight:700;color:var(--muted);cursor:pointer;padding-bottom:4px;position:relative}
+  .mode-switch span.active{color:var(--forest)}
+  .mode-switch span.active::after{content:'';position:absolute;bottom:-12px;left:0;right:0;height:3px;background:var(--forest);border-radius:2px}
+</style>
+<script src="https://unpkg.com/dexie@3/dist/dexie.js"></script>
 </head>
 <body>
+<div class="top">
+  <h1>A.U.R.A.</h1>
+  <p>Anganwadi Unified Resource Assistant. Connected production environment.</p>
+  <div class="langtoggle" role="group" aria-label="Language">
+    <button id="lang-hi" class="on" onclick="setLang('hi')">हिंदी</button>
+    <button id="lang-en" onclick="setLang('en')">English</button>
+  </div>
+</div>
+<div class="phone"><div id="app"></div><div class="modal" id="micmodal"><div class="micbox"><div class="micring"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2C8.3 2 7 3.3 7 5V10C7 11.7 8.3 13 10 13S13 11.7 13 10V5C13 3.3 11.7 2 10 2Z"/><path d="M5 10C5 13.5 7.4 16 10 16S15 13.5 15 10"/><path d="M10 16V19M7 19H13"/></svg></div><div class="ml" id="micl"></div><div class="ms" id="mics"></div><button class="mc" onclick="closeMic()" id="micc"></button></div></div></div>
+<p class="hint" id="hint"></p>
+<script type="module">
+import { BKTEngine } from './bkt_engine.js';
+import { MasteryStore, AURA_API, AURA_DB } from './aura-api.js';
+import { GuardrailEngine } from './guardrail_engine.js';
 
-  <!-- ═══ Header ═══════════════════════════════════════════════════════════ -->
-  <header>
-    <div>
-      <h1>AURA</h1>
-      <div class="header-subtitle">Anganwadi Universal Response Assistant</div>
-    </div>
-  </header>
+const SVG={
+  home:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M10 2L2 9V18H7V13H13V18H18V9Z"/></svg>',
+  voice:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2C8.3 2 7 3.3 7 5V10C7 11.7 8.3 13 10 13S13 11.7 13 10V5C13 3.3 11.7 2 10 2Z"/><path d="M5 10C5 13.5 7.4 16 10 16S15 13.5 15 10"/><path d="M10 16V19M7 19H13"/></svg>',
+  heart:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M10 17C10 17 3 12.5 3 7.5C3 5.2 4.8 3.4 7 3.4C8.4 3.4 9.5 4.3 10 5C10.5 4.3 11.6 3.4 13 3.4C15.2 3.4 17 5.2 17 7.5C17 12.5 10 17 10 17Z"/></svg>',
+  book:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M10 4C8 2.6 5 2.2 2 3.2V16C5 15 8 15.4 10 16.8C12 15.4 15 15 18 16V3.2C15 2.2 12 2.6 10 4Z"/><path d="M10 4V16.8"/></svg>',
+  grid:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="5" height="5"/><rect x="12" y="3" width="5" height="5"/><rect x="3" y="12" width="5" height="5"/><rect x="12" y="12" width="5" height="5"/></svg>',
+  bell:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M10 3C7.8 3 6 4.8 6 7V11L4.5 13H15.5L14 11V7C14 4.8 12.2 3 10 3Z"/><path d="M8.3 15C8.5 16 9.2 16.5 10 16.5S11.5 16 11.7 15"/></svg>',
+  clock:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="8"/><path d="M10 5V10L13 12" stroke-linecap="round"/></svg>',
+  meal:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M5 3V9C5 10 6 11 7 11V18M7 11C8 11 9 10 9 9V3M7 3V8M14 3C12.5 3 12 5 12 7C12 8.5 13 9 14 9V18"/></svg>',
+  globe:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="8"/><path d="M2 10H18M10 2C12 4 13 7 13 10S12 16 10 18 7 16 7 10 8 4 10 2Z"/></svg>',
+  warn:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M10 2L18 16H2Z"/><path d="M10 8V11M10 13.5V13.6" stroke-linecap="round"/></svg>',
+  cam:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M3 6H6L7 4H13L14 6H17V15H3Z"/><circle cx="10" cy="11" r="3"/></svg>',
+  check:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10L8 14L16 5"/></svg>',
+  clip:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M7 4H5V17H15V4H13"/><rect x="7" y="2.5" width="6" height="3.2" rx="1"/><path d="M7.5 9H12.5M7.5 12H11" stroke-linecap="round"/></svg>',
+  refer:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10H15M11 6L15 10L11 14"/></svg>'
+};
+const navic={att:'clock',ece:'book',meal:'meal',health:'heart',audit:'grid'};
 
-  <!-- ═══ Main content ═════════════════════════════════════════════════════ -->
-  <main>
+const T={
+ hi:{
+  govA:"भारत सरकार",govB:"महिला एवं बाल विकास मंत्रालय",govC:"समेकित बाल विकास सेवा (ICDS)",
+  pill:"हिं | A",nav:["घर","सेहत","खेल","और"],
+  splashTag:"आँगनवाड़ी का दिन, एक जगह। बिना इंटरनेट के भी चलता है।",
+  splashStart:"साइनअप/लॉगिन",splashChip:"ऑफ़लाइन तैयार",splashFine:"आपका डेटा इसी फ़ोन में सुरक्षित रहता है।",
+  pTtlLogin:"लॉगिन करें",pTtlSignUp:"पंजीकरण करें",
+  pTtlsLogin:"अपने डैशबोर्ड में प्रवेश के लिए कार्यकर्ता आईडी और पिन दर्ज करें।",pTtlsSignUp:"शुरू करने के लिए अपनी प्रोफ़ाइल पंजीकृत करें।",
+  labelName:"कार्यकर्ता का नाम",labelId:"कार्यकर्ता आईडी",labelCentre:"आँगनवाड़ी केंद्र",labelPin:"4-अंकीय पिन",
+  btnSignUp:"प्रोफ़ाइल बनाएं और लॉगिन करें",btnLogin:"डैशबोर्ड में प्रवेश करें",
+  msgErrorPin:"गलत आईडी या पिन। कृपया पुनः प्रयास करें।",msgSuccess:"प्रोफ़ाइल सफलतापूर्वक पंजीकृत!",
+  greet:"सुप्रभात, मीरा।",date:"सोमवार, 15 जून।",
+  nowClock:"अभी 8:04 बजे",nowLabel:"अभी का काम",nowTask:"सुबह की हाज़िरी",nowSub:"और नाश्ता देना",start:"हाज़िरी शुरू करें",
+  alert:"3 बच्चे ज़रूरी: तुरंत देखें",day:"दिन का नक्शा",nowtag:"अभी",doneShort:"हो गया",pendShort:"बाकी",
+  slots:[["हाज़िरी और नाश्ता","8 से 9 बजे","att",1,0],["खेल और जाँच","9 से 12 बजे","ece",0,0],["गरम खाना","12 से 1 बजे","meal",0,0],["सेहत जाँच","1 से 2 बजे","health",0,0],["दिन की जाँच","2 बजे बाद","audit",0,0]],
+  triageKw:["आज किसे ","देखना है"],
+  blocks:[{n:"01",t:"तुरंत देखें",s:"बहुत कमज़ोर बच्चे",c:"--red",bg:"--rl",kids:[{nm:"मीरा शर्मा",ag:"3 साल",ds:"वज़न 3 हफ़्ते से घट रहा है। आज नाप लें।",tag:"बहुत कमज़ोर"},{nm:"रवि दास",ag:"2 साल",ds:"बाँह बहुत पतली (10.8 सेमी)। अस्पताल भेजें।",tag:"बहुत कमज़ोर"}]},{n:"02",t:"बाकी है",s:"2 दिन से जानकारी नहीं",c:"--amber",bg:"--al",kids:[{nm:"अनिता कुमारी",ag:"4 साल",ds:"3 दिन से कुछ दर्ज नहीं हुआ।",tag:null},{nm:"राहुल मुर्मू",ag:"2 साल",ds:"5 दिन नहीं आया। आज लौटा।",tag:"आज लौटा"}]},{n:"03",t:"बाकी काम",s:"टीका, राशन",c:"--green",bg:"--gl",kids:[{nm:"सुरेश यादव",ag:"3 साल",ds:"विटामिन A का टीका बाकी। आज दें।",tag:null}]}],
+  voiceKw:["बस ","बोल दें"],voiceSub:"एक बार बोलें, हर रजिस्टर में अपने आप दर्ज हो जाएगा।",
+  voiceQ:"राहुल आज नहीं आया, प्रिया को दुगना राशन, मीरा का वज़न नापना है",voiceH:"सही सुना: 94%",
+  filling:"अपने आप भर रहा है",sure:"कितना पक्का है",
+  regs:[["हाज़िरी रजिस्टर","राहुल: अनुपस्थित दर्ज",1],["राशन रजिस्टर","प्रिया: दुगना राशन",1],["सेहत रजिस्टर","मीरा: वज़न नापना बाकी",0]],
+  tiers:[["पक्का (अपने आप दर्ज)","94% से ऊपर","--green",1],["एक बार देख लें","75% से 94%","--amber",0],["खुद भरें","75% से नीचे","--red",0]],
+  attKw:["आज ","सब आए हैं"],allHere:"सभी 42 बच्चे आए हैं",allCount:"केंद्र के सभी बच्चे उपस्थित",allTime:"8:04 बजे दर्ज",
+  camLine:"फ़ोटो से गिनती मिलाएँ",camMatch:"कैमरा खोलने के लिए टैप करें",absent:"अनुपस्थित चुनें",absTag:" · टैप करके अनुपस्थित करें",
+  attKids:[["राहुल मुर्मू","2 साल"],["अनिता कुमारी","4 साल"]],addVoice:"बोलकर जोड़ें",
+  sumLine:"आज की हाज़िरी",pct:"42 में से 40 उपस्थित (95%)",send:"जाँचें और भेजें",
+  mealKw:["गरम ","खाना"],mealSub:"आज का खाना और कितने बच्चों को मिला, यहाँ दर्ज करें।",
+  mealToday:"आज का खाना",mealFood:"दाल, चावल और सब्ज़ी",mealPer:"हर बच्चे को एक कटोरी",
+  mealFed:"अब तक खिलाया",mealOf:"में से 40",mealVoice:"बोलकर गिनती दर्ज करें",
+  mealStock:"राशन कम है",mealStockS:"दाल 2 दिन की बची है। ब्लॉक को बताएँ।",
+  hName:"रवि दास",hAge:"2 साल 4 महीने · केंद्र 04",hDanger:"ख़तरे का निशान",
+  hSignal:"तुरंत ध्यान दें",hSignalD:"बाँह की माप 10.8 सेमी है, जो बहुत कम है। आज ही अस्पताल रेफर करें।",
+  hVitals:[["वज़न","8.1 किग्रा","उम्र से कम",1],["बाँह (MUAC)","10.8 सेमी","लाल घेरा",1],["लंबाई","82 सेमी","थोड़ी कम",1],["पिछली जाँच","3 हफ़्ते पहले","",0]],
+  hScore:"पोषण स्थिति",hVeryWeak:"बहुत कमज़ोर (SAM)",hWeigh:"वज़न दर्ज करें",hRefer:"अस्पताल रेफर करें",
+  eceKw:["आज का ","खेल"],eceSub:"आज के कमरे के बच्चों के लिए गतिविधि।",
+  eceGame:"गेंद की ओर बढ़ना",eceAge:"6 से 9 माह · शारीरिक विकास",eceDesc:"बच्चे के सामने नरम गेंद रखें और पकड़ने के लिए बढ़ावा दें। फिर गेंद थोड़ा दूर खिसकाएँ।",
+  ecePick:"गतिविधि बैंक से चुना गया",eceScreen:"विकास जाँच (DSS) करें",
+  eceFocus:"ख़ास ध्यान वाले बच्चे",
+  eceFlags:[["आरती (3 साल)","अभी बोलना कम","ध्यान दें, इशारों से जवाब लेने वाली गतिविधि दें।","--amber"],["कबीर (2 साल)","ठीक चल रहा","अगली गतिविधि के लिए तैयार।","--green"]],
+  eceNote:"नोट",eceNoteV:"यह गतिविधि कमरे की उम्र और सामान के अनुसार बदली जा सकती है।",
+  auditKw:["दिन की ","जाँच"],auditYes:"भेजने से पहले एक बार देख लें",auditYesD:"नीचे आज का सारा काम है। सही लगे तो भेज दें।",
+  auditWhat:"आज क्या हुआ",
+  auditItems:[["हाज़िरी: 40 उपस्थित, 2 अनुपस्थित",1],["गरम खाना: 40 बच्चों को मिला",1],["सेहत जाँच: 3 बच्चे रेफर हुए",1],["खेल और जाँच: 1 बच्चे की DSS बाकी",0]],
+  auditSafe:"सारा डेटा इसी फ़ोन में सुरक्षित है। इंटरनेट आने पर अपने आप भेजा जाएगा।",auditApprove:"पक्का करें और दिन बंद करें",
+  micL:"सुन रहे हैं...",micS:"साफ़ बोलें। नाम, गिनती या सामान बोल सकते हैं।",micC:"बंद करें",
+  notif:"सूचनाएँ"
+ },
+ en:{
+  govA:"Government of India",govB:"Ministry of Women and Child Development",govC:"Integrated Child Development Services (ICDS)",
+  pill:"EN | अ",nav:["Home","Health","Play","More"],
+  splashTag:"The whole Anganwadi day in one place. Works without internet.",
+  splashStart:"SignUp/Login",splashChip:"Offline ready",splashFine:"Your data stays safe on this phone.",
+  pTtlLogin:"Login to AURA",pTtlSignUp:"Sign Up to AURA",
+  pTtlsLogin:"Enter your Worker ID and 4-digit PIN to access your Anganwadi dashboard.",pTtlsSignUp:"Register your offline Anganwadi identity to get started.",
+  labelName:"Worker Name",labelId:"Worker ID",labelCentre:"Anganwadi Centre",labelPin:"4-Digit PIN",
+  btnSignUp:"Create Profile & Login",btnLogin:"Enter Dashboard",
+  msgErrorPin:"Incorrect Worker ID or PIN. Please try again.",msgSuccess:"Profile registered successfully!",
+  greet:"Good morning, Meera.",date:"Monday, 15 June.",
+  nowClock:"Now, 8:04 AM",nowLabel:"Right now",nowTask:"Morning attendance",nowSub:"and serving breakfast",start:"Start attendance",
+  alert:"3 children need attention now",day:"Today's plan",nowtag:"now",doneShort:"done",pendShort:"left",
+  slots:[["Attendance and breakfast","8 to 9 AM","att",1,0],["Play and screening","9 to 12","ece",0,0],["Hot meal","12 to 1","meal",0,0],["Health check","1 to 2","health",0,0],["Day review","After 2","audit",0,0]],
+  triageKw:["Who needs ","attention today"],
+  blocks:[{n:"01",t:"See now",s:"Very weak children",c:"--red",bg:"--rl",kids:[{nm:"Meera Sharma",ag:"3 years",ds:"Weight falling for 3 weeks. Weigh today.",tag:"Very weak"},{nm:"Ravi Das",ag:"2 years",ds:"Arm very thin (10.8 cm). Refer to hospital.",tag:"Very weak"}]},{n:"02",t:"Pending",s:"No update for 2 days",c:"--amber",bg:"--al",kids:[{nm:"Anita Kumari",ag:"4 years",ds:"Nothing recorded for 3 days.",tag:null},{nm:"Rahul Murmu",ag:"2 years",ds:"Absent 5 days. Returned today.",tag:"Back today"}]},{n:"03",t:"Remaining",s:"Vaccine, ration",c:"--green",bg:"--gl",kids:[{nm:"Suresh Yadav",ag:"3 years",ds:"Vitamin A dose pending. Give today.",tag:null}]}],
+  voiceKw:["Just ","say it"],voiceSub:"Speak once. It records into every register on its own.",
+  voiceQ:"Rahul absent today, double ration for Priya, weigh Meera",voiceH:"Heard correctly: 94%",
+  filling:"Filling on its own",sure:"How sure",
+  regs:[["Attendance register","Rahul: marked absent",1],["Ration register","Priya: double ration",1],["Health register","Meera: weight pending",0]],
+  tiers:[["Confirmed (auto saved)","Above 94%","--green",1],["Please check once","75% to 94%","--amber",0],["Enter yourself","Below 75%","--red",0]],
+  attKw:["Everyone ","is here today"],allHere:"All 42 children present",allCount:"Every child in the centre is here",allTime:"Recorded at 8:04 AM",
+  camLine:"Match the count with a photo",camMatch:"Tap to open the camera",absent:"Mark absent",absTag:" · tap to mark absent",
+  attKids:[["Rahul Murmu","2 years"],["Anita Kumari","4 years"]],addVoice:"Add by voice",
+  sumLine:"Today's attendance",pct:"40 of 42 present (95%)",send:"Check and send",
+  mealKw:["Hot ","meal"],mealSub:"Record today's meal and how many children were served.",
+  mealToday:"Today's meal",mealFood:"Dal, rice and vegetables",mealPer:"One bowl per child",
+  mealFed:"Served so far",mealOf:"of 40",mealVoice:"Record count by voice",
+  mealStock:"Ration is low",mealStockS:"Dal will last 2 days. Inform the block.",
+  hName:"Ravi Das",hAge:"2 years 4 months · Centre 04",hDanger:"Danger sign",
+  hSignal:"Needs attention now",hSignalD:"Arm measure is 10.8 cm, which is very low. Refer to hospital today.",
+  hVitals:[["Weight","8.1 kg","Low for age",1],["Arm (MUAC)","10.8 cm","Red zone",1],["Height","82 cm","Slightly low",1],["Last check","3 weeks ago","",0]],
+  hScore:"Nutrition status",hVeryWeak:"Very weak (SAM)",hWeigh:"Record weight",hRefer:"Refer to hospital",
+  eceKw:["Today's ","activity"],eceSub:"A Navchetana activity for the children in the room today.",
+  eceGame:"Reaching for the ball",eceAge:"6 to 9 months · Physical",eceDesc:"Place a soft ball within reach and encourage the child to grasp it. Then move the ball a little farther.",
+  ecePick:"Chosen from the Navchetana activity bank",eceScreen:"Run development check (DSS)",
+  eceFocus:"Children to watch",
+  eceFlags:[["Aarti (3 years)","Speaking little","Watch closely. Give an activity that accepts gesture replies.","--amber"],["Kabir (2 years)","On track","Ready for the next activity.","--green"]],
+  eceNote:"Note",eceNoteV:"This activity can change to fit the room's ages and materials.",
+  auditKw:["Day ","review"],auditYes:"Check once before sending",auditYesD:"Below is everything from today. Send if it looks right.",
+  auditWhat:"What happened today",
+  auditItems:[["Attendance: 40 present, 2 absent",1],["Hot meal: served to 40 children",1],["Health check: 3 children referred",1],["Play and screening: 1 child's DSS pending",0]],
+  auditSafe:"All data is safe on this phone. It will send on its own when internet returns.",auditApprove:"Confirm and close the day",
+  micL:"Listening...",micS:"Speak clearly. You can say a name, a count or a material.",micC:"Close",
+  notif:"Notifications"
+ }
+};
 
-    <!-- Activity section — filled by JS when a C1 activity is loaded -->
-    <section id="activity-section" class="card" aria-label="Current activity">
-      <h2>Current Activity</h2>
-      <div id="activity-card">
-        <p>No activity loaded. Tap "Load Demo Activity" to begin.</p>
+let lang='hi';
+let stack=['splash'];
+let authMode='login';
+let syncQueueSize = 0;
+let currentActivity = null;
+let activeNode = 'FM-3';
+let activeChildren = [];
+let activeWorker = null;
+let activeCentre = null;
+let dssAnswers = {};
+let dssQuestions = [];
+let masteryMap = new Map();
+
+// Online check maps to the inverse of the debug offline mode flag
+function isOnline() {
+  return !window.DEBUG_OFFLINE_MODE;
+}
+
+// ── Statusbar rendering dynamically responding to Online simulator ──────────
+function statusbar(time){
+  const online = isOnline();
+  const networkLabel = online 
+    ? (lang === 'hi' ? 'ऑनलाइन' : 'Online') 
+    : (lang === 'hi' ? 'ऑफ़लाइन' : 'Offline');
+  const networkColor = online ? '#216A3F' : '#6B6B6B';
+  const indicatorHtml = `<button onclick="toggleOnline(event)" style="background:${networkColor};color:#fff;border:none;border-radius:12px;padding:4px 8px;font-size:10px;font-weight:700;display:inline-flex;align-items:center;gap:4px;cursor:pointer;min-height:22px;line-height:1;vertical-align:middle;">
+    <span style="width:6px;height:6px;border-radius:50%;background:${online ? '#6fd29b' : '#ff4d4d'};display:inline-block;animation:${online ? 'pulse 2s infinite' : 'none'}"></span>
+    ${networkLabel}
+  </button>`;
+  return `<div class="govbar"><span class="tri" aria-hidden="true"><i style="background:#FF9933"></i><i style="background:#fff"></i><i style="background:#138808"></i></span><span>${T[lang].govC}</span></div><div class="statusbar" style="padding: 0 16px;"><span>${time}</span><span class="r">${SVG.globe} ${indicatorHtml}</span></div>`;
+}
+
+function header(){
+  const t=T[lang];
+  let avatarLetter = 'M';
+  if (activeWorker && activeWorker.name) {
+    avatarLetter = activeWorker.name.charAt(0).toUpperCase();
+  }
+  return `<div class="header"><div class="avatar">${avatarLetter}</div><div class="brand">A.U.R.A.<small>${t.govC}</small></div><div class="right"><button class="pill-lang" onclick="setLang('${lang==='hi'?'en':'hi'}')">${t.pill}</button><button class="bellbtn" aria-label="${t.notif}" onclick="alert('${t.notif}')">${SVG.bell}<span class="dotn"></span></button></div></div>`;
+}
+
+function kw(arr,color){return `<div class="kw">${arr[0]}<span class="hl" style="background:var(${color})">${arr[1]}</span></div>`;}
+
+function nav(active){
+  const t=T[lang];
+  const tabs=[['home','home',()=>jump('shell')],['health','heart',()=>jump('health')],['__fab','voice',()=>openMic()],['ece','book',()=>jump('ece')],['more','grid',()=>jump('more')]];
+  let html='<div class="nav" role="navigation">';
+  const labels=[t.nav[0],t.nav[1],'',t.nav[2],t.nav[3]];
+  tabs.forEach((tb,i)=>{
+    if(tb[0]==='__fab'){
+      const online = isOnline();
+      const fabStyle = online ? '' : 'background:var(--muted);box-shadow:none;opacity:0.75;';
+      const onClickStr = online ? 'openMic()' : `alert(lang==='hi'?'ऑफ़लाइन: बोलकर इनपुट बंद है':'Offline: Voice input is disabled')`;
+      html+=`<div class="navspacer"></div><div class="fab" role="button" aria-label="Voice" style="${fabStyle}" onclick="${onClickStr}">${online ? SVG.voice : '🔒'}</div><div class="navspacer"></div>`;
+    }
+    else{const on=tb[0]===active?'on':'';html+=`<div class="tab ${on}" role="button" onclick="navTap('${tb[0]}')"><span>${SVG[tb[1]]}</span><span class="lab">${labels[i]}</span></div>`;}
+  });
+  return html+'</div>';
+}
+
+function navTap(id){
+  if(id==='home')jump('shell');
+  else if(id==='health') {
+    if (activeChildren.length > 0) {
+      jump('health');
+    } else {
+      alert(lang==='hi' ? 'कृपया पहले लॉगिन करें।' : 'Please sign in first.');
+    }
+  }
+  else if(id==='ece') jump('ece');
+  else if(id==='more') jump('more');
+}
+
+const screens={
+  splash(){
+    const t=T[lang];
+    return `<div class="screen dark active"><div class="logo">${SVG.book}</div><h1>A.U.R.A.</h1><div class="fullform">Anganwadi Unified<br>Resource Assistant</div><div class="rule"></div><div class="chip"><span class="pulse"></span>${t.splashChip}</div><div class="tag">${t.splashTag}</div><button class="startbtn" onclick="jump('profile')">${t.splashStart} ${SVG.refer}</button><div class="fine">${t.splashFine}</div><div class="govstrip">${t.govA} · ${t.govB}</div></div>`;
+  },
+  profile() {
+    const t = T[lang];
+    const isSignedUp = activeWorker !== null;
+    const currentMode = isSignedUp ? authMode : 'signup';
+
+    let formHtml = '';
+    if (currentMode === 'login') {
+      formHtml = `
+        <div class="form-group">
+          <label>${t.labelId}</label>
+          <input type="text" id="auth-id" placeholder="AWW_KH_04">
+        </div>
+        <div class="form-group">
+          <label>${t.labelPin}</label>
+          <input type="password" id="auth-pin" maxlength="4" placeholder="••••" inputmode="numeric">
+        </div>
+        <div id="auth-error" style="color:var(--red);font-size:12px;margin-top:4px;display:none;font-weight:600;">${t.msgErrorPin}</div>
+        <button class="btn green" style="margin-top:18px" onclick="handleAuthSubmit('login')">${t.btnLogin} ${SVG.refer}</button>
+      `;
+    } else {
+      formHtml = `
+        <div class="form-group">
+          <label>${t.labelName}</label>
+          <input type="text" id="auth-name" placeholder="${lang === 'hi' ? 'नाम दर्ज करें' : 'Enter name'}">
+        </div>
+        <div class="form-group">
+          <label>${t.labelId}</label>
+          <input type="text" id="auth-id" placeholder="AWW_KH_04">
+        </div>
+        <div class="form-group">
+          <label>${t.labelCentre}</label>
+          <input type="text" id="auth-centre" placeholder="AWC Centre 04">
+        </div>
+        <div class="form-group">
+          <label>${t.labelPin}</label>
+          <input type="password" id="auth-pin" maxlength="4" placeholder="••••" inputmode="numeric">
+        </div>
+        <button class="btn green" style="margin-top:18px" onclick="handleAuthSubmit('signup')">${t.btnSignUp} ${SVG.refer}</button>
+      `;
+    }
+
+    const tabsHtml = isSignedUp ? `
+      <div class="mode-switch">
+        <span class="${currentMode === 'login' ? 'active' : ''}" onclick="setAuthMode('login')">${t.pTtlLogin}</span>
+        <span class="${currentMode === 'signup' ? 'active' : ''}" onclick="setAuthMode('signup')">${t.pTtlSignUp}</span>
       </div>
-      <!-- Guardrail chip rendered here via renderGuardrailChip() — Req 10.1 -->
-      <div id="guardrail-chip-container" aria-live="polite"></div>
-      <button id="btn-load-activity" type="button">🎯 Load Demo Activity</button>
-    </section>
-
-    <!-- Post-session section — Req 9.1 -->
-    <section id="post-session" class="card" aria-label="Post-session mastery grid">
-      <h2>Session Complete</h2>
-
-      <!-- Node selector — lets AWW change the active knowledge node -->
-      <div id="node-selector">
-        <label for="activeNodeSelect">Active Node:
-          <select id="activeNodeSelect" aria-label="Select active knowledge node">
-            <option value="FM-3">FM-3 — Fine Motor</option>
-            <option value="FM-2">FM-2 — Fine Motor (Prerequisite)</option>
-            <option value="CG-2">CG-2 — Cognitive</option>
-            <option value="CG-3">CG-3 — Cognitive</option>
-            <option value="LL-1">LL-1 — Language &amp; Literacy</option>
-            <option value="SE-1">SE-1 — Socio-Emotional</option>
-          </select>
-        </label>
+    ` : `
+      <div class="mode-switch">
+        <span class="active">${t.pTtlSignUp}</span>
       </div>
+    `;
 
-      <!-- Avatar grid — populated by renderAvatarGrid() -->
-      <div id="avatar-grid" role="list" aria-label="Children mastery grid">
-        <!-- Avatar cards are injected by JS -->
+    const titleText = currentMode === 'login' ? t.pTtlLogin : t.pTtlSignUp;
+    const subtitleText = currentMode === 'login' ? t.pTtlsLogin : t.pTtlsSignUp;
+
+    return `
+      <div class="screen active" style="background:#fff">
+        <div class="govbar">
+          <span class="tri" aria-hidden="true">
+            <i style="background:#FF9933"></i>
+            <i style="background:#fff"></i>
+            <i style="background:#138808"></i>
+          </span>
+          <span>${t.govC}</span>
+        </div>
+        <div class="scroll">
+          <div class="pselect" style="padding:24px 26px 26px;">
+            <div class="globewrap" style="margin-bottom:16px">${SVG.home}</div>
+            <div class="ttl">${titleText}</div>
+            <div class="ttls" style="margin-bottom:20px;">${subtitleText}</div>
+            ${tabsHtml}
+            <div style="margin-top:10px;">${formHtml}</div>
+          </div>
+        </div>
       </div>
-
-      <!-- Session actions -->
-      <div id="session-actions">
-        <button id="btn-mark-complete" type="button">
-          Mark Session Complete
-        </button>
+    `;
+  },
+  shell() {
+    const t = T[lang];
+    const slots = t.slots.map(s => `<div class="slot ${s[2] === 'att' ? 'now' : ''}" onclick="go('${s[2]}')"><div class="dot">${SVG[navic[s[2]]]}</div><div class="meta"><div class="a">${s[0]}</div><div class="b">${s[1]}</div></div>${s[2] === 'att' ? `<span class="nowtag">${t.nowtag}</span>` : `<span class="stt">${s[4] ? t.doneShort : t.pendShort}</span>`}</div>`).join('');
+    return `
+      <div class="screen active">${statusbar('8:04')}${header()}
+        <div class="scroll">
+          <div class="body">
+            <div class="greet">${t.greet}<small>${t.date}</small></div>
+            <div class="nowcard">
+              <div class="nclock">${SVG.clock} ${t.nowClock}</div>
+              <div class="nlabel">${t.nowLabel}</div>
+              <h2>${t.nowTask}</h2>
+              <div class="ntask">${t.nowSub}</div>
+              <button class="nowbtn" onclick="go('att')">${t.start}<span class="arrow">→</span></button>
+            </div>
+            <div class="alert" onclick="go('triage')">
+              <span class="ai">${SVG.warn}</span>
+              <span class="t">${t.alert}</span>
+              <span class="chev">›</span>
+            </div>
+            <div class="sectionlabel">${t.day}</div>
+            ${slots}
+          </div>
+        </div>
+        ${nav('home')}
       </div>
-    </section>
+    `;
+  },
+  triage() {
+    const t = T[lang];
+    const blocks = t.blocks.map(b => `<div class="blockh" style="border-color:var(${b.c});background:var(${b.bg})"><span class="num" style="color:var(${b.c})">${b.n}</span><span class="ti" style="color:var(${b.c})">${b.t}</span><span class="su" style="color:var(${b.c})">${b.s}</span></div>${b.kids.map(k => `<div class="crow" style="border-left-color:var(${b.c})" onclick="go('health')"><div class="ic" style="background:var(${b.bg});color:var(${b.c})">!</div><div class="info"><div class="nm">${k.nm}</div><div class="ag">${k.ag}</div><div class="ds" style="color:var(${b.c})">${k.ds}</div></div>${k.tag ? `<span class="tag" style="background:var(${b.bg});color:var(${b.c})">${k.tag}</span>` : ''}</div>`).join('')}`).join('');
+    return `
+      <div class="screen active">${statusbar('8:04')}${header()}
+        <div class="scroll">
+          <div class="body" style="padding-top:6px">
+            <button class="backbtn" style="background:var(--rl);color:var(--red)" onclick="back()">
+              ‹ ${lang === 'hi' ? 'वापस' : 'Back'}
+            </button>
+            ${kw(t.triageKw, '--red')}${blocks}
+          </div>
+        </div>
+        ${nav('home')}
+      </div>
+    `;
+  },
+  voice() {
+    const t = T[lang];
+    const regs = t.regs.map(r => {
+      const c = r[2] ? '--green' : '--amber';
+      const bg = r[2] ? '--gl' : '--al';
+      return `<div class="reg" style="background:var(${bg});border-left-color:var(${c})"><div><div class="l" style="color:var(${c})">${r[0]}</div><div class="v">${r[1]}</div></div><span class="st" style="background:var(${c})">${r[2] ? t.doneShort : t.pendShort}</span></div>`;
+    }).join('');
+    const tiers = t.tiers.map(ti => {
+      const lt = ti[2] === '--green' ? '--gl' : ti[2] === '--amber' ? '--al' : '--rl';
+      return `<div class="tier ${ti[3] ? 'on' : ''}" style="${ti[3] ? `background:var(${lt});border-color:var(${ti[2]})` : ''};border-left-color:var(${ti[3] ? ti[2] : '--line'})"><div><div class="tl" style="${ti[3] ? `color:var(${ti[2]})` : 'color:var(--muted)'}">${ti[0]}</div><div class="td">${ti[1]}</div></div>${ti[3] ? `<span class="ck" style="background:var(${ti[2]})">${SVG.check}</span>` : ''}</div>`;
+    }).join('');
+    return `
+      <div class="screen active">${statusbar('8:10')}${header()}
+        <div class="scroll">
+          <div class="body" style="padding-top:6px">
+            <button class="backbtn" style="background:var(--gl);color:var(--green)" onclick="back()">
+              ‹ ${lang === 'hi' ? 'वापस' : 'Back'}
+            </button>
+            ${kw(t.voiceKw, '--green')}
+            <div class="sub">${t.voiceSub}</div>
+            <div class="transcript">
+              <div class="q">${t.voiceQ}</div>
+              <div class="h">${SVG.check} ${t.voiceH}</div>
+              <div class="bar"><i style="width:94%"></i></div>
+            </div>
+            <div class="sectionlabel">${t.filling}</div>
+            ${regs}
+            <div class="sectionlabel">${t.sure}</div>
+            ${tiers}
+          </div>
+        </div>
+        ${nav('home')}
+      </div>
+    `;
+  },
+  att() {
+    const t = T[lang];
+    const totalCount = activeChildren.length;
+    const presentCount = activeChildren.filter(c => c.present).length;
+    const pctVal = totalCount > 0 ? Math.round((presentCount / totalCount) * 100) : 0;
 
-  </main>
+    const kids = activeChildren.map(c => {
+      const borderCol = c.present ? 'var(--green)' : 'var(--red)';
+      const bgCol = c.present ? 'var(--gl)' : 'var(--rl)';
+      const icon = c.present ? '✓' : '✕';
+      const textTag = c.present 
+        ? (lang==='hi' ? ' · अनुपस्थित करने के लिए टैप करें' : ' · tap to mark absent') 
+        : (lang==='hi' ? ' · उपस्थित करने के लिए टैप करें' : ' · tap to mark present');
 
-  <!-- Toast notification -->
-  <div id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+      return `
+        <div class="crow" 
+             style="border-left-color:${borderCol};background:#fff;cursor:pointer;margin-bottom:8px;" 
+             onclick="toggleAttendance('${c.childId}')">
+          <div class="ic" style="background:${bgCol};color:${borderCol}">${icon}</div>
+          <div class="info">
+            <div class="nm">${c.name[lang]}</div>
+            <div class="ag">${c.age[lang]}${textTag}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
 
-  <!-- ═══ Application script ════════════════════════════════════════════════ -->
-  <script type="module">
-    import { BKTEngine }   from './bkt_engine.js';
-    import { MasteryStore } from './aura-api.js';
-    import { GuardrailEngine } from './guardrail_engine.js';
+    const attendanceSummary = lang === 'hi'
+      ? `${totalCount} में से ${presentCount} उपस्थित (${pctVal}%)`
+      : `${presentCount} of ${totalCount} present (${pctVal}%)`;
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Demo children (hardcoded for prototype — Req 9.1)
-    // In production this would be fetched from an IndexedDB children store.
-    // ─────────────────────────────────────────────────────────────────────────
-    const demoChildren = [
-      { child_id: 'C001', name: 'Raju',  age_months: 42 },
-      { child_id: 'C002', name: 'Priya', age_months: 38 },
-      { child_id: 'C003', name: 'Meena', age_months: 45 },
-      { child_id: 'C004', name: 'Arjun', age_months: 36 },
-      { child_id: 'C005', name: 'Sita',  age_months: 48 },
-      { child_id: 'C006', name: 'Kiran', age_months: 40 },
-    ];
+    const allPresentHero = presentCount === totalCount
+      ? `<div class="hero" style="background:var(--green);margin-top:6px">
+          <h2>${t.allHere}</h2>
+          <p>${t.allCount}</p>
+          <p style="font-size:10px;margin-top:6px;opacity:.85">${t.allTime}</p>
+         </div>`
+      : `<div class="hero" style="background:var(--amber);margin-top:6px">
+          <h2>${lang === 'hi' ? `${presentCount} बच्चे उपस्थित` : `${presentCount} Children Present`}</h2>
+          <p>${lang === 'hi' ? 'कुछ बच्चे अनुपस्थित हैं। रजिस्टर में अपडेट करें।' : 'Some children are absent. Marked in roster below.'}</p>
+         </div>`;
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // State
-    // ─────────────────────────────────────────────────────────────────────────
+    return `
+      <div class="screen active">${statusbar('8:04')}${header()}
+        <div class="scroll">
+          <div class="body" style="padding-top:6px">
+            <button class="backbtn" style="background:var(--gl);color:var(--green)" onclick="back()">
+              ‹ ${lang==='hi'?'वापस':'Back'}
+            </button>
+            ${kw(t.attKw,'--green')}
+            
+            ${allPresentHero}
+            
+            <div class="camline" onclick="alert('${lang==='hi'?'फोटो खींच कर स्वचालित गणना खुल रही है...':'Photo headcount scanning opens...'}')">
+              <span class="ci">${SVG.cam}</span>
+              <div>
+                <div style="color:#cdeede;font-size:11px;font-weight:600">${t.camLine}</div>
+                <div style="color:#7fae97;font-size:9px">${t.camMatch}</div>
+              </div>
+            </div>
+            
+            <div class="sectionlabel">${lang==='hi' ? 'दैनिक उपस्थिति रजिस्टर' : 'Daily Attendance Register'}</div>
+            ${kids}
+            
+            ${isOnline() ? `
+            <button class="btn ghost" onclick="alert('${lang==='hi'?'आवाज पहचान शुरू...':'Voice recognizer listening...'}')">
+              ${SVG.voice} ${t.addVoice}
+            </button>
+            ` : `
+            <button class="btn ghost outline" disabled style="opacity:0.5;cursor:not-allowed;">
+              🔒 ${t.addVoice} (${lang==='hi'?'ऑफ़लाइन':'Offline'})
+            </button>
+            `}
+            
+            <div class="hero" style="background:var(--forest);margin-top:16px">
+              <p style="opacity:.85">${t.sumLine}</p>
+              <h2 style="font-size:20px">${attendanceSummary}</h2>
+              <button class="btn green" style="margin-top:10px" onclick="submitAttendanceRoster()">${t.send}</button>
+            </div>
+          </div>
+        </div>
+        ${nav('home')}
+      </div>
+    `;
+  },
+  meal(){
+    const t=T[lang];
+    const totalCount = activeChildren.length;
+    const presentCount = activeChildren.filter(c => c.present).length;
+    
+    return `<div class="screen active">${statusbar('12:14')}${header()}<div class="scroll"><div class="body" style="padding-top:6px"><button class="backbtn" style="background:var(--al);color:var(--orange)" onclick="back()">‹ ${lang==='hi'?'वापस':'Back'}</button>${kw(t.mealKw,'--orange')}<div class="sub">${t.mealSub}</div><div class="vcard" style="border-left-color:var(--orange)"><div class="mh" style="color:var(--orange)">${SVG.meal}<span style="font-size:10px;font-weight:600">${t.mealToday}</span></div><div style="font-size:16px;font-weight:800">${t.mealFood}</div><div style="font-size:10px;color:var(--muted);margin-top:4px">${t.mealPer}</div></div><div style="background:var(--al);border-left:4px solid var(--orange);border-radius:12px;padding:14px;margin-bottom:10px"><div style="font-size:10px;color:var(--muted)">${t.mealFed}</div><div style="display:flex;align-items:baseline;gap:8px"><span style="font-size:40px;font-weight:800;color:var(--orange)">${presentCount}</span><span style="font-size:12px;color:var(--muted)">${t.mealOf} ${totalCount}</span></div><div class="bar" style="height:8px"><i style="width:${totalCount > 0 ? (presentCount / totalCount * 100) : 0}%;background:var(--orange)"></i></div></div>${isOnline() ? `<button class="btn ghost" onclick="openMic()">${SVG.voice} ${t.mealVoice}</button>` : `<button class="btn ghost outline" disabled style="opacity:0.5;cursor:not-allowed;">🔒 ${t.mealVoice} (${lang==='hi'?'ऑफ़लाइन':'Offline'})</button>`}<button class="btn green" style="margin-top:10px" onclick="submitMealFeed()">${lang === 'hi' ? 'भोजन विवरण सबमिट करें' : 'Submit Meal Details'}</button><div style="background:var(--al);border-left:4px solid var(--amber);border-radius:11px;padding:13px;margin-top:14px"><div style="font-size:12px;font-weight:700;color:var(--amber)">${t.mealStock}</div><div style="font-size:10px;color:var(--amber);margin-top:4px">${t.mealStockS}</div></div></div></div>${nav('home')}</div>`;
+  },
+  health(){
+    const t=T[lang];
+    const vit=t.hVitals.map(v=>`<div class="vital"><div class="l">${v[0]}</div><div class="v">${v[1]}</div><div class="d" style="color:var(${v[3]?'--red':'--green'})">${v[2]||'&nbsp;'}</div></div>`).join('');
+    return `<div class="screen active">${statusbar('1:20')}<div class="scroll"><div class="hero" style="background:var(--red);border-radius:0;padding:14px 20px 18px"><button class="backbtn" onclick="back()">‹ ${lang==='hi'?'वापस':'Back'}</button><div style="display:flex;justify-content:space-between;align-items:flex-start"><div><h2>${t.hName}</h2><p>${t.hAge}</p></div><span style="background:#fff;color:var(--red);font-size:10px;font-weight:800;padding:5px 12px;border-radius:12px">${t.hDanger}</span></div></div><div class="body"><div style="background:var(--rl);border:1px solid var(--red);border-left:4px solid var(--red);border-radius:12px;padding:13px;display:flex;gap:10px;margin-top:14px"><span style="color:var(--red);width:20px;height:20px;flex-shrink:0">${SVG.warn}</span><div><div style="font-size:12px;font-weight:700;color:var(--red)">${t.hSignal}</div><div style="font-size:10px;color:var(--red);line-height:1.5;margin-top:4px">${t.hSignalD}</div></div></div><div class="grid2" style="margin-top:14px">${vit}</div><div class="vcard" style="border-left-color:var(--red);margin-top:14px"><div style="font-size:9px;color:var(--muted)">${t.hScore}</div><div style="font-size:18px;font-weight:800;color:var(--red);margin-top:2px">${t.hVeryWeak}</div></div><div class="grid2" style="margin-top:6px"><button class="btn red" onclick="alert('${lang==='hi'?'वज़न दर्ज करने की स्क्रीन':'Weight entry screen'}')">${t.hWeigh}</button><button class="btn primary" onclick="alert('${lang==='hi'?'अस्पताल रेफरल बन गया ✓':'Hospital referral created ✓'}')">${t.hRefer}</button></div></div></div>${nav('health')}</div>`;
+  },
+  ece(){
+    const t = T[lang];
+    const online = isOnline();
+    
+    const sourceLabel = online 
+      ? (lang === 'hi' ? 'स्रोत: क्लाउड एलएलएम (जेमिनी फ़्लैश)' : 'Source: Cloud LLM (Gemini Flash)')
+      : (lang === 'hi' ? 'स्रोत: लोकल टेम्पलेट (ऑफ़लाइन फ़ालबैक)' : 'Source: Local Template (Offline Fallback)');
+      
+    const voiceWarningHtml = online 
+      ? '' 
+      : `<div style="background:var(--rl);color:var(--red);border-radius:10px;padding:8px;font-size:9.5px;font-weight:700;margin-bottom:10px;text-align:center;">
+          ⚠️ ${lang === 'hi' ? 'ऑफ़लाइन: बोलकर सामग्री जोड़ना बंद है (केवल टैप करें)' : 'Offline: Voice materials disabled (Tap-only)'}
+         </div>`;
 
-    /** The currently active knowledge node being assessed. */
-    let activeNode = 'FM-3';
+    const kidsGridHtml = activeChildren.map(c => {
+      const record = masteryMap.get(c.childId);
+      const flag = record ? record.trajectory_flag : null;
+      const initials = c.name[lang].charAt(0).toUpperCase();
+      let color = 'var(--muted)';
+      let label = 'None';
+      if (flag === 'mastered') { color = 'var(--green)'; label = lang === 'hi' ? 'सफल' : 'Mastered'; }
+      else if (flag === 'rising') { color = 'var(--purple)'; label = lang === 'hi' ? 'प्रगति' : 'Rising'; }
+      else if (flag === 'stalled') { color = 'var(--amber)'; label = lang === 'hi' ? 'रुका हुआ' : 'Stalled'; }
+      else if (flag === 'at_risk') { color = 'var(--red)'; label = lang === 'hi' ? 'जोखिम' : 'At Risk'; }
 
-    /**
-     * Map<child_id, MasteryRecord|null> — populated by loadMasteryMap().
-     * null means no record exists yet for this child × activeNode pair.
-     */
-    let masteryMap = new Map();
+      return `
+        <div class="avatar-card" 
+             style="display:flex;flex-direction:column;align-items:center;padding:10px 6px;border:1.5px solid var(--line);border-radius:var(--r-tile);cursor:pointer;background:#fff;user-select:none;touch-action:none;min-width:64px;"
+             onpointerdown="startBktPress(event, '${c.childId}')"
+             onpointerup="endBktPress(event, '${c.childId}')"
+             onpointerleave="cancelBktPress('${c.childId}')"
+             title="${c.name[lang]} (${label})">
+          <div class="avatar-circle" style="width:36px;height:36px;border-radius:50%;background:${color};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;position:relative;margin-bottom:6px;">
+            ${initials}
+            <span style="position:absolute;bottom:-2px;right:-2px;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid ${color};"></span>
+          </div>
+          <span style="font-size:9.5px;font-weight:700;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;color:var(--ink);">${c.name[lang].split(' ')[0]}</span>
+          <span style="font-size:8px;color:var(--muted);">${label}</span>
+        </div>
+      `;
+    }).join('');
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Badge class helpers
-    // ─────────────────────────────────────────────────────────────────────────
+    const masteredCount = activeChildren.filter(c => {
+      const record = masteryMap.get(c.childId);
+      return record && record.trajectory_flag === 'mastered';
+    }).length;
 
-    /** All valid badge CSS class names. */
-    const BADGE_CLASSES = [
-      'badge-mastered',
-      'badge-rising',
-      'badge-stalled',
-      'badge-at_risk',
-      'badge-none',
-    ];
+    const firedRules = currentActivity && currentActivity.provenance && Array.isArray(currentActivity.provenance.rules_fired)
+      ? currentActivity.provenance.rules_fired
+      : [];
 
-    /**
-     * Return the CSS badge class for a given trajectory_flag value.
-     *
-     * @param {string|null|undefined} flag
-     * @returns {string}
-     */
-    function badgeClass(flag) {
-      switch (flag) {
-        case 'mastered': return 'badge-mastered';
-        case 'rising':   return 'badge-rising';
-        case 'stalled':  return 'badge-stalled';
-        case 'at_risk':  return 'badge-at_risk';
-        default:         return 'badge-none';
-      }
+    const safety_count = firedRules.filter(id => id.startsWith('SAFE_')).length;
+    const inclusion_count = firedRules.filter(id => id.startsWith('INC_')).length;
+
+    const rulesMap = new Map(GuardrailEngine.getRules().map(r => [r.rule_id, r]));
+
+    const guardrailHtml = firedRules.length > 0 ? `
+      <div class="guardrail-wrapper" style="margin-top:12px;">
+        <div onclick="toggleGuardrailPanel(event)" style="background:var(--gl);border:1px solid var(--green);border-radius:20px;padding:8px 12px;font-size:11.5px;font-weight:700;color:var(--green);cursor:pointer;display:inline-flex;align-items:center;gap:6px;user-select:none;">
+          🛡 ${safety_count} ${lang==='hi'?'सुरक्षा':'safety'} · ${inclusion_count} ${lang==='hi'?'समावेश':'inclusion'} <span id="gr-arrow">▼</span>
+        </div>
+        <div id="gr-detail" style="display:none;background:#fcfcfc;border:1.5px solid var(--line);border-radius:12px;padding:12px;margin-top:8px;box-shadow:0 4px 10px rgba(0,0,0,.05);">
+          <div style="margin-bottom:8px;border-bottom:1px solid var(--line);padding-bottom:6px;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;">
+            ${lang === 'hi' ? 'लागू सुरक्षा नियम (15 नियमों में से)' : 'ACTIVE SAFETY RULES (FROM 15-RULE LIST)'}
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            ${firedRules.map(ruleId => {
+              const rule = rulesMap.get(ruleId) || { type: 'safety', message: ruleId };
+              const isSafety = rule.type === 'safety';
+              const col = isSafety ? 'var(--amber)' : 'var(--purple)';
+              const bg = isSafety ? '#fff9eb' : '#fbfaff';
+              return `
+                <div style="border-left:3.5px solid ${col};background:${bg};padding:6px 10px;border-radius:6px;font-size:10.5px;">
+                  <strong style="color:${col};font-size:9px;display:block;">${ruleId} · ${rule.type.toUpperCase()}</strong>
+                  <span style="color:var(--ink);">${rule.message}</span>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      </div>
+    ` : '';
+
+    return `
+      <div class="screen active">${statusbar('9:30')}${header()}
+        <div class="scroll">
+          <div class="body">
+            ${kw(t.eceKw,'--purple')}
+            <div class="sub">${t.eceSub}</div>
+            
+            ${voiceWarningHtml}
+            
+            <button class="btn green" style="margin-bottom:12px" onclick="loadECEActivity()" id="btn-load-activity">
+              🎯 ${lang === 'hi' ? 'गतिविधि अनुकूलित करें (Adapt)' : 'Adapt Activity for Room'}
+            </button>
+
+            <div class="vcard" style="border-left-color:var(--purple);background:#fff;position:relative;">
+              <div style="position:absolute;top:10px;right:12px;font-size:8px;font-weight:800;color:#fff;background:var(--purple);padding:3px 8px;border-radius:8px;">
+                ${sourceLabel}
+              </div>
+              <div style="font-size:16px;font-weight:800;margin-top:6px;max-width:80%;">${currentActivity ? currentActivity.adapted_title : t.eceGame}</div>
+              <div style="font-size:9.5px;color:var(--muted);margin-top:4px">${currentActivity ? (currentActivity.age_band_months + ' months · ' + currentActivity.targeted_domain) : t.eceAge}</div>
+              <div style="font-size:10.5px;line-height:1.55;margin-top:8px">${currentActivity ? currentActivity.step_by_step_instructions.join('<br>') : t.eceDesc}</div>
+              <div style="font-size:8px;color:var(--muted);margin-top:8px">${currentActivity ? ('milestone: ' + currentActivity.milestone_targeted) : t.ecePick}</div>
+              
+              ${guardrailHtml}
+            </div>
+            
+            <button class="btn ghost" style="border-color:var(--purple);color:var(--purple);margin-top:6px;" onclick="go('dss')">
+              ${SVG.clip} ${t.eceScreen}
+            </button>
+            
+            <div class="sectionlabel" style="display:flex;justify-content:space-between;align-items:center;margin-top:24px;">
+              <span>${lang === 'hi' ? 'बाल दक्षता ट्रैकिंग (BKT)' : 'Child Mastery Grid (BKT)'}</span>
+              <span style="font-size:10px;text-transform:none;color:var(--green);font-weight:700;">${masteredCount} / ${activeChildren.length} ${lang === 'hi' ? 'सफल' : 'Mastered'}</span>
+            </div>
+            
+            <div style="font-size:9.5px;color:var(--muted);margin-bottom:10px;line-height:1.4;">
+              💡 ${lang === 'hi' ? 'टैप: सफलता (हरा), दबाए रखें: ध्यान दें/जोखिम (लाल)' : 'Tap: Mastered (green), Press & hold: Needs attention (red)'}
+            </div>
+            
+            <div class="bkt-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:18px;">
+              ${kidsGridHtml}
+            </div>
+            
+            <div class="sectionlabel">${t.eceFocus}</div>
+            <div class="vcard" style="background:var(--al);border-left-color:var(--amber)">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span style="font-size:13px;font-weight:700">${lang === 'hi' ? 'आरती (3 साल)' : 'Aarti (3 years)'}</span>
+                <span style="background:var(--amber);color:#fff;font-size:7.5px;font-weight:600;padding:3px 8px;border-radius:9px">${lang === 'hi' ? 'संकेत विकल्प' : 'Gesture Override'}</span>
+              </div>
+              <div style="font-size:10px;margin-top:6px;line-height:1.5">${lang === 'hi' ? 'गैर-मूक (Non-verbal) होने के कारण, हाथ के इशारे से गेंद छूने की गतिविधि दी गई।' : 'Attunement rule fired: Non-verbal response path (clapping/gestures) mapped for interaction.'}</div>
+            </div>
+          </div>
+        </div>
+        ${nav('ece')}
+      </div>
+    `;
+  },
+  dss() {
+    const t = T[lang];
+    const questionsToRender = dssQuestions.slice(0, 5); // Load 5 questions for screen space
+
+    const dssHtml = questionsToRender.map((q, idx) => `
+      <div class="form-group" style="background:#fff;border:1px solid var(--line);border-radius:var(--r-tile);padding:14px;margin-bottom:10px;">
+        <div style="font-size:12px;font-weight:700;color:var(--ink);line-height:1.4;">${idx + 1}. ${q.question}</div>
+        <div style="display:flex;gap:12px;margin-top:10px;">
+          <button onclick="toggleDssQuestion('${q.item_id || 'q' + idx}', true)" id="btn-${q.item_id || 'q' + idx}-yes" style="flex:1;background:#fff;border:1.5px solid var(--line);border-radius:8px;padding:8px;font-size:12px;font-weight:700;cursor:pointer;color:var(--muted);min-height:36px;">
+            ${lang === 'hi' ? 'हाँ' : 'Yes'}
+          </button>
+          <button onclick="toggleDssQuestion('${q.item_id || 'q' + idx}', false)" id="btn-${q.item_id || 'q' + idx}-no" style="flex:1;background:var(--gl);border:1.5px solid var(--green);border-radius:8px;padding:8px;font-size:12px;font-weight:700;cursor:pointer;color:var(--green);min-height:36px;">
+            ${lang === 'hi' ? 'नहीं' : 'No'}
+          </button>
+        </div>
+      </div>
+    `).join('');
+
+    return `
+      <div class="screen active">${statusbar('9:45')}${header()}
+        <div class="scroll">
+          <div class="body" style="padding-top:6px;">
+            <button class="backbtn" style="background:var(--pl);color:var(--purple)" onclick="back()">
+              ‹ ${lang==='hi'?'वापस':'Back'}
+            </button>
+            ${kw(lang === 'hi' ? ["विकास ", "जाँच (DSS)"] : ["Developmental ", "Screening (DSS)"], '--purple')}
+            <div class="sub">
+              ${lang === 'hi' ? 'अक्षमता स्क्रीनिंग अनुसूची (Navchetana 2024)। लाल झंडे और RBSK रेफरल पहचान।' : 'Navchetana clinical disability screening schedule. Identify developmental red flags.'}
+            </div>
+
+            <div id="dss-questions-panel">
+              ${dssHtml}
+              <button class="btn green" style="margin-top:10px;" onclick="calculateDssResult()">
+                ${lang === 'hi' ? 'स्क्रीनिंग परिणाम का आकलन करें' : 'Evaluate Screening Result'}
+              </button>
+            </div>
+
+            <div id="dss-result-panel" style="display:none;margin-top:16px;"></div>
+          </div>
+        </div>
+        ${nav('ece')}
+      </div>
+    `;
+  },
+  audit(){
+    const t=T[lang];
+    const items=t.auditItems.map(i=>`<div class="item" style="border-left-color:var(${i[1]?'--green':'--red'})"><span class="b" style="background:var(${i[1]?'--green':'--red'})">${i[1]?'✓':'!'}</span><span class="x">${i[0]}</span></div>`).join('');
+    return `<div class="screen active">${statusbar('2:30')}${header()}<div class="scroll"><div class="body" style="padding-top:6px"><button class="backbtn" style="background:var(--pl);color:var(--navy)" onclick="back()">‹ ${lang==='hi'?'वापस':'Back'}</button>${kw(t.auditKw,'--navy')}<div style="background:var(--al);border-left:6px solid var(--amber);border-radius:12px;padding:13px;margin:6px 0 14px"><div style="font-size:12px;font-weight:700;color:var(--amber)">${t.auditYes}</div><div style="font-size:9.5px;color:var(--amber);margin-top:4px">${t.auditYesD}</div></div><div class="sectionlabel">${t.auditWhat}</div>${items}<div style="background:var(--gl);border-radius:10px;padding:11px;margin-top:4px;font-size:9.5px;color:var(--green);line-height:1.5">${t.auditSafe}</div><button class="btn primary" style="margin-top:14px" onclick="alert('${lang==='hi' ? 'दिन बंद किया गया। सारा काम स्थानीय स्तर पर सुरक्षित है।' : 'Day review closed. All actions saved locally on device.'}');jump('shell')">${t.auditApprove}</button></div></div>${nav('home')}</div>`;
+  },
+  more() {
+    const t = T[lang];
+    let workerName = activeWorker ? activeWorker.name : 'Mira Devi';
+    let centreName = activeCentre || 'AWC Centre 04';
+    let workerId = activeWorker ? activeWorker.id : 'AWW_KH_04';
+
+    const syncStatusHtml = syncQueueSize > 0
+      ? `
+        <div style="background:var(--al);border:2px solid var(--amber);border-radius:12px;padding:16px;margin-bottom:14px;">
+          <div style="font-size:14px;font-weight:800;color:var(--amber);display:flex;align-items:center;gap:6px;">
+            <span>🔄</span> ${lang === 'hi' ? `${syncQueueSize} डेटा सिंक होना बाकी` : `${syncQueueSize} Pending Uploads`}
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-top:6px;line-height:1.45;">
+            ${lang === 'hi' 
+              ? 'ऑफ़लाइन काम के कारण नया डेटा सिंक कतार (Sync queue) में सुरक्षित है। इंटरनेट आने पर सिंक करें।' 
+              : 'Updates captured offline are securely queued locally. Connect and sync below.'}
+          </div>
+          <ul style="font-size:10.5px;color:var(--ink);margin-top:10px;padding-left:16px;line-height:1.5;">
+            <li>BKT Mastery Records (${lang==='hi'?'गुमनाम आईडी':'Anonymous UUIDs'})</li>
+            <li>Bandit Weight Adjustments (SGD Context Rewards)</li>
+          </ul>
+          <button id="btn-sync-now" class="btn green" style="margin-top:14px;background:var(--amber);" onclick="simulateSync()">
+            ${lang === 'hi' ? 'अभी डेटा भेजें (Sync)' : 'Sync Now'}
+          </button>
+        </div>
+      `
+      : `
+        <div style="background:var(--gl);border:2px solid var(--green);border-radius:12px;padding:16px;margin-bottom:14px;text-align:center;">
+          <span style="font-size:24px;display:block;margin-bottom:6px;">✅</span>
+          <div style="font-size:14px;font-weight:800;color:var(--green);">${lang === 'hi' ? 'सभी डेटा सिंक है' : 'Data Fully Synchronized'}</div>
+          <div style="font-size:11px;color:var(--green);margin-top:4px;">
+            ${lang === 'hi' ? 'कतार में कोई डेटा लंबित नहीं है।' : 'Sync queue is empty. Database matches cloud.'}
+          </div>
+        </div>
+      `;
+
+    return `
+      <div class="screen active">${statusbar('2:45')}${header()}
+        <div class="scroll">
+          <div class="body" style="padding-top:6px;">
+            ${kw(lang === 'hi' ? ["और ", "सुविधाएँ"] : ["More ", "Settings & Queue"], '--navy')}
+            <div class="sub">
+              ${lang === 'hi' ? 'क्रेडेंशियल, डेटा सिंक्रोनाइज़ेशन और ऑफ़लाइन कतार नियंत्रण।' : 'Identity profile configuration, offline queue controls, and status sync.'}
+            </div>
+
+            ${syncStatusHtml}
+
+            <div class="sectionlabel">${lang === 'hi' ? 'प्रोफ़ाइल जानकारी (Identity)' : 'Active Profile Identity'}</div>
+            <div class="vcard" style="border-left-color:var(--navy);background:#fff;padding:14px;">
+              <div style="font-size:13px;font-weight:800;color:var(--navy);">${workerName}</div>
+              <div style="font-size:10.5px;color:var(--muted);margin-top:4px;">ID: ${workerId} · ${centreName}</div>
+              <div style="font-size:9.5px;color:var(--muted);margin-top:8px;border-top:1px solid var(--line);padding-top:6px;line-height:1.45;">
+                🔒 ${lang === 'hi' 
+                  ? 'शून्य-PII अनुपालन सक्रिय। बच्चों के नाम या चिकित्सा रिपोर्ट सर्वर पर नहीं भेजी जाती है। केवल पहचानकर्ता और स्थानीय सांख्यिकी डेटा का मिलान होता है।' 
+                  : 'Zero-PII compliance active. Child names and medical details are restricted. Data uploaded consists of aggregated local weights and anonymous child UUID indexes only.'}
+              </div>
+            </div>
+
+            <button class="btn red" style="margin-top:24px;background:#fff;border:1.5px solid var(--red);color:var(--red);" onclick="resetProfileIdentity()">
+              ⚠️ ${lang === 'hi' ? 'प्रोफ़ाइल हटाएं (Reset)' : 'Reset Profile Identity'}
+            </button>
+          </div>
+        </div>
+        ${nav('more')}
+      </div>
+    `;
+  }
+};
+
+function go(id){stack.push(id);render();}
+function jump(id){stack=[id];render();}
+function back(){if(stack.length>1){stack.pop();render();}}
+
+function setAuthMode(mode) {
+  authMode = mode;
+  render();
+}
+
+async function handleAuthSubmit(mode) {
+  const t = T[lang];
+  if (mode === 'signup') {
+    const nameInput = document.getElementById('auth-name');
+    const idInput = document.getElementById('auth-id');
+    const centreInput = document.getElementById('auth-centre');
+    const pinInput = document.getElementById('auth-pin');
+
+    const name = nameInput ? nameInput.value.trim() : '';
+    const workerId = idInput ? idInput.value.trim() : '';
+    const centre = centreInput ? centreInput.value.trim() : '';
+    const pin = pinInput ? pinInput.value.trim() : '';
+
+    if (!name || !workerId || !centre || pin.length !== 4 || isNaN(pin)) {
+      alert(lang === 'hi' ? 'कृपया सभी फ़ील्ड सही से भरें और 4-अंकीय पिन दर्ज करें।' : 'Please fill all fields correctly and enter a 4-digit PIN.');
+      return;
     }
 
-    /**
-     * Human-readable label for the trajectory flag (used in aria-label).
-     *
-     * @param {string|null|undefined} flag
-     * @returns {string}
-     */
-    function badgeLabel(flag) {
-      switch (flag) {
-        case 'mastered': return 'mastered';
-        case 'rising':   return 'rising';
-        case 'stalled':  return 'stalled';
-        case 'at_risk':  return 'at risk';
-        default:         return 'no record';
-      }
+    const success = await AURA_DB.setupIdentity({ name, id: workerId }, pin, centre, lang);
+    if (success) {
+      alert(t.msgSuccess);
+      authMode = 'login';
+      await initIdentity();
+      render();
+    } else {
+      alert(lang === 'hi' ? 'डाटाबेस त्रुटी' : 'Database registration failed');
+    }
+  } else if (mode === 'login') {
+    const idInput = document.getElementById('auth-id');
+    const pinInput = document.getElementById('auth-pin');
+    const workerId = idInput ? idInput.value.trim() : '';
+    const pin = pinInput ? pinInput.value.trim() : '';
+    
+    if (!workerId || pin.length !== 4 || isNaN(pin)) {
+      const errorDiv = document.getElementById('auth-error');
+      if (errorDiv) errorDiv.style.display = 'block';
+      return;
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Sub-task 6.1 — Load mastery records (batched IDB read — Req 9.1)
-    // ─────────────────────────────────────────────────────────────────────────
-
-    /**
-     * loadMasteryMap — Batch-fetch all mastery records for activeNode in a
-     * single `getAllByNode` call, then build a Map keyed by child_id.
-     *
-     * This satisfies the Req 9.1 requirement to "batch the IDB read as a single
-     * getAllByChild call per node rather than one call per child".
-     */
-    async function loadMasteryMap() {
-      // One IDB index scan for the whole node — O(n_records) not O(n_children).
-      const records = await MasteryStore.getAllByNode(activeNode);
-
-      masteryMap = new Map();
-
-      // Seed all known children as null (no record) first.
-      for (const child of demoChildren) {
-        masteryMap.set(child.child_id, null);
-      }
-
-      // Overwrite with real records where they exist.
-      for (const record of records) {
-        if (masteryMap.has(record.child_id)) {
-          masteryMap.set(record.child_id, record);
-        }
-      }
+    const storedIdentity = await AURA_DB.getIdentity();
+    if (!storedIdentity) {
+      alert(lang === 'hi' ? 'कोई प्रोफ़ाइल नहीं मिली। कृपया पहले साइनअप करें।' : 'No profile found. Please Sign Up first.');
+      authMode = 'signup';
+      render();
+      return;
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Sub-task 6.2 — Render avatar grid (Req 9.1, colour-coding)
-    // ─────────────────────────────────────────────────────────────────────────
+    const isPinValid = await AURA_DB.verifyPin(pin);
+    const storedWorkerId = storedIdentity.worker ? storedIdentity.worker.id : '';
 
-    /**
-     * renderAvatarGrid — Build and insert all avatar card elements.
-     * Called on initial load and after every node change.
-     */
-    function renderAvatarGrid() {
-      const grid = document.getElementById('avatar-grid');
-      grid.innerHTML = '';
-
-      for (const child of demoChildren) {
-        const record = masteryMap.get(child.child_id);
-        const flag   = record ? record.trajectory_flag : null;
-        const cls    = badgeClass(flag);
-        const label  = badgeLabel(flag);
-
-        // Build avatar card — Req 9.1 (role="button" + aria-label)
-        const card = document.createElement('div');
-        card.className = 'avatar-card';
-        card.setAttribute('role', 'button');
-        card.setAttribute('tabindex', '0');
-        card.setAttribute('data-child-id', child.child_id);
-        card.setAttribute(
-          'aria-label',
-          `${child.name}, age ${child.age_months} months, mastery: ${label}. ` +
-          `Tap to mark as understood, long-press to mark as not understood.`
-        );
-
-        // Badge element
-        const badge = document.createElement('div');
-        badge.className = `avatar-badge ${cls}`;
-        badge.setAttribute(
-          'aria-label',
-          `Mastery status: ${label}`
-        );
-        // Show first initial inside the badge circle for easy identification
-        badge.textContent = child.name.charAt(0).toUpperCase();
-        badge.style.color = '#fff';
-        badge.style.fontWeight = '700';
-        badge.style.fontSize = '1.1rem';
-
-        // Name label
-        const nameEl = document.createElement('span');
-        nameEl.className = 'avatar-name';
-        nameEl.textContent = child.name;
-
-        card.appendChild(badge);
-        card.appendChild(nameEl);
-
-        // Wire interaction handlers (sub-tasks 6.3, 6.4)
-        attachTapHandlers(card, child.child_id);
-
-        // Keyboard activation support for accessibility
-        card.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            handleShortTap(child.child_id, card);
-          }
-        });
-
-        grid.appendChild(card);
-      }
+    if (workerId.toUpperCase() === storedWorkerId.toUpperCase() && isPinValid) {
+      await initIdentity();
+      jump('shell');
+    } else {
+      const errorDiv = document.getElementById('auth-error');
+      if (errorDiv) errorDiv.style.display = 'block';
     }
+  }
+}
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Sub-task 6.3 — Short-tap handler (Req 9.2 — optimistic update)
-    // Sub-task 6.4 — Long-press handler (Req 9.3)
-    // Sub-task 6.5 — Promise reconciliation (Req 9.4)
-    // ─────────────────────────────────────────────────────────────────────────
-
-    /** Duration in ms that distinguishes a long-press from a short tap. */
-    const LONG_PRESS_MS = 500;
-
-    /**
-     * attachTapHandlers — Wire short-tap and long-press pointer events to a
-     * given avatar card element.
-     *
-     * Short tap  → tapMastery(child_id, activeNode, true)   with optimistic badge
-     * Long press → tapMastery(child_id, activeNode, false)  on timer expiry
-     *
-     * @param {HTMLElement} card       — The .avatar-card DOM element
-     * @param {string}      child_id   — Identifier for the child
-     */
-    function attachTapHandlers(card, child_id) {
-      let longPressTimer = null;
-      let longPressFired = false;
-
-      // ── pointerdown: start long-press countdown ─────────────────────────
-      card.addEventListener('pointerdown', (e) => {
-        // Capture the pointer so we receive pointerup even if the finger moves.
-        card.setPointerCapture(e.pointerId);
-        longPressFired = false;
-
-        longPressTimer = setTimeout(() => {
-          longPressFired = true;
-          handleLongPress(child_id, card);
-        }, LONG_PRESS_MS);
-      });
-
-      // ── pointerup: short tap if long press has NOT fired yet ─────────────
-      card.addEventListener('pointerup', () => {
-        if (longPressTimer !== null) {
-          clearTimeout(longPressTimer);
-          longPressTimer = null;
-        }
-
-        if (!longPressFired) {
-          handleShortTap(child_id, card);
-        }
-
-        longPressFired = false;
-      });
-
-      // ── pointerleave / pointercancel: cancel without firing either ────────
-      const cancelPress = () => {
-        if (longPressTimer !== null) {
-          clearTimeout(longPressTimer);
-          longPressTimer = null;
-        }
-        longPressFired = false;
-      };
-
-      card.addEventListener('pointerleave',  cancelPress);
-      card.addEventListener('pointercancel', cancelPress);
-
-      // Prevent context-menu on long-press (mobile browsers)
-      card.addEventListener('contextmenu', (e) => e.preventDefault());
+async function initIdentity() {
+  const storedIdentity = await AURA_DB.getIdentity();
+  if (storedIdentity) {
+    activeWorker = storedIdentity.worker;
+    activeCentre = storedIdentity.centre;
+    if (storedIdentity.worker && storedIdentity.worker.name) {
+      T.hi.greet = `सुप्रभात, ${storedIdentity.worker.name}।`;
+      T.en.greet = `Good morning, ${storedIdentity.worker.name}.`;
     }
-
-    /**
-     * handleShortTap — Optimistically flip the badge to green (mastered) then
-     * call tapMastery(child_id, activeNode, true). On Promise resolution,
-     * reconcile with the actual trajectory_flag (Req 9.2, 9.4).
-     *
-     * @param {string}      child_id
-     * @param {HTMLElement} card
-     */
-    async function handleShortTap(child_id, card) {
-      if (card.classList.contains('pending')) return; // debounce
-
-      // ── Sub-task 6.3: optimistic update — flip badge to green immediately ─
-      card.classList.add('pending');
-      const badge = card.querySelector('.avatar-badge');
-      setBadge(badge, 'mastered', card.getAttribute('aria-label'));
-
-      showToast(`Marked ${getChildName(child_id)} ✓`);
-
-      try {
-        // Call BKT engine
-        const record = await BKTEngine.tapMastery(child_id, activeNode, true);
-
-        // ── Sub-task 6.5: reconcile optimistic badge with actual flag ────────
-        masteryMap.set(child_id, record);
-        setBadge(badge, record.trajectory_flag, buildAriaLabel(child_id, record.trajectory_flag));
-        updateCardAriaLabel(card, child_id, record.trajectory_flag);
-      } catch (err) {
-        console.error('[index.html] tapMastery(true) failed:', err);
-        showToast('Error saving — please retry');
-        // Revert to last known badge on failure
-        const existing = masteryMap.get(child_id);
-        const flag = existing ? existing.trajectory_flag : null;
-        setBadge(badge, flag, buildAriaLabel(child_id, flag));
-        updateCardAriaLabel(card, child_id, flag);
-      } finally {
-        card.classList.remove('pending');
-      }
-    }
-
-    /**
-     * handleLongPress — Call tapMastery(child_id, activeNode, false) and update
-     * the badge with the returned trajectory_flag (Req 9.3, 9.4).
-     *
-     * No optimistic update for long-press per spec (Req 9.3 says "update the
-     * badge on Promise resolution").
-     *
-     * @param {string}      child_id
-     * @param {HTMLElement} card
-     */
-    async function handleLongPress(child_id, card) {
-      if (card.classList.contains('pending')) return;
-
-      card.classList.add('pending');
-      const badge = card.querySelector('.avatar-badge');
-
-      showToast(`Marking ${getChildName(child_id)} as not understood…`);
-
-      try {
-        const record = await BKTEngine.tapMastery(child_id, activeNode, false);
-
-        // ── Sub-task 6.4 + 6.5: update badge with actual flag on resolution ─
-        masteryMap.set(child_id, record);
-        setBadge(badge, record.trajectory_flag, buildAriaLabel(child_id, record.trajectory_flag));
-        updateCardAriaLabel(card, child_id, record.trajectory_flag);
-
-        showToast(`Updated ${getChildName(child_id)}`);
-      } catch (err) {
-        console.error('[index.html] tapMastery(false) failed:', err);
-        showToast('Error saving — please retry');
-      } finally {
-        card.classList.remove('pending');
-      }
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // Badge DOM helpers
-    // ─────────────────────────────────────────────────────────────────────────
-
-    /**
-     * setBadge — Apply the correct colour class and aria-label to a badge element.
-     *
-     * @param {HTMLElement}         badgeEl — The .avatar-badge element
-     * @param {string|null}         flag    — trajectory_flag value
-     * @param {string}              ariaLabel
-     */
-    function setBadge(badgeEl, flag, ariaLabel) {
-      // Remove all badge colour classes, then add the correct one.
-      badgeEl.classList.remove(...BADGE_CLASSES);
-      badgeEl.classList.add(badgeClass(flag));
-      badgeEl.setAttribute('aria-label', `Mastery status: ${badgeLabel(flag)}`);
-    }
-
-    /**
-     * updateCardAriaLabel — Refresh the card's top-level aria-label after
-     * a badge change so screen-readers describe the new state.
-     */
-    function updateCardAriaLabel(card, child_id, flag) {
-      card.setAttribute('aria-label', buildAriaLabel(child_id, flag));
-    }
-
-    /**
-     * buildAriaLabel — Construct the full descriptive aria-label for a card.
-     */
-    function buildAriaLabel(child_id, flag) {
-      const child = demoChildren.find(c => c.child_id === child_id);
-      const name  = child ? child.name : child_id;
-      return (
-        `${name}, mastery: ${badgeLabel(flag)}. ` +
-        `Tap to mark as understood, long-press to mark as not understood.`
-      );
-    }
-
-    /**
-     * getChildName — Look up a display name from the demo children array.
-     */
-    function getChildName(child_id) {
-      const child = demoChildren.find(c => c.child_id === child_id);
-      return child ? child.name : child_id;
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // Toast notification
-    // ─────────────────────────────────────────────────────────────────────────
-
-    let _toastTimer = null;
-
-    /**
-     * showToast — Display a brief message at the bottom of the screen.
-     *
-     * @param {string} message
-     * @param {number} [duration=2000]
-     */
-    function showToast(message, duration = 2000) {
-      const toast = document.getElementById('toast');
-      toast.textContent = message;
-      toast.classList.add('show');
-
-      if (_toastTimer) clearTimeout(_toastTimer);
-      _toastTimer = setTimeout(() => {
-        toast.classList.remove('show');
-      }, duration);
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // Node selector wiring
-    // ─────────────────────────────────────────────────────────────────────────
-
-    async function onNodeChange(newNode) {
-      activeNode = newNode;
+    // Fetch children list dynamically
+    try {
+      const kids = await AURA_API.getChildren(activeCentre);
+      activeChildren = kids.map(c => ({
+        childId: c.id || c.child_id || Math.random().toString(36).slice(2),
+        name: {
+          en: c.name || c.nameEn || 'Child',
+          hi: c.nameHi || c.name || 'बच्चा'
+        },
+        age: {
+          en: c.age || (c.age_months ? c.age_months + ' months' : '3 years'),
+          hi: c.age || (c.age_months ? c.age_months + ' महीने' : '3 साल')
+        },
+        present: true
+      }));
+      
+      // Load BKT status badges
       await loadMasteryMap();
-      renderAvatarGrid();
+      
+      // Load Sync Queue Size
+      syncQueueSize = (await AURA_DB.getPendingSync()).length;
+    } catch(e) {
+      console.error('Kids roster initialization failed:', e);
     }
+  }
+}
 
-    document.getElementById('activeNodeSelect').addEventListener('change', async (e) => {
-      await onNodeChange(e.target.value);
+async function loadMasteryMap() {
+  const records = await MasteryStore.getAllByNode(activeNode);
+  masteryMap = new Map();
+  for (const child of activeChildren) {
+    masteryMap.set(child.childId, null);
+  }
+  for (const record of records) {
+    if (masteryMap.has(record.child_id)) {
+      masteryMap.set(record.child_id, record);
+    }
+  }
+}
+
+let bktTimer = null;
+let bktLongPressTriggered = false;
+
+function startBktPress(event, childId) {
+  if (event) event.preventDefault();
+  bktLongPressTriggered = false;
+  bktTimer = setTimeout(() => {
+    bktLongPressTriggered = true;
+    updateBktStatus(childId, false);
+  }, 500);
+}
+
+function endBktPress(event, childId) {
+  if (event) event.preventDefault();
+  if (bktTimer) {
+    clearTimeout(bktTimer);
+    bktTimer = null;
+  }
+  if (!bktLongPressTriggered) {
+    updateBktStatus(childId, true);
+  }
+  bktLongPressTriggered = false;
+}
+
+function cancelBktPress(childId) {
+  if (bktTimer) {
+    clearTimeout(bktTimer);
+    bktTimer = null;
+  }
+  bktLongPressTriggered = false;
+}
+
+async function updateBktStatus(childId, isCorrect) {
+  try {
+    const record = await BKTEngine.tapMastery(childId, activeNode, isCorrect);
+    masteryMap.set(childId, record);
+    
+    // Sync size indicator
+    syncQueueSize = (await AURA_DB.getPendingSync()).length;
+    
+    const nameStr = getChildName(childId);
+    const statusMsg = record.trajectory_flag === 'mastered'
+      ? (lang === 'hi' ? `${nameStr}: सफल ✓` : `${nameStr}: Mastered ✓`)
+      : (lang === 'hi' ? `${nameStr}: ध्यान दें ⚠️` : `${nameStr}: At Risk ⚠️`);
+    
+    showBktToast(statusMsg);
+    render();
+  } catch (err) {
+    console.error('[BKT Update failed]', err);
+    showBktToast(lang==='hi' ? 'सिस्टम त्रुटि: पुनः प्रयास करें' : 'System error: please retry');
+  }
+}
+
+function getChildName(childId) {
+  const child = activeChildren.find(c => c.childId === childId);
+  return child ? child.name[lang] : childId;
+}
+
+function showBktToast(msg) {
+  let toast = document.getElementById('toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'toast';
+    toast.style.cssText = "position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1c1c1c;color:#fff;padding:8px 16px;border-radius:10px;font-size:12px;font-weight:700;z-index:100;box-shadow:0 4px 10px rgba(0,0,0,.3);pointer-events:none;";
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.style.display = 'block';
+  setTimeout(() => { toast.style.display = 'none'; }, 2000);
+}
+
+function toggleGuardrailPanel(event) {
+  if (event) event.stopPropagation();
+  const panel = document.getElementById('gr-detail');
+  const arrow = document.getElementById('gr-arrow');
+  if (panel) {
+    const isHidden = panel.style.display === 'none';
+    panel.style.display = isHidden ? 'block' : 'none';
+    if (arrow) arrow.textContent = isHidden ? '▲' : '▼';
+  }
+}
+
+function toggleDssQuestion(qId, val) {
+  dssAnswers[qId] = val;
+  const yesBtn = document.getElementById(`btn-${qId}-yes`);
+  const noBtn = document.getElementById(`btn-${qId}-no`);
+  
+  if (yesBtn && noBtn) {
+    if (val) {
+      yesBtn.style.background = 'var(--rl)';
+      yesBtn.style.borderColor = 'var(--red)';
+      yesBtn.style.color = 'var(--red)';
+      
+      noBtn.style.background = '#fff';
+      noBtn.style.borderColor = 'var(--line)';
+      noBtn.style.color = 'var(--muted)';
+    } else {
+      yesBtn.style.background = '#fff';
+      yesBtn.style.borderColor = 'var(--line)';
+      yesBtn.style.color = 'var(--muted)';
+      
+      noBtn.style.background = 'var(--gl)';
+      noBtn.style.borderColor = 'var(--green)';
+      noBtn.style.color = 'var(--green)';
+    }
+  }
+}
+
+function calculateDssResult() {
+  const redFlagsCount = Object.values(dssAnswers).filter(v => v === true).length;
+  const resultDiv = document.getElementById('dss-result-panel');
+  if (!resultDiv) return;
+
+  let resultHtml = '';
+  if (redFlagsCount === 0) {
+    resultHtml = `
+      <div style="background:var(--gl);border:2px solid var(--green);border-radius:12px;padding:16px;text-align:center;">
+        <span style="font-size:32px;display:block;margin-bottom:8px;">✅</span>
+        <div style="font-size:16px;font-weight:800;color:var(--green);">${lang === 'hi' ? 'सामान्य विकास (Typical)' : 'Typical Development'}</div>
+        <div style="font-size:11.5px;color:var(--green);margin-top:6px;line-height:1.4;">
+          ${lang === 'hi' ? 'कोई लाल झंडा (Red flag) नहीं मिला। विकास सामान्य है। नियमित अंतराल पर दोबारा जांच करें।' : '0 Red Flags detected. Child is tracking normally. Re-evaluate during regular screening cycle.'}
+        </div>
+      </div>
+    `;
+  } else if (redFlagsCount === 1) {
+    resultHtml = `
+      <div style="background:var(--al);border:2px solid var(--amber);border-radius:12px;padding:16px;text-align:center;">
+        <span style="font-size:32px;display:block;margin-bottom:8px;">⚠️</span>
+        <div style="font-size:16px;font-weight:800;color:var(--amber);">${lang === 'hi' ? 'निगरानी रखें (Monitor)' : 'Monitor Closely'}</div>
+        <div style="font-size:11.5px;color:var(--amber);margin-top:6px;line-height:1.4;">
+          ${lang === 'hi' ? '1 लाल झंडा मिला। बच्चे की बारीकी से निगरानी करें। 2 सप्ताह बाद दोबारा स्क्रीन टेस्ट लें।' : '1 Red Flag detected. Developmental deviation observed. Please monitor closely and re-evaluate in 2 weeks.'}
+        </div>
+      </div>
+    `;
+  } else {
+    resultHtml = `
+      <div style="background:var(--rl);border:2px solid var(--red);border-radius:12px;padding:16px;text-align:center;">
+        <span style="font-size:32px;display:block;margin-bottom:8px;">🚨</span>
+        <div style="font-size:16px;font-weight:800;color:var(--red);">${lang === 'hi' ? 'रेफरल आवश्यक (Refer to DEIC)' : 'RBSK / DEIC Referral Required'}</div>
+        <div style="font-size:11.5px;color:var(--red);margin-top:6px;line-height:1.4;">
+          ${lang === 'hi' ? `${redFlagsCount} लाल झंडे मिले। बच्चे को तुरंत RBSK / जिला प्रारंभिक हस्तक्षेप केंद्र (DEIC) रेफर करें।` : `${redFlagsCount} Red Flags detected. High risk of clinical delay. Refer child to RBSK / District Early Intervention Centre immediately.`}
+        </div>
+      </div>
+    `;
+  }
+
+  resultHtml += `
+    <button class="btn ghost" style="margin-top:14px;border-color:var(--purple);color:var(--purple);" onclick="resetDssScreener()">
+      ${lang === 'hi' ? 'दोबारा जाँच करें' : 'Run Screener Again'}
+    </button>
+  `;
+
+  document.getElementById('dss-questions-panel').style.display = 'none';
+  resultDiv.innerHTML = resultHtml;
+  resultDiv.style.display = 'block';
+}
+
+function resetDssScreener() {
+  dssAnswers = {};
+  render();
+}
+
+function toggleAttendance(childId) {
+  const child = activeChildren.find(c => c.childId === childId);
+  if (child) {
+    child.present = !child.present;
+    render();
+  }
+}
+
+async function submitAttendanceRoster() {
+  const present = activeChildren.filter(c => c.present).map(c => c.childId);
+  const absent = activeChildren.filter(c => !c.present).map(c => c.childId);
+  
+  await AURA_API.submitAttendance({ centreId: activeCentre, present, absent, photoCount: 0 });
+  syncQueueSize = (await AURA_DB.getPendingSync()).length;
+  
+  showBktToast(lang==='hi' ? 'उपस्थिति दर्ज ✓' : 'Attendance submitted ✓');
+  go('audit');
+}
+
+async function submitMealFeed() {
+  const presentCount = activeChildren.filter(c => c.present).length;
+  await AURA_API.logMeal({ centreId: activeCentre, fedCount: presentCount, totalPresent: presentCount });
+  syncQueueSize = (await AURA_DB.getPendingSync()).length;
+  
+  showBktToast(lang==='hi' ? 'भोजन विवरण दर्ज ✓' : 'Meal details submitted ✓');
+  jump('shell');
+}
+
+async function loadECEActivity() {
+  const btn = document.getElementById('btn-load-activity');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = lang==='hi' ? '⏳ अनुकूलन जारी...' : '⏳ Adapting...';
+  }
+  
+  try {
+    const response = await fetch('/api/activity/next', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        child_profiles: activeChildren.map(c => ({
+          child_id: c.childId,
+          name: c.name[lang],
+          age_months: 36 // default representative age
+        })),
+        node_id: activeNode,
+        age_band_months: '36-48',
+        is_offline: window.DEBUG_OFFLINE_MODE
+      }),
     });
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // Session Complete button
-    // ─────────────────────────────────────────────────────────────────────────
-
-    document.getElementById('btn-mark-complete').addEventListener('click', () => {
-      showToast('Session saved ✓', 3000);
-      // Future: POST session summary to server.js
-    });
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // Task 7 — Guardrail Chip UI (Req 10.1–10.4)
-    // ─────────────────────────────────────────────────────────────────────────
-
-    /**
-     * renderGuardrailChip — Build an HTML string for the guardrail chip.
-     *
-     * Sub-task 7.1: Returns '' when rules_fired is null, undefined, or empty.
-     * Sub-task 7.2: Renders chip with safety/inclusion counts and amber/blue colour.
-     * Sub-task 7.3: Detail panel with per-rule pills is toggled by a click handler
-     *               attached after the chip is injected into the DOM (see wiring below).
-     *
-     * @param {string[]|null|undefined} rules_fired — array of rule_id strings
-     * @returns {string} — HTML string or '' if nothing to render
-     *
-     * Satisfies Req 10.1, 10.2, 10.4
-     */
-    function renderGuardrailChip(rules_fired) {
-      // Sub-task 7.1 — empty / absent → no chip
-      if (!Array.isArray(rules_fired) || rules_fired.length === 0) {
-        return '';
+    
+    if (!response.ok) throw new Error('Network error');
+    
+    currentActivity = await response.json();
+    render();
+  } catch (err) {
+    console.warn('[Offline Fallback Activated]', err);
+    currentActivity = {
+      schema_version: "1.0",
+      activity_id: "ACT-OFFLINE-01",
+      source: "local_template",
+      targeted_domain: "physical",
+      age_band_months: "36-48",
+      milestone_targeted: "FM-3",
+      adapted_title: lang === 'hi' ? "गेंद की ओर बढ़ना (ऑफ़लाइन फ़ालबैक)" : "Reaching for the ball (Offline Fallback)",
+      step_by_step_instructions: lang === 'hi' 
+        ? ["बच्चे के सामने नरम गेंद रखें और पकड़ने के लिए बढ़ावा दें।", "गेंद थोड़ा दूर खिसकाएँ।"]
+        : ["Place a soft ball within reach and encourage child to grasp it.", "Move ball slightly further away."],
+      required_materials: ["soft_ball"],
+      safety_guard_applied: true,
+      provenance: {
+        generated_offline: true,
+        rules_fired: ["SAFE_CHOKE_01", "INC_ATTUNE_01"]
       }
+    };
+    render();
+  }
+}
 
-      // Sub-task 7.2 — count by prefix
-      const safety_count    = rules_fired.filter(id => id.startsWith('SAFE_')).length;
-      const inclusion_count = rules_fired.filter(id => id.startsWith('INC_')).length;
+async function loadDssQuestions() {
+  if (dssQuestions.length > 0) return;
+  try {
+    const r = await fetch('/data/dss.json');
+    const data = await r.json();
+    dssQuestions = data.items || [];
+  } catch (err) {
+    console.warn('[DSS loading failed]', err);
+    dssQuestions = [
+      { item_id: 'q1', question: "Do the child's eyes frequently turn red or water?" },
+      { item_id: 'q2', question: "Is there frequent pus or watery discharge from the ears?" },
+      { item_id: 'q3', question: "Does the child have poor balance or jerky movements while walking?" },
+      { item_id: 'q4', question: "Is the child too small or too weak compared to other children of similar age?" },
+      { item_id: 'q5', question: "Does the child have feeding difficulties such as suckling or swallowing?" }
+    ];
+  }
+}
 
-      const colorClass = safety_count > 0 ? 'chip-amber' : 'chip-blue';
-      const ariaLabel  = `${safety_count} safety, ${inclusion_count} inclusion guardrail rules applied`;
+async function simulateSync() {
+  const btn = document.getElementById('btn-sync-now');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = lang === 'hi' ? '⏳ सिंक हो रहा है...' : '⏳ Synchronizing...';
+    btn.style.opacity = '0.7';
+  }
+  
+  try {
+    const result = await AURA_API.syncNow();
+    syncQueueSize = (await AURA_DB.getPendingSync()).length;
+    showBktToast(lang === 'hi' ? `सिंक संपन्न (${result.synced} सफल)` : `Sync complete (${result.synced} uploaded) ✓`);
+    render();
+  } catch (e) {
+    console.error(e);
+    showBktToast(lang === 'hi' ? 'सिंक विफल' : 'Sync failed');
+    render();
+  }
+}
 
-      // Build the pill HTML for each fired rule, looking up type + message from the catalogue
-      const rulesMap = new Map(GuardrailEngine.getRules().map(r => [r.rule_id, r]));
-
-      const pillsHtml = rules_fired.map(rule_id => {
-        const rule = rulesMap.get(rule_id);
-        const type    = rule ? rule.type    : 'unknown';
-        const message = rule ? rule.message : rule_id;
-        const typeClass = type === 'safety' ? 'type-safety' : 'type-inclusion';
-        return `<div class="rule-pill" data-rule-id="${escapeAttr(rule_id)}">
-          <span class="pill-id">${escapeHtml(rule_id)}</span>
-          <span class="pill-type ${typeClass}">${escapeHtml(type)}</span>
-          <span class="pill-msg">${escapeHtml(message)}</span>
-        </div>`;
-      }).join('');
-
-      return `<div class="guardrail-chip ${colorClass}" data-rules='${JSON.stringify(rules_fired)}' aria-label="${escapeAttr(ariaLabel)}" role="button" tabindex="0">
-  <span class="chip-icon" aria-hidden="true">🛡</span>
-  <span class="chip-label">${safety_count} safety · ${inclusion_count} inclusion</span>
-  <span class="chip-toggle" aria-hidden="true">▼</span>
-  <div class="chip-detail" hidden>
-    ${pillsHtml}
-  </div>
-</div>`;
-    }
-
-    /**
-     * escapeHtml — Escape characters that have special meaning in HTML text content.
-     */
-    function escapeHtml(str) {
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
-    }
-
-    /**
-     * escapeAttr — Escape characters that have special meaning inside HTML attribute values.
-     */
-    function escapeAttr(str) {
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/"/g, '&quot;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
-    }
-
-    /**
-     * wireChipToggle — Attach the click/keydown toggle handler to a rendered chip element.
-     *
-     * Sub-task 7.3: Toggles the chip-detail hidden attribute and flips the toggle arrow.
-     *
-     * @param {HTMLElement} chipEl — The .guardrail-chip DOM element
-     *
-     * Satisfies Req 10.3
-     */
-    function wireChipToggle(chipEl) {
-      if (!chipEl) return;
-
-      function toggle() {
-        const detail = chipEl.querySelector('.chip-detail');
-        const arrow  = chipEl.querySelector('.chip-toggle');
-        if (!detail) return;
-
-        const isHidden = detail.hasAttribute('hidden');
-        if (isHidden) {
-          detail.removeAttribute('hidden');
-          if (arrow) arrow.textContent = '▲';
-          chipEl.setAttribute('aria-expanded', 'true');
-        } else {
-          detail.setAttribute('hidden', '');
-          if (arrow) arrow.textContent = '▼';
-          chipEl.setAttribute('aria-expanded', 'false');
-        }
-      }
-
-      chipEl.addEventListener('click', toggle);
-      chipEl.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          toggle();
-        }
-      });
-    }
-
-    /**
-     * renderActivityCard — Display a C1 activity object in #activity-card and
-     * inject the guardrail chip into #guardrail-chip-container.
-     *
-     * Sub-task 7.4: Calls renderGuardrailChip with c1.provenance.rules_fired and
-     * wires the toggle handler after insertion.
-     *
-     * @param {object} c1 — C1ActivityObject
-     *
-     * Satisfies Req 10.2, 10.3, 10.4
-     */
-    function renderActivityCard(c1) {
-      // ── Render the activity card content ─────────────────────────────────
-      const cardEl = document.getElementById('activity-card');
-
-      const stepsHtml = Array.isArray(c1.step_by_step_instructions)
-        ? `<ol class="activity-steps">${
-            c1.step_by_step_instructions
-              .map(s => `<li>${escapeHtml(s)}</li>`)
-              .join('')
-          }</ol>`
-        : '';
-
-      const materialsHtml = Array.isArray(c1.required_materials) && c1.required_materials.length > 0
-        ? `<div class="activity-materials">🧰 <strong>Materials:</strong> ${escapeHtml(c1.required_materials.join(', '))}</div>`
-        : '';
-
-      cardEl.innerHTML = `<div class="activity-content">
-  <h3>${escapeHtml(c1.adapted_title || 'Activity')}</h3>
-  <div class="activity-meta">
-    <span>📚 ${escapeHtml(c1.targeted_domain || '')}</span>
-    <span>🎂 ${escapeHtml(c1.age_band_months || '')} months</span>
-    <span>🎯 ${escapeHtml(c1.milestone_targeted || '')}</span>
-    ${c1.safety_guard_applied ? '<span style="background:#fef3c7;color:#92400e">🛡 Guardrails applied</span>' : ''}
-  </div>
-  ${stepsHtml}
-  ${materialsHtml}
-</div>`;
-
-      // ── Sub-task 7.4: inject the guardrail chip ───────────────────────────
-      const chipContainer = document.getElementById('guardrail-chip-container');
-      const rules_fired = c1.provenance && Array.isArray(c1.provenance.rules_fired)
-        ? c1.provenance.rules_fired
-        : [];
-
-      const chipHtml = renderGuardrailChip(rules_fired);
-      chipContainer.innerHTML = chipHtml;
-
-      // Wire the toggle handler to the newly injected chip (sub-task 7.3)
-      const chipEl = chipContainer.querySelector('.guardrail-chip');
-      if (chipEl) wireChipToggle(chipEl);
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // "Load Demo Activity" button — calls POST /api/activity/next and renders
-    // ─────────────────────────────────────────────────────────────────────────
-
-    document.getElementById('btn-load-activity').addEventListener('click', async () => {
-      const btn = document.getElementById('btn-load-activity');
-      btn.disabled = true;
-      btn.textContent = '⏳ Loading…';
-
-      try {
-        const response = await fetch('/api/activity/next', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            child_profiles: demoChildren,
-            node_id: activeNode,
-            age_band_months: '36-48',
-          }),
-        });
-
-        if (!response.ok) {
-          const err = await response.text();
-          throw new Error(`HTTP ${response.status}: ${err}`);
-        }
-
-        const c1 = await response.json();
-        renderActivityCard(c1);
-        showToast('Activity loaded ✓');
-      } catch (err) {
-        console.error('[index.html] Load activity failed:', err);
-        document.getElementById('activity-card').innerHTML =
-          `<p style="color:#ef4444;font-size:0.85rem">Could not load activity: ${escapeHtml(err.message)}</p>`;
-        showToast('Failed to load activity');
-      } finally {
-        btn.disabled = false;
-        btn.textContent = '🎯 Load Demo Activity';
-      }
-    });
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // Boot — load mastery data and render the grid
-    // ─────────────────────────────────────────────────────────────────────────
-
+function resetProfileIdentity() {
+  const confirmMsg = lang === 'hi' 
+    ? 'क्या आप सच में प्रोफ़ाइल मिटाना चाहते हैं? आपको दोबारा साइनअप करना होगा।' 
+    : 'Are you sure you want to delete your profile? You will need to SignUp again.';
+  if (confirm(confirmMsg)) {
+    // Clear identity configuration
     (async () => {
-      try {
-        await loadMasteryMap();
-        renderAvatarGrid();
-      } catch (err) {
-        console.error('[index.html] Boot error:', err);
-        document.getElementById('avatar-grid').innerHTML =
-          '<p style="color:#ef4444;font-size:0.85rem">Could not load mastery data. Please refresh.</p>';
+      const db = typeof Dexie !== 'undefined' ? new Dexie('AuraOfflineDB') : null;
+      if (db) {
+        db.version(1).stores({ identity: 'id' });
+        await db.identity.delete('config');
       }
+      activeWorker = null;
+      activeCentre = null;
+      activeChildren = [];
+      authMode = 'signup';
+      jump('splash');
     })();
+  }
+}
 
-  </script>
+function toggleOnline(event) {
+  if (event) event.stopPropagation();
+  window.DEBUG_OFFLINE_MODE = !window.DEBUG_OFFLINE_MODE;
+  render();
+}
 
+function openMic(){
+  const t=T[lang];
+  document.getElementById('micl').textContent=t.micL;
+  document.getElementById('mics').textContent=t.micS;
+  document.getElementById('micc').textContent=t.micC;
+  document.getElementById('micmodal').classList.add('show');
+}
+function closeMic(){
+  document.getElementById('micmodal').classList.remove('show');
+  go('voice');
+}
+
+function setLang(l){
+  lang=l;
+  document.getElementById('lang-hi').classList.toggle('on',l==='hi');
+  document.getElementById('lang-en').classList.toggle('on',l==='en');
+  render();
+}
+
+function render(){
+  const id=stack[stack.length-1];
+  document.getElementById('app').innerHTML=(screens[id] || screens.shell)();
+  const hints={
+    hi:"उत्पादन डाटाबेस-कनेक्टेड प्रणाली सक्रिय। भाषा बदलें, अनुकूलित खेल चुनें और ऑफ़लाइन/ऑनलाइन टॉगल करें।",
+    en:"Production database-connected system active. Select adapt activities, track attendance, and toggle offline simulator."
+  };
+  document.getElementById('hint').textContent=hints[lang];
+  document.querySelector('.phone').className='phone '+(lang==='hi'?'hindi':'');
+}
+
+// ── Attach module functions to window for onclick/inline integration ────────
+window.setLang = setLang;
+window.go = go;
+window.jump = jump;
+window.back = back;
+window.setAuthMode = setAuthMode;
+window.handleAuthSubmit = handleAuthSubmit;
+window.toggleOnline = toggleOnline;
+window.toggleAttendance = toggleAttendance;
+window.startBktPress = startBktPress;
+window.endBktPress = endBktPress;
+window.cancelBktPress = cancelBktPress;
+window.toggleGuardrailPanel = toggleGuardrailPanel;
+window.toggleDssQuestion = toggleDssQuestion;
+window.calculateDssResult = calculateDssResult;
+window.resetDssScreener = resetDssScreener;
+window.simulateSync = simulateSync;
+window.resetProfileIdentity = resetProfileIdentity;
+window.openMic = openMic;
+window.closeMic = closeMic;
+window.loadECEActivity = loadECEActivity;
+window.submitAttendanceRoster = submitAttendanceRoster;
+window.submitMealFeed = submitMealFeed;
+
+// ── DOM Bootstrap ───────────────────────────────────────────────────────────
+(async () => {
+  window.DEBUG_OFFLINE_MODE = false; // default online
+  await initIdentity();
+  await loadDssQuestions();
+  render();
+})();
+</script>
 </body>
 </html>
