@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1B3A2D">
+<meta name="description" content="A.U.R.A. Anganwadi Unified Resource Assistant. Offline-first field tool for Anganwadi workers.">
+<title>A.U.R.A. Anganwadi Unified Resource Assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --forest:#1B3A2D; --forest-d:#11261C; --green:#216A3F; --green-d:#1A5733; --red:#C0392B;
+    --amber:#CC6A1A; --orange:#D67424; --purple:#6B5296; --navy:#13384D;
+    --ink:#161616; --muted:#6B6B6B; --line:#E2E2E2; --card:#F6F6F6;
+    --bg:#FFFFFF; --rl:#FCEBE9; --al:#FCF3E3; --gl:#E9F3EC; --pl:#F0EDF7;
+    --saffron:#E8821E; --indiagreen:#1A7A3C;
+    --r-card:16px; --r-tile:11px; --tap:48px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html{-webkit-text-size-adjust:100%}
+  body{font-family:'Inter','Segoe UI',system-ui,-apple-system,sans-serif;background:#0d0d0d;color:var(--ink);
+    min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:24px 12px 60px}
+  .hindi *{font-family:'Noto Sans Devanagari','Inter',sans-serif}
+  button{font-family:inherit}
+  :focus-visible{outline:3px solid var(--saffron);outline-offset:2px}
+  @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+
+  .top{width:100%;max-width:430px;color:#eee;margin-bottom:18px}
+  .top h1{font-size:20px;font-weight:800;letter-spacing:.5px}
+  .top p{font-size:12px;color:#999;margin-top:3px}
+  .langtoggle{display:inline-flex;margin-top:12px;background:#1c1c1c;border-radius:10px;padding:3px;gap:2px}
+  .langtoggle button{background:none;border:none;color:#888;font-size:13px;font-weight:600;padding:9px 18px;border-radius:8px;cursor:pointer;min-height:var(--tap)}
+  .langtoggle button.on{background:var(--green);color:#fff}
+
+  .phone{width:390px;max-width:96vw;height:800px;background:var(--bg);border-radius:38px;overflow:hidden;position:relative;
+    box-shadow:0 0 0 11px #1a1a1a, 0 0 0 13px #2a2a2a, 0 30px 70px rgba(0,0,0,.6)}
+  .screen{position:absolute;inset:0;display:none;flex-direction:column;background:var(--bg);overflow:hidden}
+  .screen.active{display:flex}
+  .scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+  .scroll::-webkit-scrollbar{width:0}
+
+  svg{width:20px;height:20px;flex-shrink:0;display:block}
+  .nav .tab svg{width:22px;height:22px}
+  .nav .fab svg{width:26px;height:26px}
+  .dark .logo svg{width:40px;height:40px}
+  .globewrap svg{width:30px;height:30px}
+
+  .statusbar{height:42px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font-size:13px;font-weight:600;flex-shrink:0}
+  .statusbar .r{color:var(--muted);font-size:11px;font-weight:500;display:flex;gap:6px;align-items:center}
+  .govbar{height:26px;background:var(--forest-d);color:#cfe3d8;font-size:9px;font-weight:600;letter-spacing:.3px;
+    display:flex;align-items:center;justify-content:center;gap:7px;flex-shrink:0;text-align:center;padding:0 10px}
+  .govbar .tri{width:14px;height:10px;border-radius:2px;overflow:hidden;display:inline-flex;flex-direction:column;flex-shrink:0}
+  .govbar .tri i{flex:1}
+  .header{height:56px;display:flex;align-items:center;padding:0 18px;gap:10px;flex-shrink:0;border-bottom:1px solid var(--line)}
+  .avatar{width:36px;height:36px;border-radius:50%;background:var(--forest);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;position:relative;flex-shrink:0}
+  .avatar::after{content:'';position:absolute;right:-2px;bottom:-2px;width:12px;height:12px;border-radius:50%;background:var(--indiagreen);border:2px solid #fff}
+  .brand{font-size:18px;font-weight:800;color:var(--forest);letter-spacing:.5px}
+  .brand small{display:block;font-size:8px;font-weight:600;color:var(--muted);letter-spacing:.3px}
+  .header .right{margin-left:auto;display:flex;align-items:center;gap:10px}
+  .pill-lang{border:1px solid var(--line);border-radius:12px;padding:7px 11px;font-size:11px;font-weight:700;cursor:pointer;min-height:38px;background:#fff;color:var(--ink)}
+  .bellbtn{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink);position:relative}
+  .bellbtn .dotn{position:absolute;top:7px;right:8px;width:7px;height:7px;border-radius:50%;background:var(--red)}
+  .body{padding:0 20px 26px}
+
+  .greet{font-size:16px;color:var(--muted);margin-top:12px}
+  .greet small{display:block;font-size:13px;margin-top:2px}
+  .kw{margin:18px 0 4px;font-size:23px;font-weight:800;line-height:1.3}
+  .kw .hl{color:#fff;padding:1px 10px;border-radius:7px;display:inline-block}
+  .sub{font-size:12.5px;color:var(--muted);margin:6px 0 14px;line-height:1.55}
+
+  .nowcard{background:var(--forest);border-radius:var(--r-card);padding:18px;color:#fff;position:relative;overflow:hidden;margin-top:6px}
+  .nowcard::after{content:'';position:absolute;right:-40px;top:-40px;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.04)}
+  .nowcard .nclock{font-size:11px;color:#bcd8cb;display:flex;align-items:center;gap:6px;margin-bottom:8px}
+  .nowcard .nclock svg{width:14px;height:14px;color:#bcd8cb}
+  .nowcard .nlabel{font-size:11px;color:#9fc3b1;font-weight:600;letter-spacing:.4px}
+  .nowcard h2{font-size:25px;font-weight:800;margin-top:2px}
+  .nowcard .ntask{font-size:14px;color:#d7ece1;margin-top:4px}
+  .nowbtn{margin-top:16px;background:var(--green);color:#fff;border:none;border-radius:11px;width:100%;padding:14px;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:space-between;min-height:var(--tap);position:relative;z-index:1}
+  .nowbtn span.arrow{font-size:18px}
+
+  .alert{display:flex;align-items:center;gap:12px;background:var(--rl);border:1px solid var(--red);border-left:4px solid var(--red);border-radius:11px;padding:14px;margin-top:16px;cursor:pointer;min-height:var(--tap)}
+  .alert .ai{width:22px;height:22px;flex-shrink:0;color:var(--red)}
+  .alert .ai svg{width:22px;height:22px}
+  .alert .t{font-size:13px;font-weight:700;color:var(--red);flex:1;line-height:1.35}
+  .alert .chev{color:var(--red);font-weight:700;flex-shrink:0;font-size:18px}
+
+  .sectionlabel{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.5px;margin:22px 0 10px;text-transform:uppercase}
+  .slot{display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-left:4px solid var(--line);border-radius:11px;padding:12px;margin-bottom:9px;background:var(--card);cursor:pointer;transition:transform .15s;min-height:var(--tap)}
+  .slot:hover{transform:translateX(2px)}
+  .slot.now{background:#fff;border:2px solid var(--green);border-left:4px solid var(--green)}
+  .slot .dot{width:32px;height:32px;border-radius:50%;background:#e3e3e3;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff}
+  .slot .dot svg{width:16px;height:16px}
+  .slot.now .dot{background:var(--green)}
+  .slot .meta{flex:1}
+  .slot .meta .a{font-size:13.5px;font-weight:700;color:var(--muted)}
+  .slot.now .meta .a{color:var(--ink)}
+  .slot .meta .b{font-size:10.5px;color:var(--muted);margin-top:1px}
+  .slot .nowtag{background:var(--green);color:#fff;font-size:9px;font-weight:700;padding:5px 10px;border-radius:11px}
+  .slot .stt{margin-left:auto;font-size:9px;font-weight:700;color:var(--muted)}
+
+  .blockh{display:flex;align-items:center;gap:8px;padding:9px 14px;border-left:6px solid;margin:0 -20px}
+  .blockh .num{font-size:12px;font-weight:800}
+  .blockh .ti{font-size:13px;font-weight:700}
+  .blockh .su{margin-left:auto;font-size:9px;font-weight:500}
+  .crow{display:flex;gap:12px;border:1px solid var(--line);border-left:4px solid;border-radius:11px;padding:12px;margin:9px 0;background:#fff;cursor:pointer;align-items:flex-start;min-height:var(--tap)}
+  .crow .ic{width:22px;height:22px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;margin-top:2px}
+  .crow .info{flex:1}
+  .crow .info .nm{font-size:14px;font-weight:700}
+  .crow .info .ag{font-size:9.5px;color:var(--muted);margin:2px 0}
+  .crow .info .ds{font-size:10.5px;line-height:1.45}
+  .crow .tag{font-size:8px;font-weight:600;padding:3px 8px;border-radius:9px;height:fit-content;white-space:nowrap}
+
+  .transcript{background:#fff;border:2px solid var(--green);border-left:4px solid var(--green);border-radius:13px;padding:14px;margin-bottom:16px}
+  .transcript .q{font-size:14px;line-height:1.5}
+  .transcript .h{font-size:10px;font-weight:600;color:var(--green);margin-top:10px;display:flex;align-items:center;gap:6px}
+  .bar{height:5px;background:#e6e6e6;border-radius:3px;margin-top:6px;overflow:hidden}
+  .bar i{display:block;height:100%;background:var(--green)}
+  .reg{display:flex;align-items:center;border-radius:11px;padding:11px 12px;margin-bottom:9px;border-left:4px solid;min-height:46px}
+  .reg .l{font-size:9px;font-weight:600}
+  .reg .v{font-size:13px;font-weight:700;color:var(--ink)}
+  .reg .st{margin-left:auto;font-size:8px;font-weight:700;color:#fff;padding:5px 11px;border-radius:10px}
+  .tier{display:flex;align-items:center;border-radius:11px;padding:11px 12px;margin-bottom:9px;border:1px solid var(--line);border-left:4px solid var(--line)}
+  .tier.on{border-width:1px}
+  .tier .tl{font-size:12px;font-weight:700}
+  .tier .td{font-size:9.5px;color:var(--muted)}
+  .tier .ck{margin-left:auto;width:22px;height:22px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center}
+  .tier .ck svg{width:12px;height:12px}
+
+  .hero{border-radius:14px;padding:16px;color:#fff;position:relative;overflow:hidden}
+  .hero h2{font-size:22px;font-weight:800}
+  .hero p{font-size:12px;margin-top:4px;opacity:.92}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+  .vital{border:1px solid var(--line);border-radius:12px;padding:12px}
+  .vital .l{font-size:9.5px;color:var(--muted)}
+  .vital .v{font-size:16px;font-weight:800;margin-top:3px}
+  .vital .d{font-size:9.5px;margin-top:3px}
+
+  .btn{border:none;border-radius:11px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;width:100%;min-height:var(--tap);display:flex;align-items:center;justify-content:center;gap:8px}
+  .btn svg{width:18px;height:18px}
+  .btn.primary{background:var(--forest);color:#fff}
+  .btn.green{background:var(--green);color:#fff}
+  .btn.red{background:var(--red);color:#fff}
+  .btn.ghost{background:#fff;border:1.5px solid var(--forest);color:var(--forest)}
+  .btn.outline{background:#fff;border:1px solid var(--line);color:var(--muted)}
+
+  .vcard{border:1px solid var(--line);border-left:4px solid;border-radius:11px;padding:12px;margin-bottom:9px}
+  .vcard .mh{display:flex;gap:8px;align-items:center;margin-bottom:6px}
+  .vcard .mh svg{width:18px;height:18px}
+  .item{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-left:4px solid;border-radius:10px;padding:11px 12px;margin-bottom:8px;min-height:44px}
+  .item .b{width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#fff;flex-shrink:0}
+  .item .x{font-size:10.5px;line-height:1.4}
+  .camline{background:#161616;border-radius:11px;padding:13px;margin-top:12px;display:flex;gap:10px;align-items:center;cursor:pointer;min-height:var(--tap)}
+  .camline .ci{width:20px;height:20px;flex-shrink:0;color:#8fe6c0}
+
+  .nav{height:72px;background:#fff;border-top:1px solid var(--line);display:flex;position:relative;flex-shrink:0}
+  .nav .tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;color:var(--muted);position:relative;min-height:var(--tap)}
+  .nav .tab.on{color:var(--forest)}
+  .nav .tab.on::before{content:'';position:absolute;top:0;width:34px;height:3px;background:var(--forest);border-radius:2px}
+  .nav .tab .lab{font-size:9.5px;font-weight:600}
+  .nav .fab{position:absolute;left:50%;top:-22px;transform:translateX(-50%);width:58px;height:58px;border-radius:50%;background:var(--forest);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(27,58,45,.45);cursor:pointer;border:4px solid #fff}
+  .nav .fab svg{color:#fff}
+  .navspacer{flex:1.4}
+
+  .screen.dark{position:absolute;inset:0}
+  .dark{background:var(--forest);color:#fff;justify-content:center;align-items:center;text-align:center;padding:44px 32px;overflow:hidden}
+  .dark::before{content:'';position:absolute;top:-80px;left:50%;transform:translateX(-50%);width:380px;height:380px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.05),transparent 70%);pointer-events:none}
+  .dark .logo{width:96px;height:96px;border-radius:50%;background:var(--forest-d);display:flex;align-items:center;justify-content:center;margin-bottom:24px;box-shadow:0 0 0 1px rgba(255,255,255,.12),0 0 0 11px rgba(255,255,255,.04);position:relative;z-index:1}
+  .dark .logo svg{color:#fff}
+  .dark h1{font-size:48px;font-weight:800;letter-spacing:4px;line-height:1}
+  .dark .fullform{font-size:11px;color:#9fc3b1;margin-top:12px;letter-spacing:2px;text-transform:uppercase;font-weight:600;line-height:1.6}
+  .dark .rule{width:42px;height:2px;background:rgba(255,255,255,.22);border-radius:2px;margin:22px 0}
+  .dark .chip{display:inline-flex;align-items:center;gap:7px;border:1px solid rgba(255,255,255,.22);border-radius:20px;padding:7px 14px;font-size:11px;font-weight:600;color:#cfe3d8;letter-spacing:.3px}
+  .dark .chip .pulse{width:7px;height:7px;border-radius:50%;background:#6fd29b;box-shadow:0 0 0 0 rgba(111,210,155,.6);animation:pulse 2s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(111,210,155,.5)}70%{box-shadow:0 0 0 8px rgba(111,210,155,0)}100%{box-shadow:0 0 0 0 rgba(111,210,155,0)}}
+  .dark .tag{font-size:13px;color:#9fc3b1;margin-top:10px;max-width:250px;line-height:1.5}
+  .dark .startbtn{margin-top:30px;background:#fff;color:var(--forest);border:none;border-radius:30px;padding:17px 38px;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:11px;box-shadow:0 10px 24px rgba(0,0,0,.22);position:relative;z-index:1;min-height:var(--tap)}
+  .dark .startbtn svg{width:21px;height:21px}
+  .dark .fine{font-size:12px;color:#8fb9a3;margin-top:20px;max-width:260px;line-height:1.5}
+  .dark .govstrip{position:absolute;bottom:22px;left:0;right:0;font-size:10px;color:#5f8a73;letter-spacing:.3px;line-height:1.5;padding:0 24px}
+
+  /* profile select */
+  .pselect{padding:34px 26px 26px}
+  .pselect .ttl{font-size:21px;font-weight:800;color:var(--forest)}
+  .pselect .ttls{font-size:12.5px;color:var(--muted);margin-top:6px;line-height:1.5}
+  .prow{display:flex;align-items:center;gap:13px;border:1px solid var(--line);border-radius:13px;padding:14px;margin-top:11px;cursor:pointer;min-height:var(--tap)}
+  .prow.on{border:2px solid var(--green);background:var(--gl)}
+  .prow .pa{width:46px;height:46px;border-radius:50%;background:var(--forest);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;flex-shrink:0}
+  .prow .pinf{flex:1}
+  .prow .pinf .pn{font-size:15px;font-weight:700}
+  .prow .pinf .pc{font-size:10.5px;color:var(--muted);margin-top:2px}
+  .prow .pck{width:24px;height:24px;border-radius:50%;border:2px solid var(--line);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff}
+  .prow.on .pck{background:var(--green);border-color:var(--green)}
+  .prow .pck svg{width:13px;height:13px}
+
+  .modal{position:absolute;inset:0;background:rgba(17,38,28,.72);display:none;align-items:center;justify-content:center;z-index:40;padding:30px}
+  .modal.show{display:flex}
+  .micbox{background:#fff;border-radius:22px;padding:30px 26px;text-align:center;width:100%;max-width:300px}
+  .micring{width:96px;height:96px;border-radius:50%;background:var(--gl);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;position:relative}
+  .micring::before{content:'';position:absolute;inset:0;border-radius:50%;border:3px solid var(--green);animation:ripple 1.6s infinite}
+  @keyframes ripple{0%{transform:scale(1);opacity:.7}100%{transform:scale(1.35);opacity:0}}
+  .micring svg{width:40px;height:40px;color:var(--green)}
+  .micbox .ml{font-size:15px;font-weight:700;color:var(--ink)}
+  .micbox .ms{font-size:11.5px;color:var(--muted);margin-top:6px;line-height:1.5}
+  .micbox .mc{margin-top:18px;background:#fff;border:1.5px solid var(--line);color:var(--muted);border-radius:11px;padding:12px;font-weight:700;cursor:pointer;width:100%;min-height:44px}
+
+  .globewrap{width:60px;height:60px;border-radius:50%;background:var(--gl);display:flex;align-items:center;justify-content:center;margin:0 auto;color:var(--green)}
+  .backbtn{background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:20px;padding:8px 13px;font-size:12px;font-weight:600;cursor:pointer;margin-bottom:10px;min-height:38px;display:inline-flex;align-items:center;gap:4px}
+  .hint{font-size:11px;color:#bbb;text-align:center;margin-top:16px;max-width:430px;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="top">
+  <h1>A.U.R.A.</h1>
+  <p>Anganwadi Unified Resource Assistant. Field prototype.</p>
+  <div class="langtoggle" role="group" aria-label="Language">
+    <button id="lang-hi" class="on" onclick="setLang('hi')">हिंदी</button>
+    <button id="lang-en" onclick="setLang('en')">English</button>
+  </div>
+</div>
+<div class="phone"><div id="app"></div><div class="modal" id="micmodal"><div class="micbox"><div class="micring"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2C8.3 2 7 3.3 7 5V10C7 11.7 8.3 13 10 13S13 11.7 13 10V5C13 3.3 11.7 2 10 2Z"/><path d="M5 10C5 13.5 7.4 16 10 16S15 13.5 15 10"/><path d="M10 16V19M7 19H13"/></svg></div><div class="ml" id="micl"></div><div class="ms" id="mics"></div><button class="mc" onclick="closeMic()" id="micc"></button></div></div></div>
+<p class="hint" id="hint"></p>
+<script>
+const SVG={
+  home:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M10 2L2 9V18H7V13H13V18H18V9Z"/></svg>',
+  voice:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2C8.3 2 7 3.3 7 5V10C7 11.7 8.3 13 10 13S13 11.7 13 10V5C13 3.3 11.7 2 10 2Z"/><path d="M5 10C5 13.5 7.4 16 10 16S15 13.5 15 10"/><path d="M10 16V19M7 19H13"/></svg>',
+  heart:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M10 17C10 17 3 12.5 3 7.5C3 5.2 4.8 3.4 7 3.4C8.4 3.4 9.5 4.3 10 5C10.5 4.3 11.6 3.4 13 3.4C15.2 3.4 17 5.2 17 7.5C17 12.5 10 17 10 17Z"/></svg>',
+  book:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M10 4C8 2.6 5 2.2 2 3.2V16C5 15 8 15.4 10 16.8C12 15.4 15 15 18 16V3.2C15 2.2 12 2.6 10 4Z"/><path d="M10 4V16.8"/></svg>',
+  grid:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="5" height="5"/><rect x="12" y="3" width="5" height="5"/><rect x="3" y="12" width="5" height="5"/><rect x="12" y="12" width="5" height="5"/></svg>',
+  bell:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M10 3C7.8 3 6 4.8 6 7V11L4.5 13H15.5L14 11V7C14 4.8 12.2 3 10 3Z"/><path d="M8.3 15C8.5 16 9.2 16.5 10 16.5S11.5 16 11.7 15"/></svg>',
+  clock:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="8"/><path d="M10 5V10L13 12" stroke-linecap="round"/></svg>',
+  meal:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M5 3V9C5 10 6 11 7 11V18M7 11C8 11 9 10 9 9V3M7 3V8M14 3C12.5 3 12 5 12 7C12 8.5 13 9 14 9V18"/></svg>',
+  globe:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="8"/><path d="M2 10H18M10 2C12 4 13 7 13 10S12 16 10 18 7 16 7 10 8 4 10 2Z"/></svg>',
+  warn:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M10 2L18 16H2Z"/><path d="M10 8V11M10 13.5V13.6" stroke-linecap="round"/></svg>',
+  cam:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M3 6H6L7 4H13L14 6H17V15H3Z"/><circle cx="10" cy="11" r="3"/></svg>',
+  check:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10L8 14L16 5"/></svg>',
+  clip:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M7 4H5V17H15V4H13"/><rect x="7" y="2.5" width="6" height="3.2" rx="1"/><path d="M7.5 9H12.5M7.5 12H11" stroke-linecap="round"/></svg>',
+  refer:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10H15M11 6L15 10L11 14"/></svg>'
+};
+const navic={att:'clock',ece:'book',meal:'meal',health:'heart',audit:'grid'};
+
+const T={
+ hi:{
+  govA:"भारत सरकार",govB:"महिला एवं बाल विकास मंत्रालय",govC:"समेकित बाल विकास सेवा (ICDS)",
+  pill:"हिं | A",nav:["घर","सेहत","खेल","और"],
+  splashTag:"आँगनवाड़ी का दिन, एक जगह। बिना इंटरनेट के भी चलता है।",
+  splashStart:"शुरू करें",splashChip:"ऑफ़लाइन तैयार",splashFine:"आपका डेटा इसी फ़ोन में सुरक्षित रहता है।",
+  pTtl:"अपना नाम चुनें",pTtls:"जारी रखने के लिए अपनी आँगनवाड़ी और नाम पर टैप करें।",
+  workers:[["मीरा देवी","आँगनवाड़ी केंद्र 04, ब्लॉक रामपुर","MD"],["सुनीता बाला","आँगनवाड़ी केंद्र 04, ब्लॉक रामपुर","SB"],["कविता देवी","आँगनवाड़ी केंद्र 11, ब्लॉक रामपुर","KD"]],
+  pContinue:"दिन शुरू करें",
+  greet:"सुप्रभात, मीरा।",date:"सोमवार, 15 जून।",
+  nowClock:"अभी 8:04 बजे",nowLabel:"अभी का काम",nowTask:"सुबह की हाज़िरी",nowSub:"और नाश्ता देना",start:"हाज़िरी शुरू करें",
+  alert:"3 बच्चे ज़रूरी: तुरंत देखें",day:"दिन का नक्शा",nowtag:"अभी",doneShort:"हो गया",pendShort:"बाकी",
+  slots:[["हाज़िरी और नाश्ता","8 से 9 बजे","att",1,0],["खेल और जाँच","9 से 12 बजे","ece",0,0],["गरम खाना","12 से 1 बजे","meal",0,0],["सेहत जाँच","1 से 2 बजे","health",0,0],["दिन की जाँच","2 बजे बाद","audit",0,0]],
+  triageKw:["आज किसे ","देखना है"],
+  blocks:[{n:"01",t:"तुरंत देखें",s:"बहुत कमज़ोर बच्चे",c:"--red",bg:"--rl",kids:[{nm:"मीरा शर्मा",ag:"3 साल",ds:"वज़न 3 हफ़्ते से घट रहा है। आज नाप लें।",tag:"बहुत कमज़ोर"},{nm:"रवि दास",ag:"2 साल",ds:"बाँह बहुत पतली (10.8 सेमी)। अस्पताल भेजें।",tag:"बहुत कमज़ोर"}]},{n:"02",t:"बाकी है",s:"2 दिन से जानकारी नहीं",c:"--amber",bg:"--al",kids:[{nm:"अनिता कुमारी",ag:"4 साल",ds:"3 दिन से कुछ दर्ज नहीं हुआ।",tag:null},{nm:"राहुल मुर्मू",ag:"2 साल",ds:"5 दिन नहीं आया। आज लौटा।",tag:"आज लौटा"}]},{n:"03",t:"बाकी काम",s:"टीका, राशन",c:"--green",bg:"--gl",kids:[{nm:"सुरेश यादव",ag:"3 साल",ds:"विटामिन A का टीका बाकी। आज दें।",tag:null}]}],
+  voiceKw:["बस ","बोल दें"],voiceSub:"एक बार बोलें, हर रजिस्टर में अपने आप दर्ज हो जाएगा।",
+  voiceQ:"राहुल आज नहीं आया, प्रिया को दुगना राशन, मीरा का वज़न नापना है",voiceH:"सही सुना: 94%",
+  filling:"अपने आप भर रहा है",sure:"कितना पक्का है",
+  regs:[["हाज़िरी रजिस्टर","राहुल: अनुपस्थित दर्ज",1],["राशन रजिस्टर","प्रिया: दुगना राशन",1],["सेहत रजिस्टर","मीरा: वज़न नापना बाकी",0]],
+  tiers:[["पक्का (अपने आप दर्ज)","94% से ऊपर","--green",1],["एक बार देख लें","75% से 94%","--amber",0],["खुद भरें","75% से नीचे","--red",0]],
+  attKw:["आज ","सब आए हैं"],allHere:"सभी 42 बच्चे आए हैं",allCount:"केंद्र के सभी बच्चे उपस्थित",allTime:"8:04 बजे दर्ज",
+  camLine:"फ़ोटो से गिनती मिलाएँ",camMatch:"कैमरा खोलने के लिए टैप करें",absent:"अनुपस्थित चुनें",absTag:" · टैप करके अनुपस्थित करें",
+  attKids:[["राहुल मुर्मू","2 साल"],["अनिता कुमारी","4 साल"]],addVoice:"बोलकर जोड़ें",
+  sumLine:"आज की हाज़िरी",pct:"42 में से 40 उपस्थित (95%)",send:"जाँचें और भेजें",
+  mealKw:["गरम ","खाना"],mealSub:"आज का खाना और कितने बच्चों को मिला, यहाँ दर्ज करें।",
+  mealToday:"आज का खाना",mealFood:"दाल, चावल और सब्ज़ी",mealPer:"हर बच्चे को एक कटोरी",
+  mealFed:"अब तक खिलाया",mealOf:"में से 40",mealVoice:"बोलकर गिनती दर्ज करें",
+  mealStock:"राशन कम है",mealStockS:"दाल 2 दिन की बची है। ब्लॉक को बताएँ।",
+  hName:"रवि दास",hAge:"2 साल 4 महीने · केंद्र 04",hDanger:"ख़तरे का निशान",
+  hSignal:"तुरंत ध्यान दें",hSignalD:"बाँह की माप 10.8 सेमी है, जो बहुत कम है। आज ही अस्पताल रेफर करें।",
+  hVitals:[["वज़न","8.1 किग्रा","उम्र से कम",1],["बाँह (MUAC)","10.8 सेमी","लाल घेरा",1],["लंबाई","82 सेमी","थोड़ी कम",1],["पिछली जाँच","3 हफ़्ते पहले","",0]],
+  hScore:"पोषण स्थिति",hVeryWeak:"बहुत कमज़ोर (SAM)",hWeigh:"वज़न दर्ज करें",hRefer:"अस्पताल रेफर करें",
+  eceKw:["आज का ","खेल"],eceSub:"आज के कमरे के बच्चों के लिए नवचेतना की गतिविधि।",
+  eceGame:"गेंद की ओर बढ़ना",eceAge:"6 से 9 माह · शारीरिक विकास",eceDesc:"बच्चे के सामने नरम गेंद रखें और पकड़ने के लिए बढ़ावा दें। फिर गेंद थोड़ा दूर खिसकाएँ।",
+  ecePick:"नवचेतना गतिविधि बैंक से चुना गया",eceScreen:"विकास जाँच (DSS) करें",
+  eceFocus:"ख़ास ध्यान वाले बच्चे",
+  eceFlags:[["आरती (3 साल)","अभी बोलना कम","ध्यान दें, इशारों से जवाब लेने वाली गतिविधि दें।","--amber"],["कबीर (2 साल)","ठीक चल रहा","अगली गतिविधि के लिए तैयार।","--green"]],
+  eceNote:"नोट",eceNoteV:"यह गतिविधि कमरे की उम्र और सामान के अनुसार बदली जा सकती है।",
+  auditKw:["दिन की ","जाँच"],auditYes:"भेजने से पहले एक बार देख लें",auditYesD:"नीचे आज का सारा काम है। सही लगे तो भेज दें।",
+  auditWhat:"आज क्या हुआ",
+  auditItems:[["हाज़िरी: 40 उपस्थित, 2 अनुपस्थित",1],["गरम खाना: 40 बच्चों को मिला",1],["सेहत जाँच: 3 बच्चे रेफर हुए",1],["खेल और जाँच: 1 बच्चे की DSS बाकी",0]],
+  auditSafe:"सारा डेटा इसी फ़ोन में सुरक्षित है। इंटरनेट आने पर अपने आप भेजा जाएगा।",auditApprove:"पक्का करें और दिन बंद करें",
+  micL:"सुन रहे हैं...",micS:"साफ़ बोलें। नाम, गिनती या सामान बोल सकते हैं।",micC:"बंद करें",
+  notif:"सूचनाएँ"
+ },
+ en:{
+  govA:"Government of India",govB:"Ministry of Women and Child Development",govC:"Integrated Child Development Services (ICDS)",
+  pill:"EN | अ",nav:["Home","Health","Play","More"],
+  splashTag:"The whole Anganwadi day in one place. Works without internet.",
+  splashStart:"Get started",splashChip:"Offline ready",splashFine:"Your data stays safe on this phone.",
+  pTtl:"Select your name",pTtls:"Tap your Anganwadi centre and name to continue.",
+  workers:[["Meera Devi","Anganwadi Centre 04, Block Rampur","MD"],["Sunita Bala","Anganwadi Centre 04, Block Rampur","SB"],["Kavita Devi","Anganwadi Centre 11, Block Rampur","KD"]],
+  pContinue:"Start the day",
+  greet:"Good morning, Meera.",date:"Monday, 15 June.",
+  nowClock:"Now, 8:04 AM",nowLabel:"Right now",nowTask:"Morning attendance",nowSub:"and serving breakfast",start:"Start attendance",
+  alert:"3 children need attention now",day:"Today's plan",nowtag:"now",doneShort:"done",pendShort:"left",
+  slots:[["Attendance and breakfast","8 to 9 AM","att",1,0],["Play and screening","9 to 12","ece",0,0],["Hot meal","12 to 1","meal",0,0],["Health check","1 to 2","health",0,0],["Day review","After 2","audit",0,0]],
+  triageKw:["Who needs ","attention today"],
+  blocks:[{n:"01",t:"See now",s:"Very weak children",c:"--red",bg:"--rl",kids:[{nm:"Meera Sharma",ag:"3 years",ds:"Weight falling for 3 weeks. Weigh today.",tag:"Very weak"},{nm:"Ravi Das",ag:"2 years",ds:"Arm very thin (10.8 cm). Refer to hospital.",tag:"Very weak"}]},{n:"02",t:"Pending",s:"No update for 2 days",c:"--amber",bg:"--al",kids:[{nm:"Anita Kumari",ag:"4 years",ds:"Nothing recorded for 3 days.",tag:null},{nm:"Rahul Murmu",ag:"2 years",ds:"Absent 5 days. Returned today.",tag:"Back today"}]},{n:"03",t:"Remaining",s:"Vaccine, ration",c:"--green",bg:"--gl",kids:[{nm:"Suresh Yadav",ag:"3 years",ds:"Vitamin A dose pending. Give today.",tag:null}]}],
+  voiceKw:["Just ","say it"],voiceSub:"Speak once. It records into every register on its own.",
+  voiceQ:"Rahul absent today, double ration for Priya, weigh Meera",voiceH:"Heard correctly: 94%",
+  filling:"Filling on its own",sure:"How sure",
+  regs:[["Attendance register","Rahul: marked absent",1],["Ration register","Priya: double ration",1],["Health register","Meera: weight pending",0]],
+  tiers:[["Confirmed (auto saved)","Above 94%","--green",1],["Please check once","75% to 94%","--amber",0],["Enter yourself","Below 75%","--red",0]],
+  attKw:["Everyone ","is here today"],allHere:"All 42 children present",allCount:"Every child in the centre is here",allTime:"Recorded at 8:04 AM",
+  camLine:"Match the count with a photo",camMatch:"Tap to open the camera",absent:"Mark absent",absTag:" · tap to mark absent",
+  attKids:[["Rahul Murmu","2 years"],["Anita Kumari","4 years"]],addVoice:"Add by voice",
+  sumLine:"Today's attendance",pct:"40 of 42 present (95%)",send:"Check and send",
+  mealKw:["Hot ","meal"],mealSub:"Record today's meal and how many children were served.",
+  mealToday:"Today's meal",mealFood:"Dal, rice and vegetables",mealPer:"One bowl per child",
+  mealFed:"Served so far",mealOf:"of 40",mealVoice:"Record count by voice",
+  mealStock:"Ration is low",mealStockS:"Dal will last 2 days. Inform the block.",
+  hName:"Ravi Das",hAge:"2 years 4 months · Centre 04",hDanger:"Danger sign",
+  hSignal:"Needs attention now",hSignalD:"Arm measure is 10.8 cm, which is very low. Refer to hospital today.",
+  hVitals:[["Weight","8.1 kg","Low for age",1],["Arm (MUAC)","10.8 cm","Red zone",1],["Height","82 cm","Slightly low",1],["Last check","3 weeks ago","",0]],
+  hScore:"Nutrition status",hVeryWeak:"Very weak (SAM)",hWeigh:"Record weight",hRefer:"Refer to hospital",
+  eceKw:["Today's ","activity"],eceSub:"A Navchetana activity for the children in the room today.",
+  eceGame:"Reaching for the ball",eceAge:"6 to 9 months · Physical",eceDesc:"Place a soft ball within reach and encourage the child to grasp it. Then move the ball a little farther.",
+  ecePick:"Chosen from the Navchetana activity bank",eceScreen:"Run development check (DSS)",
+  eceFocus:"Children to watch",
+  eceFlags:[["Aarti (3 years)","Speaking little","Watch closely. Give an activity that accepts gesture replies.","--amber"],["Kabir (2 years)","On track","Ready for the next activity.","--green"]],
+  eceNote:"Note",eceNoteV:"This activity can change to fit the room's ages and materials.",
+  auditKw:["Day ","review"],auditYes:"Check once before sending",auditYesD:"Below is everything from today. Send if it looks right.",
+  auditWhat:"What happened today",
+  auditItems:[["Attendance: 40 present, 2 absent",1],["Hot meal: served to 40 children",1],["Health check: 3 children referred",1],["Play and screening: 1 child's DSS pending",0]],
+  auditSafe:"All data is safe on this phone. It will send on its own when internet returns.",auditApprove:"Confirm and close the day",
+  micL:"Listening...",micS:"Speak clearly. You can say a name, a count or a material.",micC:"Close",
+  notif:"Notifications"
+ }
+};
+
+let lang='hi';
+let stack=['splash'];
+
+function statusbar(time){return `<div class="govbar"><span class="tri" aria-hidden="true"><i style="background:#FF9933"></i><i style="background:#fff"></i><i style="background:#138808"></i></span><span>${T[lang].govC}</span></div><div class="statusbar"><span>${time}</span><span class="r">${SVG.globe} ${lang==='hi'?'ऑफ़लाइन':'Offline'}</span></div>`;}
+function header(){const t=T[lang];return `<div class="header"><div class="avatar">M</div><div class="brand">A.U.R.A.<small>${t.govC}</small></div><div class="right"><button class="pill-lang" onclick="setLang('${lang==='hi'?'en':'hi'}')">${t.pill}</button><button class="bellbtn" aria-label="${t.notif}" onclick="alert('${t.notif}')">${SVG.bell}<span class="dotn"></span></button></div></div>`;}
+function kw(arr,color){return `<div class="kw">${arr[0]}<span class="hl" style="background:var(${color})">${arr[1]}</span></div>`;}
+function nav(active){const t=T[lang];const tabs=[['home','home',()=>jump('shell')],['health','heart',()=>jump('health')],['__fab','voice',()=>openMic()],['ece','book',()=>jump('ece')],['more','grid',()=>alert(lang==='hi'?'और सुविधाएँ':'More features')]];
+  let html='<div class="nav" role="navigation">';
+  const labels=[t.nav[0],t.nav[1],'',t.nav[2],t.nav[3]];
+  tabs.forEach((tb,i)=>{
+    if(tb[0]==='__fab'){html+=`<div class="navspacer"></div><div class="fab" role="button" aria-label="${T[lang].nav?'':''}Voice" onclick="openMic()">${SVG.voice}</div><div class="navspacer"></div>`;}
+    else{const on=tb[0]===active?'on':'';html+=`<div class="tab ${on}" role="button" onclick="navTap('${tb[0]}')"><span>${SVG[tb[1]]}</span><span class="lab">${labels[i]}</span></div>`;}
+  });
+  return html+'</div>';}
+function navTap(id){if(id==='home')jump('shell');else if(id==='health')jump('health');else if(id==='ece')jump('ece');else alert(lang==='hi'?'और सुविधाएँ जल्द':'More features soon');}
+
+const screens={
+ splash(){const t=T[lang];return `<div class="screen dark active"><div class="logo">${SVG.book}</div><h1>A.U.R.A.</h1><div class="fullform">Anganwadi Unified<br>Resource Assistant</div><div class="rule"></div><div class="chip"><span class="pulse"></span>${t.splashChip}</div><div class="tag">${t.splashTag}</div><button class="startbtn" onclick="jump('profile')">${t.splashStart} ${SVG.refer}</button><div class="fine">${t.splashFine}</div><div class="govstrip">${t.govA} · ${t.govB}</div></div>`;},
+ profile(){const t=T[lang];const rows=t.workers.map((w,i)=>`<div class="prow ${i===0?'on':''}" onclick="selectWorker(${i})" id="pw${i}"><div class="pa">${w[2]}</div><div class="pinf"><div class="pn">${w[0]}</div><div class="pc">${w[1]}</div></div><div class="pck">${SVG.check}</div></div>`).join('');
+   return `<div class="screen active" style="background:#fff"><div class="govbar"><span class="tri" aria-hidden="true"><i style="background:#FF9933"></i><i style="background:#fff"></i><i style="background:#138808"></i></span><span>${t.govC}</span></div><div class="scroll"><div class="pselect"><div class="globewrap" style="margin-bottom:16px">${SVG.home}</div><div class="ttl">${t.pTtl}</div><div class="ttls">${t.pTtls}</div>${rows}<button class="btn green" style="margin-top:18px" onclick="jump('shell')">${t.pContinue} ${SVG.refer}</button></div></div></div>`;},
+ shell(){const t=T[lang];const slots=t.slots.map(s=>`<div class="slot ${s[3]?'now':''}" onclick="go('${s[2]}')"><div class="dot">${SVG[navic[s[2]]]}</div><div class="meta"><div class="a">${s[0]}</div><div class="b">${s[1]}</div></div>${s[3]?`<span class="nowtag">${t.nowtag}</span>`:`<span class="stt">${s[4]?t.doneShort:t.pendShort}</span>`}</div>`).join('');
+   return `<div class="screen active">${statusbar('8:04')}${header()}<div class="scroll"><div class="body"><div class="greet">${t.greet}<small>${t.date}</small></div><div class="nowcard"><div class="nclock">${SVG.clock} ${t.nowClock}</div><div class="nlabel">${t.nowLabel}</div><h2>${t.nowTask}</h2><div class="ntask">${t.nowSub}</div><button class="nowbtn" onclick="go('att')">${t.start}<span class="arrow">→</span></button></div><div class="alert" onclick="go('triage')"><span class="ai">${SVG.warn}</span><span class="t">${t.alert}</span><span class="chev">›</span></div><div class="sectionlabel">${t.day}</div>${slots}</div></div>${nav('home')}</div>`;},
+ triage(){const t=T[lang];const blocks=t.blocks.map(b=>`<div class="blockh" style="border-color:var(${b.c});background:var(${b.bg})"><span class="num" style="color:var(${b.c})">${b.n}</span><span class="ti" style="color:var(${b.c})">${b.t}</span><span class="su" style="color:var(${b.c})">${b.s}</span></div>${b.kids.map(k=>`<div class="crow" style="border-left-color:var(${b.c})" onclick="go('health')"><div class="ic" style="background:var(${b.bg});color:var(${b.c})">!</div><div class="info"><div class="nm">${k.nm}</div><div class="ag">${k.ag}</div><div class="ds" style="color:var(${b.c})">${k.ds}</div></div>${k.tag?`<span class="tag" style="background:var(${b.bg});color:var(${b.c})">${k.tag}</span>`:''}</div>`).join('')}`).join('');
+   return `<div class="screen active">${statusbar('8:04')}${header()}<div class="scroll"><div class="body" style="padding-top:6px"><button class="backbtn" style="background:var(--rl);color:var(--red)" onclick="back()">‹ ${lang==='hi'?'वापस':'Back'}</button>${kw(t.triageKw,'--red')}${blocks}</div></div>${nav('home')}</div>`;},
+ voice(){const t=T[lang];const regs=t.regs.map(r=>{const c=r[2]?'--green':'--amber',bg=r[2]?'--gl':'--al';return `<div class="reg" style="background:var(${bg});border-left-color:var(${c})"><div><div class="l" style="color:var(${c})">${r[0]}</div><div class="v">${r[1]}</div></div><span class="st" style="background:var(${c})">${r[2]?t.doneShort:t.pendShort}</span></div>`;}).join('');
+   const tiers=t.tiers.map(ti=>{const lt=ti[2]==='--green'?'--gl':ti[2]==='--amber'?'--al':'--rl';return `<div class="tier ${ti[3]?'on':''}" style="${ti[3]?`background:var(${lt});border-color:var(${ti[2]})`:''};border-left-color:var(${ti[3]?ti[2]:'--line'})"><div><div class="tl" style="${ti[3]?`color:var(${ti[2]})`:'color:var(--muted)'}">${ti[0]}</div><div class="td">${ti[1]}</div></div>${ti[3]?`<span class="ck" style="background:var(${ti[2]})">${SVG.check}</span>`:''}</div>`;}).join('');
+   return `<div class="screen active">${statusbar('8:10')}${header()}<div class="scroll"><div class="body" style="padding-top:6px"><button class="backbtn" style="background:var(--gl);color:var(--green)" onclick="back()">‹ ${lang==='hi'?'वापस':'Back'}</button>${kw(t.voiceKw,'--green')}<div class="sub">${t.voiceSub}</div><div class="transcript"><div class="q">${t.voiceQ}</div><div class="h">${SVG.check} ${t.voiceH}</div><div class="bar"><i style="width:94%"></i></div></div><div class="sectionlabel">${t.filling}</div>${regs}<div class="sectionlabel">${t.sure}</div>${tiers}</div></div>${nav('home')}</div>`;},
+ att(){const t=T[lang];const kids=t.attKids.map(k=>`<div class="crow" style="border-left-color:var(--red)"><div class="ic" style="background:var(--rl);color:var(--red)">✕</div><div class="info"><div class="nm">${k[0]}</div><div class="ag">${k[1]}${t.absTag}</div></div></div>`).join('');
+   return `<div class="screen active">${statusbar('8:04')}${header()}<div class="scroll"><div class="body" style="padding-top:6px"><button class="backbtn" style="background:var(--gl);color:var(--green)" onclick="back()">‹ ${lang==='hi'?'वापस':'Back'}</button>${kw(t.attKw,'--green')}<div class="hero" style="background:var(--green);margin-top:6px"><h2>${t.allHere}</h2><p>${t.allCount}</p><p style="font-size:10px;margin-top:6px;opacity:.85">${t.allTime}</p></div><div class="camline" onclick="openMic()"><span class="ci">${SVG.cam}</span><div><div style="color:#cdeede;font-size:11px;font-weight:600">${t.camLine}</div><div style="color:#7fae97;font-size:9px">${t.camMatch}</div></div></div><div class="sectionlabel">${t.absent}</div>${kids}<button class="btn ghost" onclick="openMic()">${SVG.voice} ${t.addVoice}</button><div class="hero" style="background:var(--forest);margin-top:16px"><p style="opacity:.85">${t.sumLine}</p><h2 style="font-size:20px">${t.pct}</h2><button class="btn green" style="margin-top:10px" onclick="go('audit')">${t.send}</button></div></div></div>${nav('home')}</div>`;},
+ meal(){const t=T[lang];return `<div class="screen active">${statusbar('12:14')}${header()}<div class="scroll"><div class="body" style="padding-top:6px"><button class="backbtn" style="background:var(--al);color:var(--orange)" onclick="back()">‹ ${lang==='hi'?'वापस':'Back'}</button>${kw(t.mealKw,'--orange')}<div class="sub">${t.mealSub}</div><div class="vcard" style="border-left-color:var(--orange)"><div class="mh" style="color:var(--orange)">${SVG.meal}<span style="font-size:10px;font-weight:600">${t.mealToday}</span></div><div style="font-size:16px;font-weight:800">${t.mealFood}</div><div style="font-size:10px;color:var(--muted);margin-top:4px">${t.mealPer}</div></div><div style="background:var(--al);border-left:4px solid var(--orange);border-radius:12px;padding:14px;margin-bottom:10px"><div style="font-size:10px;color:var(--muted)">${t.mealFed}</div><div style="display:flex;align-items:baseline;gap:8px"><span style="font-size:40px;font-weight:800;color:var(--orange)">18</span><span style="font-size:12px;color:var(--muted)">${t.mealOf}</span></div><div class="bar" style="height:8px"><i style="width:45%;background:var(--orange)"></i></div></div><button class="btn ghost" onclick="openMic()">${SVG.voice} ${t.mealVoice}</button><div style="background:var(--al);border-left:4px solid var(--amber);border-radius:11px;padding:13px;margin-top:14px"><div style="font-size:12px;font-weight:700;color:var(--amber)">${t.mealStock}</div><div style="font-size:10px;color:var(--amber);margin-top:4px">${t.mealStockS}</div></div></div></div>${nav('home')}</div>`;},
+ health(){const t=T[lang];const vit=t.hVitals.map(v=>`<div class="vital"><div class="l">${v[0]}</div><div class="v">${v[1]}</div><div class="d" style="color:var(${v[3]?'--red':'--green'})">${v[2]||'&nbsp;'}</div></div>`).join('');
+   return `<div class="screen active">${statusbar('1:20')}<div class="scroll"><div class="hero" style="background:var(--red);border-radius:0;padding:14px 20px 18px"><button class="backbtn" onclick="back()">‹ ${lang==='hi'?'वापस':'Back'}</button><div style="display:flex;justify-content:space-between;align-items:flex-start"><div><h2>${t.hName}</h2><p>${t.hAge}</p></div><span style="background:#fff;color:var(--red);font-size:10px;font-weight:800;padding:5px 12px;border-radius:12px">${t.hDanger}</span></div></div><div class="body"><div style="background:var(--rl);border:1px solid var(--red);border-left:4px solid var(--red);border-radius:12px;padding:13px;display:flex;gap:10px;margin-top:14px"><span style="color:var(--red);width:20px;height:20px;flex-shrink:0">${SVG.warn}</span><div><div style="font-size:12px;font-weight:700;color:var(--red)">${t.hSignal}</div><div style="font-size:10px;color:var(--red);line-height:1.5;margin-top:4px">${t.hSignalD}</div></div></div><div class="grid2" style="margin-top:14px">${vit}</div><div class="vcard" style="border-left-color:var(--red);margin-top:14px"><div style="font-size:9px;color:var(--muted)">${t.hScore}</div><div style="font-size:18px;font-weight:800;color:var(--red);margin-top:2px">${t.hVeryWeak}</div></div><div class="grid2" style="margin-top:6px"><button class="btn red" onclick="alert('${lang==='hi'?'वज़न दर्ज करने की स्क्रीन':'Weight entry screen'}')">${t.hWeigh}</button><button class="btn primary" onclick="alert('${lang==='hi'?'अस्पताल रेफरल बन गया ✓':'Hospital referral created ✓'}')">${t.hRefer}</button></div></div></div>${nav('health')}</div>`;},
+ ece(){const t=T[lang];const flags=t.eceFlags.map(f=>`<div class="vcard" style="background:var(${f[3]==='--green'?'--gl':'--al'});border-left-color:var(${f[3]})"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;font-weight:700">${f[0]}</span><span style="background:var(${f[3]});color:#fff;font-size:7.5px;font-weight:600;padding:3px 8px;border-radius:9px">${f[1]}</span></div><div style="font-size:10px;margin-top:6px;line-height:1.5">${f[2]}</div></div>`).join('');
+   return `<div class="screen active">${statusbar('9:30')}${header()}<div class="scroll"><div class="body">${kw(t.eceKw,'--purple')}<div class="sub">${t.eceSub}</div><div class="vcard" style="border-left-color:var(--purple)"><div style="font-size:16px;font-weight:800">${t.eceGame}</div><div style="font-size:9.5px;color:var(--muted);margin-top:4px">${t.eceAge}</div><div style="font-size:10.5px;line-height:1.55;margin-top:8px">${t.eceDesc}</div><div style="font-size:8px;color:var(--muted);margin-top:8px">${t.ecePick}</div></div><button class="btn ghost" style="border-color:var(--purple);color:var(--purple)" onclick="alert('${lang==='hi'?'नवचेतना विकास जाँच (DSS) खुलेगी':'Navchetana development check (DSS) opens'}')">${SVG.clip} ${t.eceScreen}</button><div class="sectionlabel">${t.eceFocus}</div>${flags}<div class="sectionlabel">${t.eceNote}</div><div class="vcard" style="border-left-color:var(--muted)"><div style="font-size:10px;color:var(--muted)">${t.eceNoteV}</div></div></div></div>${nav('ece')}</div>`;},
+ audit(){const t=T[lang];const items=t.auditItems.map(i=>`<div class="item" style="border-left-color:var(${i[1]?'--green':'--red'})"><span class="b" style="background:var(${i[1]?'--green':'--red'})">${i[1]?'✓':'!'}</span><span class="x">${i[0]}</span></div>`).join('');
+   return `<div class="screen active">${statusbar('2:30')}${header()}<div class="scroll"><div class="body" style="padding-top:6px"><button class="backbtn" style="background:var(--pl);color:var(--navy)" onclick="back()">‹ ${lang==='hi'?'वापस':'Back'}</button>${kw(t.auditKw,'--navy')}<div style="background:var(--al);border-left:6px solid var(--amber);border-radius:12px;padding:13px;margin:6px 0 14px"><div style="font-size:12px;font-weight:700;color:var(--amber)">${t.auditYes}</div><div style="font-size:9.5px;color:var(--amber);margin-top:4px">${t.auditYesD}</div></div><div class="sectionlabel">${t.auditWhat}</div>${items}<div style="background:var(--gl);border-radius:10px;padding:11px;margin-top:4px;font-size:9.5px;color:var(--green);line-height:1.5">${t.auditSafe}</div><button class="btn primary" style="margin-top:14px" onclick="alert('${lang==='hi'?'सब सेव हो गया ✓':'All saved ✓'}');jump('shell')">${t.auditApprove}</button></div></div>${nav('home')}</div>`;}
+};
+
+function go(id){stack.push(id);render();}
+function jump(id){stack=[id];render();}
+function back(){if(stack.length>1){stack.pop();render();}}
+function selectWorker(i){document.querySelectorAll('.prow').forEach(p=>p.classList.remove('on'));document.getElementById('pw'+i).classList.add('on');}
+function openMic(){const t=T[lang];document.getElementById('micl').textContent=t.micL;document.getElementById('mics').textContent=t.micS;document.getElementById('micc').textContent=t.micC;document.getElementById('micmodal').classList.add('show');}
+function closeMic(){document.getElementById('micmodal').classList.remove('show');go('voice');}
+
+function setLang(l){lang=l;document.getElementById('lang-hi').classList.toggle('on',l==='hi');document.getElementById('lang-en').classList.toggle('on',l==='en');render();}
+function render(){const id=stack[stack.length-1];document.getElementById('app').innerHTML=(screens[id]||screens.shell)();
+  const hints={hi:"यह क्लिक करने लायक प्रोटोटाइप है। बटन दबाएँ और घूमें। ऊपर से भाषा बदलें। क्रम: शुरू करें, नाम चुनें, घर, हाज़िरी, जाँच, दिन की जाँच।",en:"Clickable prototype. Tap to navigate. Switch language above. Flow: Get started, select name, home, attendance, review, day review."};
+  document.getElementById('hint').textContent=hints[lang];
+  document.querySelector('.phone').className='phone '+(lang==='hi'?'hindi':'');}
+render();
+</script>
+</body>
+</html>
