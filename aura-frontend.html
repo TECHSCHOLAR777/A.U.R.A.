@@ -249,6 +249,8 @@ const T={
   pTtl:"अपना नाम चुनें",pTtls:"जारी रखने के लिए अपनी आँगनवाड़ी और नाम पर टैप करें।",
   workers:[["मीरा देवी","आँगनवाड़ी केंद्र 04, ब्लॉक रामपुर","MD"],["सुनीता बाला","आँगनवाड़ी केंद्र 04, ब्लॉक रामपुर","SB"],["कविता देवी","आँगनवाड़ी केंद्र 11, ब्लॉक रामपुर","KD"]],
   pContinue:"दिन शुरू करें",
+  authSub:"आँगनवाड़ी कार्यकर्ता के लिए सरल साथी।",authName:"आपका नाम (वैकल्पिक)",authWorkerId:"वर्कर आईडी (वैकल्पिक)",
+  authLogin:"लॉग इन करें",authSignup:"साइन अप करें",authOffline:"ऑफ़लाइन लॉगिन — डेटा इसी फ़ोन में सुरक्षित रहता है। असली अकाउंट बैकएंड जुड़ने पर।",
   greet:"सुप्रभात, मीरा।",date:"सोमवार, 15 जून।",
   nowClock:"अभी 8:04 बजे",nowLabel:"अभी का काम",nowTask:"सुबह की हाज़िरी",nowSub:"और नाश्ता देना",start:"हाज़िरी शुरू करें",
   alert:"3 बच्चे ज़रूरी: तुरंत देखें",day:"दिन का नक्शा",nowtag:"अभी",doneShort:"हो गया",pendShort:"बाकी",
@@ -283,7 +285,45 @@ const T={
   auditItems:[["हाज़िरी: 40 उपस्थित, 2 अनुपस्थित",1],["गरम खाना: 40 बच्चों को मिला",1],["सेहत जाँच: 3 बच्चे रेफर हुए",1],["खेल और जाँच: 1 बच्चे की DSS बाकी",0]],
   auditSafe:"सारा डेटा इसी फ़ोन में सुरक्षित है। इंटरनेट आने पर अपने आप भेजा जाएगा।",auditApprove:"पक्का करें और दिन बंद करें",
   micL:"सुन रहे हैं...",micS:"साफ़ बोलें। नाम, गिनती या सामान बोल सकते हैं।",micC:"बंद करें",
-  notif:"सूचनाएँ"
+  notif:"सूचनाएँ",
+  countMicL:"गिनती सुन रहे हैं...",countMicS:"सिर्फ़ संख्या बोलें। बच्चों के नाम न बोलें।",
+  speechOff:"इस फ़ोन में आवाज़ पहचान उपलब्ध नहीं है। हाथ से दर्ज करें।",
+  backendTag:"बैकएंड ज़रूरी",modelTag:"मॉडल ज़रूरी",
+  rosTtl:"बच्चों की सूची बनाएँ",rosSub:"केंद्र के बच्चों को जोड़ें। सूची इसी फ़ोन में सुरक्षित रहेगी और बैकएंड जुड़ने पर भेजी जाएगी।",
+  rosName:"बच्चे का नाम",rosId:"स्थानीय आईडी",rosAge:"उम्र वर्ग",rosRoom:"कमरा/समूह",
+  rosFlagInc:"समावेशन सहायता",rosFlagMed:"स्वास्थ्य/एलर्जी",ageBands:["0-1 साल","1-3 साल","3-6 साल"],
+  rosAdd:"बच्चा जोड़ें",rosEmpty:"अभी कोई बच्चा नहीं जोड़ा गया।",rosSave:"सूची सहेजें",rosRemove:"हटाएँ",
+  rosCount:(n)=>`${n} बच्चे जोड़े गए`,rosNeedName:"बच्चे का नाम लिखें।",
+  rosSavedLocal:"सूची इस फ़ोन में सहेजी गई। बैकएंड जुड़ने पर अपने आप भेजी जाएगी।",rosSkip:"अभी छोड़ें",
+  attAllPresent:(n)=>`सभी ${n} बच्चे उपस्थित`,attPresentN:(p,n)=>`${n} में से ${p} उपस्थित`,
+  attRecordedAt:(tm)=>`${tm} दर्ज`,attNoRoster:"पहले बच्चों की सूची बनाएँ, फिर हाज़िरी लें।",attGoRoster:"सूची बनाएँ",
+  markAbsent:"अनुपस्थित करें",markPresent:"उपस्थित करें",attTapHint:"बच्चे पर टैप करके अनुपस्थित/उपस्थित करें",
+  attMore:"और विकल्प",attMoreAllPresent:"सभी उपस्थित करें",attMoreRoster:"सूची देखें/बदलें",attMorePhoto:"फ़ोटो से गिनती मिलाएँ",
+  attReview:"जाँचें और पुष्टि करें",attReviewNote:"भेजा नहीं गया। दिन की जाँच में पुष्टि के बाद, इंटरनेट आने पर सिंक होगा।",
+  mealEmpty:"आज के खाने का रिकॉर्ड अभी नहीं है।",mealStartBtn:"आज का खाना दर्ज करें",
+  mealServedN:(s,p)=>`${p} उपस्थित में से ${s} को मिला`,mealRationUsed:"इस्तेमाल राशन",mealRationLeft:"बचा राशन",
+  mealAddOne:"+1 परोसा",mealVoiceHint:"सिर्फ़ संख्या बोलें। नाम न बोलें।",mealKg:"किग्रा",
+  eceAdapt:"कमरे के लिए गतिविधि ढालें",eceAdapting:"कमरे के अनुसार ढाल रहे हैं...",
+  eceAdapted:"कमरे के अनुसार ढाली गई गतिविधि",eceNeedsInput:"पहले आज की हाज़िरी भरें ताकि कमरे की जानकारी मिल सके।",
+  eceCtx:(age,present,mat)=>`उम्र मिश्रण: ${age} · उपस्थित: ${present} · सामान: ${mat}`,
+  eceMaterials:"नरम गेंद, कपड़े के टुकड़े",
+  eceGuardSafety:"सुरक्षा नियम",eceGuardInclusion:"समावेशन नियम",eceRulesFired:"लागू नियम",activeTag:"सक्रिय",
+  eceGuardSafetyV:"छोटी गेंद 1 साल से कम बच्चों की पहुँच से दूर रखें (दम घुटने का ख़तरा)।",
+  eceGuardInclusionV:"बोलने में कमज़ोर बच्चों से इशारों में जवाब स्वीकार करें।",
+  eceRules:["उम्र-मिश्रित समूह → सरल चरण","कम सामान → साझा गतिविधि","समावेशन फ़्लैग → इशारा-स्वीकृत"],
+  dssTtl:"विकास जाँच (DSS)",dssSub:"नवचेतना के अनुसार सरल जाँच। बच्चे को देखकर हाँ/नहीं चुनें।",
+  dssPickChild:"बच्चा चुनें",dssYes:"हाँ",dssNo:"नहीं",dssSave:"जाँच सहेजें",dssDone:"जाँच इस फ़ोन में सहेजी गई।",
+  dssNote:"अंतिम स्कोरिंग और रेफरल सुझाव बैकएंड मॉडल से आएँगे।",
+  dssQ:["क्या बच्चा बुलाने पर देखता/मुड़ता है?","क्या बच्चा दो शब्द मिलाकर बोलता है?","क्या बच्चा बिना सहारे चलता है?","क्या बच्चा सरल इशारे समझता है?"],
+  mastTtl:"बच्चों की प्रगति",mastSub:"हर बच्चे की स्थिति। लाल = ध्यान दें।",
+  mastMastered:"सीख लिया",mastAttention:"ध्यान दें",mastEmpty:"अभी कोई बच्चा नहीं। पहले सूची बनाएँ।",
+  mastNote:"प्रगति के अंक DSS और गतिविधि के नतीजों से आते हैं (बैकएंड)।",
+  moreTtl:"और सुविधाएँ",moreMastery:"बच्चों की प्रगति",moreDss:"विकास जाँच (DSS)",
+  moreReport:"रिपोर्ट बनाएँ (PDF)",morePhoto:"फ़ोटो से गिनती",moreAudit:"दिन की जाँच",moreRoster:"बच्चों की सूची",
+  pdfTtl:"रिपोर्ट (PDF)",pdfSub:"दिन की रिपोर्ट PDF में बनाएँ और साझा करें।",pdfBtn:"PDF बनाएँ",
+  pdfLoading:"रिपोर्ट तैयार हो रही है...",pdfPending:"एक्सपोर्ट तैयार – बैकएंड/एक्सपोर्ट सेवा ज़रूरी",
+  yoloTtl:"फ़ोटो से गिनती",yoloSub:"कैमरे से बच्चों की गिनती (YOLO मॉडल)।",yoloBtn:"कैमरा खोलें",
+  yoloLoading:"छवि जाँची जा रही है...",yoloManual:(n)=>`हाथ से गिनती: ${n} उपस्थित`,yoloPending:"मॉडल इंटीग्रेशन ज़रूरी"
  },
  en:{
   govA:"Government of India",govB:"Ministry of Women and Child Development",govC:"Integrated Child Development Services (ICDS)",
@@ -293,6 +333,8 @@ const T={
   pTtl:"Select your name",pTtls:"Tap your Anganwadi centre and name to continue.",
   workers:[["Meera Devi","Anganwadi Centre 04, Block Rampur","MD"],["Sunita Bala","Anganwadi Centre 04, Block Rampur","SB"],["Kavita Devi","Anganwadi Centre 11, Block Rampur","KD"]],
   pContinue:"Start the day",
+  authSub:"A simple companion for Anganwadi workers.",authName:"Your name (optional)",authWorkerId:"Worker ID (optional)",
+  authLogin:"Log in",authSignup:"Sign up",authOffline:"Offline login — data stays on this phone. Real accounts arrive when the backend is connected.",
   greet:"Good morning, Meera.",date:"Monday, 15 June.",
   nowClock:"Now, 8:04 AM",nowLabel:"Right now",nowTask:"Morning attendance",nowSub:"and serving breakfast",start:"Start attendance",
   alert:"3 children need attention now",day:"Today's plan",nowtag:"now",doneShort:"done",pendShort:"left",
@@ -327,17 +369,117 @@ const T={
   auditItems:[["Attendance: 40 present, 2 absent",1],["Hot meal: served to 40 children",1],["Health check: 3 children referred",1],["Play and screening: 1 child's DSS pending",0]],
   auditSafe:"All data is safe on this phone. It will send on its own when internet returns.",auditApprove:"Confirm and close the day",
   micL:"Listening...",micS:"Speak clearly. You can say a name, a count or a material.",micC:"Close",
-  notif:"Notifications"
+  notif:"Notifications",
+  countMicL:"Listening for a count...",countMicS:"Say a number only. Do not say children's names.",
+  speechOff:"Voice recognition is not available on this phone. Enter by hand.",
+  backendTag:"Backend required",modelTag:"Model required",
+  rosTtl:"Build the children list",rosSub:"Add the centre's children. The list stays safe on this phone and syncs when a backend is connected.",
+  rosName:"Child's name",rosId:"Local ID",rosAge:"Age band",rosRoom:"Room / group",
+  rosFlagInc:"Inclusion support",rosFlagMed:"Health / allergy",ageBands:["0-1 yr","1-3 yr","3-6 yr"],
+  rosAdd:"Add child",rosEmpty:"No children added yet.",rosSave:"Save list",rosRemove:"Remove",
+  rosCount:(n)=>`${n} children added`,rosNeedName:"Enter the child's name.",
+  rosSavedLocal:"List saved on this phone. It will sync on its own when a backend is connected.",rosSkip:"Skip for now",
+  attAllPresent:(n)=>`All ${n} children present`,attPresentN:(p,n)=>`${p} of ${n} present`,
+  attRecordedAt:(tm)=>`Recorded at ${tm}`,attNoRoster:"Build the children list first, then take attendance.",attGoRoster:"Build list",
+  markAbsent:"Mark absent",markPresent:"Mark present",attTapHint:"Tap a child to mark absent / present",
+  attMore:"More options",attMoreAllPresent:"Mark all present",attMoreRoster:"View / edit list",attMorePhoto:"Match count with photo",
+  attReview:"Check and confirm",attReviewNote:"Not sent. After you confirm in Day review, it syncs when internet returns.",
+  mealEmpty:"No meal record for today yet.",mealStartBtn:"Record today's meal",
+  mealServedN:(s,p)=>`${s} of ${p} present served`,mealRationUsed:"Ration used",mealRationLeft:"Ration left",
+  mealAddOne:"+1 served",mealVoiceHint:"Say a number only. No names.",mealKg:"kg",
+  eceAdapt:"Adapt activity for room",eceAdapting:"Adapting to the room...",
+  eceAdapted:"Activity adapted for this room",eceNeedsInput:"Fill today's attendance first so the room context is known.",
+  eceCtx:(age,present,mat)=>`Age mix: ${age} · Present: ${present} · Materials: ${mat}`,
+  eceMaterials:"soft ball, cloth pieces",
+  eceGuardSafety:"Safety guardrails",eceGuardInclusion:"Inclusion guardrails",eceRulesFired:"Rules fired",activeTag:"active",
+  eceGuardSafetyV:"Keep the small ball out of reach of under-1s (choking risk).",
+  eceGuardInclusionV:"Accept gesture replies from children who speak little.",
+  eceRules:["mixed-age group → simpler steps","low materials → shared activity","inclusion flag → gesture-accepted"],
+  dssTtl:"Development screening (DSS)",dssSub:"A simple Navchetana check. Watch the child and choose yes / no.",
+  dssPickChild:"Select a child",dssYes:"Yes",dssNo:"No",dssSave:"Save screening",dssDone:"Screening saved on this phone.",
+  dssNote:"Final scoring and referral suggestions come from the backend model.",
+  dssQ:["Does the child look / turn when called?","Does the child join two words together?","Does the child walk without support?","Does the child understand simple gestures?"],
+  mastTtl:"Children's progress",mastSub:"Each child's status. Red = needs attention.",
+  mastMastered:"Mastered",mastAttention:"Needs Attention",mastEmpty:"No children yet. Build the list first.",
+  mastNote:"Progress scores come from DSS and activity results (backend).",
+  moreTtl:"More features",moreMastery:"Children's progress",moreDss:"Development screening (DSS)",
+  moreReport:"Generate report (PDF)",morePhoto:"Photo count",moreAudit:"Day review",moreRoster:"Children list",
+  pdfTtl:"Report (PDF)",pdfSub:"Generate and share today's report as a PDF.",pdfBtn:"Generate PDF",
+  pdfLoading:"Preparing report...",pdfPending:"Export ready – backend/export service required",
+  yoloTtl:"Photo count",yoloSub:"Count children from a camera photo (YOLO model).",yoloBtn:"Open camera",
+  yoloLoading:"Checking the image...",yoloManual:(n)=>`Manual count: ${n} present`,yoloPending:"Model integration required"
  }
 };
 
 let lang='hi';
 let stack=['splash'];
 
-function statusbar(time){return `<div class="govbar"><span class="tri" aria-hidden="true"><i style="background:#FF9933"></i><i style="background:#fff"></i><i style="background:#138808"></i></span><span>${T[lang].govC}</span></div><div class="statusbar"><span>${time}</span><span class="r">${SVG.globe} ${lang==='hi'?'ऑफ़लाइन':'Offline'}</span></div>`;}
-function header(){const t=T[lang];return `<div class="header"><div class="avatar">M</div><div class="brand">A.U.R.A.<small>${t.govC}</small></div><div class="right"><button class="pill-lang" onclick="setLang('${lang==='hi'?'en':'hi'}')">${t.pill}</button><button class="bellbtn" aria-label="${t.notif}" onclick="alert('${t.notif}')">${SVG.bell}<span class="dotn"></span></button></div></div>`;}
+/* ---------------------------------------------------------------------------
+   STATE + LOCAL PERSISTENCE
+   localStorage is used intentionally as temporary on-device persistence
+   (offline-first). It is NOT a substitute for the real database. Anything
+   that needs the server is routed through the backend* placeholders below.
+--------------------------------------------------------------------------- */
+const STORE_KEY='aura.state.v1';
+const uid=()=>'c'+Math.random().toString(36).slice(2,8);
+// Sample roster: real, editable on-device entries (not a fake "42" count).
+// Seeded only on first run so the prototype has content to demonstrate.
+function sampleRoster(){return [
+  {id:uid(),name:'Rahul Murmu',localId:'R-01',ageBand:1,room:'A',inclusion:false,medical:false,present:true,mastery:'attention'},
+  {id:uid(),name:'Anita Kumari',localId:'R-02',ageBand:2,room:'A',inclusion:true,medical:false,present:true,mastery:'attention'},
+  {id:uid(),name:'Suresh Yadav',localId:'R-03',ageBand:2,room:'A',inclusion:false,medical:true,present:true,mastery:'mastered'},
+  {id:uid(),name:'Meera Sharma',localId:'R-04',ageBand:2,room:'B',inclusion:false,medical:false,present:true,mastery:'mastered'}
+];}
+const STATE={
+  auth:null,            // {name,workerId,loggedIn} — offline placeholder identity only
+  roster:[],
+  attendance:{recordedAt:null},
+  meal:null,            // null = no record yet (empty state). Shape set in startMeal().
+  dss:{childId:null,answers:{}},
+  synced:false          // true only after a real backend sync (never faked here)
+};
+function loadState(){try{const s=JSON.parse(localStorage.getItem(STORE_KEY));if(s&&s.roster){Object.assign(STATE,s);}else{STATE.roster=sampleRoster();}}catch(e){STATE.roster=sampleRoster();}}
+function saveState(){try{localStorage.setItem(STORE_KEY,JSON.stringify(STATE));}catch(e){}}
+loadState();
+
+/* Backend-ready placeholders. These are intentionally NOT implemented on the
+   client. Wire them to Supabase/Postgres/IndexedDB sync + model services. */
+async function backendSaveRoster(roster){throw new Error('BACKEND_REQUIRED');}
+async function backendSyncDay(payload){throw new Error('BACKEND_REQUIRED');}
+async function backendGeneratePDF(payload){throw new Error('BACKEND_REQUIRED');}
+async function backendYoloCount(image){throw new Error('BACKEND_REQUIRED');}      // YOLO model service
+async function backendAdaptActivity(ctx){throw new Error('BACKEND_REQUIRED');}    // server-side adaptation
+
+/* Derived helpers over roster */
+function presentCount(){return STATE.roster.filter(c=>c.present).length;}
+function absentList(){return STATE.roster.filter(c=>!c.present);}
+
+/* Live device time (no hardcoded clock) */
+function nowTime(){const d=new Date();let h=d.getHours();const m=String(d.getMinutes()).padStart(2,'0');const ap=h<12?'AM':'PM';let h12=h%12||12;return `${h12}:${m} ${ap}`;}
+function nowTime24(){const d=new Date();return `${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;}
+
+/* Web Speech — allowed ONLY for non-PII numeric counts (never names/health). */
+let micTarget='voice';
+function speechSupported(){return !!(window.SpeechRecognition||window.webkitSpeechRecognition);}
+function openCountMic(onNumber){
+  const t=T[lang];
+  if(!speechSupported()){alert(t.speechOff);return;}
+  micTarget='count';
+  document.getElementById('micl').textContent=t.countMicL;
+  document.getElementById('mics').textContent=t.countMicS;
+  document.getElementById('micc').textContent=t.micC;
+  document.getElementById('micmodal').classList.add('show');
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  const r=new SR();r.lang=lang==='hi'?'hi-IN':'en-IN';r.interimResults=false;r.maxAlternatives=1;
+  r.onresult=(e)=>{const txt=e.results[0][0].transcript||'';const m=txt.match(/\d+/);closeMic();if(m)onNumber(parseInt(m[0],10));};
+  r.onerror=()=>{closeMic();};
+  try{r.start();}catch(e){closeMic();}
+}
+
+function statusbar(time){return `<div class="statusbar"><span>${time}</span><span class="r">${SVG.globe} ${lang==='hi'?'ऑफ़लाइन':'Offline'}</span></div>`;}
+function header(){const t=T[lang];return `<div class="header"><div class="avatar">M</div><div class="brand">A.U.R.A.</div><div class="right"><button class="pill-lang" onclick="setLang('${lang==='hi'?'en':'hi'}')">${t.pill}</button><button class="bellbtn" aria-label="${t.notif}" onclick="alert('${t.notif}')">${SVG.bell}<span class="dotn"></span></button></div></div>`;}
 function kw(arr,color){return `<div class="kw">${arr[0]}<span class="hl" style="background:var(${color})">${arr[1]}</span></div>`;}
-function nav(active){const t=T[lang];const tabs=[['home','home',()=>jump('shell')],['health','heart',()=>jump('health')],['__fab','voice',()=>openMic()],['ece','book',()=>jump('ece')],['more','grid',()=>alert(lang==='hi'?'और सुविधाएँ':'More features')]];
+function nav(active){const t=T[lang];const tabs=[['home','home',()=>jump('shell')],['health','heart',()=>jump('health')],['__fab','voice',()=>openMic()],['ece','book',()=>jump('ece')],['more','grid',()=>jump('more')]];
   let html='<div class="nav" role="navigation">';
   const labels=[t.nav[0],t.nav[1],'',t.nav[2],t.nav[3]];
   tabs.forEach((tb,i)=>{
@@ -345,12 +487,15 @@ function nav(active){const t=T[lang];const tabs=[['home','home',()=>jump('shell'
     else{const on=tb[0]===active?'on':'';html+=`<div class="tab ${on}" role="button" onclick="navTap('${tb[0]}')"><span>${SVG[tb[1]]}</span><span class="lab">${labels[i]}</span></div>`;}
   });
   return html+'</div>';}
-function navTap(id){if(id==='home')jump('shell');else if(id==='health')jump('health');else if(id==='ece')jump('ece');else alert(lang==='hi'?'और सुविधाएँ जल्द':'More features soon');}
+function navTap(id){if(id==='home')jump('shell');else if(id==='health')jump('health');else if(id==='ece')jump('ece');else jump('more');}
 
 const screens={
- splash(){const t=T[lang];return `<div class="screen dark active"><div class="logo">${SVG.book}</div><h1>A.U.R.A.</h1><div class="fullform">Anganwadi Unified<br>Resource Assistant</div><div class="rule"></div><div class="chip"><span class="pulse"></span>${t.splashChip}</div><div class="tag">${t.splashTag}</div><button class="startbtn" onclick="jump('profile')">${t.splashStart} ${SVG.refer}</button><div class="fine">${t.splashFine}</div><div class="govstrip">${t.govA} · ${t.govB}</div></div>`;},
- profile(){const t=T[lang];const rows=t.workers.map((w,i)=>`<div class="prow ${i===0?'on':''}" onclick="selectWorker(${i})" id="pw${i}"><div class="pa">${w[2]}</div><div class="pinf"><div class="pn">${w[0]}</div><div class="pc">${w[1]}</div></div><div class="pck">${SVG.check}</div></div>`).join('');
-   return `<div class="screen active" style="background:#fff"><div class="govbar"><span class="tri" aria-hidden="true"><i style="background:#FF9933"></i><i style="background:#fff"></i><i style="background:#138808"></i></span><span>${t.govC}</span></div><div class="scroll"><div class="pselect"><div class="globewrap" style="margin-bottom:16px">${SVG.home}</div><div class="ttl">${t.pTtl}</div><div class="ttls">${t.pTtls}</div>${rows}<button class="btn green" style="margin-top:18px" onclick="jump('shell')">${t.pContinue} ${SVG.refer}</button></div></div></div>`;},
+ splash(){const t=T[lang];return `<div class="screen dark active"><div class="logo">${SVG.book}</div><h1>A.U.R.A.</h1><div class="fullform">Anganwadi Unified<br>Resource Assistant</div><div class="rule"></div><div class="chip"><span class="pulse"></span>${t.splashChip}</div><div class="tag">${t.splashTag}</div><button class="startbtn" onclick="jump('auth')">${t.splashStart} ${SVG.refer}</button><div class="fine">${t.splashFine}</div></div>`;},
+ auth(){const t=T[lang];const inp='border:1px solid var(--line);border-radius:11px;padding:13px;font-size:14px;background:#fff;color:var(--ink);width:100%;margin-top:10px';
+   return `<div class="screen active" style="background:#fff"><div class="scroll"><div class="pselect" style="padding-top:54px"><div class="globewrap" style="margin-bottom:18px">${SVG.book}</div><div class="ttl" style="text-align:center;letter-spacing:2px">AURA</div><div class="ttls" style="text-align:center">${t.authSub}</div><input id="auth-name" placeholder="${t.authName}" style="${inp}"><input id="auth-id" placeholder="${t.authWorkerId}" style="${inp}"><button class="btn green" style="margin-top:18px" onclick="doSignup()">${t.authSignup} ${SVG.refer}</button><button class="btn ghost" style="margin-top:10px" onclick="doLogin()">${t.authLogin}</button><div style="font-size:10px;color:var(--muted);text-align:center;margin-top:16px;line-height:1.5">${t.authOffline}</div></div></div></div>`;},
+ roster(){const t=T[lang];const inp='border:1px solid var(--line);border-radius:8px;padding:9px;font-size:12px;background:#fff;color:var(--ink);width:100%';
+   const rows=STATE.roster.length?STATE.roster.map(c=>`<div class="vcard" style="border-left-color:var(--green)"><div style="display:flex;gap:8px;align-items:center"><input value="${c.name}" placeholder="${t.rosName}" onchange="updRoster('${c.id}','name',this.value)" style="${inp};flex:1;font-size:13px;font-weight:700"><button class="backbtn" style="background:var(--rl);color:var(--red);margin:0" onclick="rmRoster('${c.id}')">${t.rosRemove}</button></div><div class="grid2" style="margin-top:8px"><input value="${c.localId}" placeholder="${t.rosId}" onchange="updRoster('${c.id}','localId',this.value)" style="${inp}"><select onchange="updRoster('${c.id}','ageBand',+this.value)" style="${inp}">${t.ageBands.map((a,i)=>`<option value="${i}" ${c.ageBand===i?'selected':''}>${a}</option>`).join('')}</select></div><input value="${c.room}" placeholder="${t.rosRoom}" onchange="updRoster('${c.id}','room',this.value)" style="${inp};margin-top:8px"><div style="display:flex;gap:16px;margin-top:9px;font-size:11px;color:var(--ink)"><label style="display:flex;gap:6px;align-items:center;cursor:pointer"><input type="checkbox" ${c.inclusion?'checked':''} onchange="updRoster('${c.id}','inclusion',this.checked)">${t.rosFlagInc}</label><label style="display:flex;gap:6px;align-items:center;cursor:pointer"><input type="checkbox" ${c.medical?'checked':''} onchange="updRoster('${c.id}','medical',this.checked)">${t.rosFlagMed}</label></div></div>`).join(''):`<div class="vcard" style="border-left-color:var(--amber)"><div style="font-size:12px;color:var(--muted)">${t.rosEmpty}</div></div>`;
+   return `<div class="screen active">${statusbar(nowTime24())}${header()}<div class="scroll"><div class="body" style="padding-top:6px"><button class="backbtn" style="background:var(--gl);color:var(--green)" onclick="back()">‹ ${lang==='hi'?'वापस':'Back'}</button><div class="kw">${t.rosTtl}</div><div class="sub">${t.rosSub}</div><div style="background:var(--al);border-left:4px solid var(--amber);border-radius:11px;padding:11px;margin-bottom:6px;display:flex;gap:8px;align-items:center"><span style="color:var(--amber);width:18px;height:18px;flex-shrink:0">${SVG.warn}</span><div style="font-size:10px;color:var(--amber);line-height:1.45">${t.backendTag} · ${t.rosSavedLocal}</div></div><div class="sectionlabel">${t.rosCount(STATE.roster.length)}</div>${rows}<button class="btn ghost" style="margin-top:8px" onclick="addRoster()">+ ${t.rosAdd}</button><button class="btn green" style="margin-top:10px" onclick="saveRoster()">${t.rosSave}</button><button class="btn outline" style="margin-top:8px" onclick="jump('shell')">${t.rosSkip}</button></div></div>${nav('home')}</div>`;},
  shell(){const t=T[lang];const slots=t.slots.map(s=>`<div class="slot ${s[3]?'now':''}" onclick="go('${s[2]}')"><div class="dot">${SVG[navic[s[2]]]}</div><div class="meta"><div class="a">${s[0]}</div><div class="b">${s[1]}</div></div>${s[3]?`<span class="nowtag">${t.nowtag}</span>`:`<span class="stt">${s[4]?t.doneShort:t.pendShort}</span>`}</div>`).join('');
    return `<div class="screen active">${statusbar('8:04')}${header()}<div class="scroll"><div class="body"><div class="greet">${t.greet}<small>${t.date}</small></div><div class="nowcard"><div class="nclock">${SVG.clock} ${t.nowClock}</div><div class="nlabel">${t.nowLabel}</div><h2>${t.nowTask}</h2><div class="ntask">${t.nowSub}</div><button class="nowbtn" onclick="go('att')">${t.start}<span class="arrow">→</span></button></div><div class="alert" onclick="go('triage')"><span class="ai">${SVG.warn}</span><span class="t">${t.alert}</span><span class="chev">›</span></div><div class="sectionlabel">${t.day}</div>${slots}</div></div>${nav('home')}</div>`;},
  triage(){const t=T[lang];const blocks=t.blocks.map(b=>`<div class="blockh" style="border-color:var(${b.c});background:var(${b.bg})"><span class="num" style="color:var(${b.c})">${b.n}</span><span class="ti" style="color:var(${b.c})">${b.t}</span><span class="su" style="color:var(${b.c})">${b.s}</span></div>${b.kids.map(k=>`<div class="crow" style="border-left-color:var(${b.c})" onclick="go('health')"><div class="ic" style="background:var(${b.bg});color:var(${b.c})">!</div><div class="info"><div class="nm">${k.nm}</div><div class="ag">${k.ag}</div><div class="ds" style="color:var(${b.c})">${k.ds}</div></div>${k.tag?`<span class="tag" style="background:var(${b.bg});color:var(${b.c})">${k.tag}</span>`:''}</div>`).join('')}`).join('');
@@ -358,23 +503,111 @@ const screens={
  voice(){const t=T[lang];const regs=t.regs.map(r=>{const c=r[2]?'--green':'--amber',bg=r[2]?'--gl':'--al';return `<div class="reg" style="background:var(${bg});border-left-color:var(${c})"><div><div class="l" style="color:var(${c})">${r[0]}</div><div class="v">${r[1]}</div></div><span class="st" style="background:var(${c})">${r[2]?t.doneShort:t.pendShort}</span></div>`;}).join('');
    const tiers=t.tiers.map(ti=>{const lt=ti[2]==='--green'?'--gl':ti[2]==='--amber'?'--al':'--rl';return `<div class="tier ${ti[3]?'on':''}" style="${ti[3]?`background:var(${lt});border-color:var(${ti[2]})`:''};border-left-color:var(${ti[3]?ti[2]:'--line'})"><div><div class="tl" style="${ti[3]?`color:var(${ti[2]})`:'color:var(--muted)'}">${ti[0]}</div><div class="td">${ti[1]}</div></div>${ti[3]?`<span class="ck" style="background:var(${ti[2]})">${SVG.check}</span>`:''}</div>`;}).join('');
    return `<div class="screen active">${statusbar('8:10')}${header()}<div class="scroll"><div class="body" style="padding-top:6px"><button class="backbtn" style="background:var(--gl);color:var(--green)" onclick="back()">‹ ${lang==='hi'?'वापस':'Back'}</button>${kw(t.voiceKw,'--green')}<div class="sub">${t.voiceSub}</div><div class="transcript"><div class="q">${t.voiceQ}</div><div class="h">${SVG.check} ${t.voiceH}</div><div class="bar"><i style="width:94%"></i></div></div><div class="sectionlabel">${t.filling}</div>${regs}<div class="sectionlabel">${t.sure}</div>${tiers}</div></div>${nav('home')}</div>`;},
- att(){const t=T[lang];const kids=t.attKids.map(k=>`<div class="crow" style="border-left-color:var(--red)"><div class="ic" style="background:var(--rl);color:var(--red)">✕</div><div class="info"><div class="nm">${k[0]}</div><div class="ag">${k[1]}${t.absTag}</div></div></div>`).join('');
-   return `<div class="screen active">${statusbar('8:04')}${header()}<div class="scroll"><div class="body" style="padding-top:6px"><button class="backbtn" style="background:var(--gl);color:var(--green)" onclick="back()">‹ ${lang==='hi'?'वापस':'Back'}</button>${kw(t.attKw,'--green')}<div class="hero" style="background:var(--green);margin-top:6px"><h2>${t.allHere}</h2><p>${t.allCount}</p><p style="font-size:10px;margin-top:6px;opacity:.85">${t.allTime}</p></div><div class="camline" onclick="openMic()"><span class="ci">${SVG.cam}</span><div><div style="color:#cdeede;font-size:11px;font-weight:600">${t.camLine}</div><div style="color:#7fae97;font-size:9px">${t.camMatch}</div></div></div><div class="sectionlabel">${t.absent}</div>${kids}<button class="btn ghost" onclick="openMic()">${SVG.voice} ${t.addVoice}</button><div class="hero" style="background:var(--forest);margin-top:16px"><p style="opacity:.85">${t.sumLine}</p><h2 style="font-size:20px">${t.pct}</h2><button class="btn green" style="margin-top:10px" onclick="go('audit')">${t.send}</button></div></div></div>${nav('home')}</div>`;},
- meal(){const t=T[lang];return `<div class="screen active">${statusbar('12:14')}${header()}<div class="scroll"><div class="body" style="padding-top:6px"><button class="backbtn" style="background:var(--al);color:var(--orange)" onclick="back()">‹ ${lang==='hi'?'वापस':'Back'}</button>${kw(t.mealKw,'--orange')}<div class="sub">${t.mealSub}</div><div class="vcard" style="border-left-color:var(--orange)"><div class="mh" style="color:var(--orange)">${SVG.meal}<span style="font-size:10px;font-weight:600">${t.mealToday}</span></div><div style="font-size:16px;font-weight:800">${t.mealFood}</div><div style="font-size:10px;color:var(--muted);margin-top:4px">${t.mealPer}</div></div><div style="background:var(--al);border-left:4px solid var(--orange);border-radius:12px;padding:14px;margin-bottom:10px"><div style="font-size:10px;color:var(--muted)">${t.mealFed}</div><div style="display:flex;align-items:baseline;gap:8px"><span style="font-size:40px;font-weight:800;color:var(--orange)">18</span><span style="font-size:12px;color:var(--muted)">${t.mealOf}</span></div><div class="bar" style="height:8px"><i style="width:45%;background:var(--orange)"></i></div></div><button class="btn ghost" onclick="openMic()">${SVG.voice} ${t.mealVoice}</button><div style="background:var(--al);border-left:4px solid var(--amber);border-radius:11px;padding:13px;margin-top:14px"><div style="font-size:12px;font-weight:700;color:var(--amber)">${t.mealStock}</div><div style="font-size:10px;color:var(--amber);margin-top:4px">${t.mealStockS}</div></div></div></div>${nav('home')}</div>`;},
+ att(){const t=T[lang];
+   if(!STATE.roster.length){return `<div class="screen active">${statusbar(nowTime24())}${header()}<div class="scroll"><div class="body" style="padding-top:6px"><button class="backbtn" style="background:var(--gl);color:var(--green)" onclick="back()">‹ ${lang==='hi'?'वापस':'Back'}</button>${kw(t.attKw,'--green')}<div class="vcard" style="border-left-color:var(--amber)"><div style="font-size:12px;color:var(--muted)">${t.attNoRoster}</div></div><button class="btn green" onclick="go('roster')">${t.attGoRoster}</button></div></div>${nav('home')}</div>`;}
+   const p=presentCount(),n=STATE.roster.length;
+   const rows=STATE.roster.map(c=>{const ab=!c.present;return `<div class="crow" style="border-left-color:var(${ab?'--red':'--green'})" onclick="toggleAbsent('${c.id}')"><div class="ic" style="background:var(${ab?'--rl':'--gl'});color:var(${ab?'--red':'--green'})">${ab?'✕':'✓'}</div><div class="info"><div class="nm">${c.name}</div><div class="ag">${t.ageBands[c.ageBand]} · ${ab?t.markPresent:t.markAbsent}</div></div></div>`;}).join('');
+   const menu=attMenuOpen?`<div class="vcard" style="border-left-color:var(--navy)"><div class="slot" style="margin-bottom:8px;background:#fff" onclick="allPresent()"><div class="meta"><div class="a" style="color:var(--ink)">${t.attMoreAllPresent}</div></div></div><div class="slot" style="margin-bottom:8px;background:#fff" onclick="go('roster')"><div class="meta"><div class="a" style="color:var(--ink)">${t.attMoreRoster}</div></div></div><div class="slot" style="background:#fff" onclick="openYolo()"><div class="meta"><div class="a" style="color:var(--ink)">${t.attMorePhoto}</div></div><span class="stt" style="color:var(--amber)">${t.modelTag}</span></div></div>`:'';
+   return `<div class="screen active">${statusbar(nowTime24())}${header()}<div class="scroll"><div class="body" style="padding-top:6px"><div style="display:flex;align-items:center;gap:8px"><button class="backbtn" style="background:var(--gl);color:var(--green)" onclick="back()">‹ ${lang==='hi'?'वापस':'Back'}</button><button class="backbtn" style="background:var(--pl);color:var(--navy);margin-left:auto" onclick="toggleAttMenu()">${t.attMore} ▾</button></div>${menu}${kw(t.attKw,'--green')}<div class="hero" style="background:var(--green);margin-top:6px"><h2>${p===n?t.attAllPresent(n):t.attPresentN(p,n)}</h2><p>${t.allCount}</p><p style="font-size:10px;margin-top:6px;opacity:.85">${t.attRecordedAt(nowTime())}</p></div><div class="camline" onclick="openYolo()"><span class="ci">${SVG.cam}</span><div><div style="color:#cdeede;font-size:11px;font-weight:600">${t.camLine}</div><div style="color:#7fae97;font-size:9px">${t.modelTag}</div></div></div><div class="sectionlabel">${t.absent}</div><div style="font-size:10px;color:var(--muted);margin:-4px 0 8px">${t.attTapHint}</div>${rows}<div class="hero" style="background:var(--forest);margin-top:16px"><p style="opacity:.85">${t.sumLine}</p><h2 style="font-size:20px">${t.attPresentN(p,n)}</h2><button class="btn green" style="margin-top:10px" onclick="recordAttendance()">${t.attReview}</button><p style="font-size:9px;margin-top:8px;opacity:.8">${t.attReviewNote}</p></div></div></div>${nav('home')}</div>`;},
+ meal(){const t=T[lang];
+   const card=`<div class="vcard" style="border-left-color:var(--orange)"><div class="mh" style="color:var(--orange)">${SVG.meal}<span style="font-size:10px;font-weight:600">${t.mealToday}</span></div><div style="font-size:16px;font-weight:800">${t.mealFood}</div><div style="font-size:10px;color:var(--muted);margin-top:4px">${t.mealPer}</div></div>`;
+   const stock=`<div style="background:var(--al);border-left:4px solid var(--amber);border-radius:11px;padding:13px;margin-top:14px"><div style="font-size:12px;font-weight:700;color:var(--amber)">${t.mealStock}</div><div style="font-size:10px;color:var(--amber);margin-top:4px">${t.mealStockS}</div></div>`;
+   if(!STATE.meal){return `<div class="screen active">${statusbar('12:14')}${header()}<div class="scroll"><div class="body" style="padding-top:6px"><button class="backbtn" style="background:var(--al);color:var(--orange)" onclick="back()">‹ ${lang==='hi'?'वापस':'Back'}</button>${kw(t.mealKw,'--orange')}<div class="sub">${t.mealSub}</div>${card}<div class="vcard" style="border-left-color:var(--amber)"><div style="font-size:12px;color:var(--muted)">${t.mealEmpty}</div></div><button class="btn green" onclick="startMeal()">${t.mealStartBtn}</button></div></div>${nav('home')}</div>`;}
+   const m=STATE.meal,present=presentCount()||m.childrenPresent,pctw=present?Math.min(100,Math.round(m.mealsServed/present*100)):0;
+   return `<div class="screen active">${statusbar('12:14')}${header()}<div class="scroll"><div class="body" style="padding-top:6px"><button class="backbtn" style="background:var(--al);color:var(--orange)" onclick="back()">‹ ${lang==='hi'?'वापस':'Back'}</button>${kw(t.mealKw,'--orange')}<div class="sub">${t.mealSub}</div>${card}<div style="background:var(--al);border-left:4px solid var(--orange);border-radius:12px;padding:14px;margin-bottom:10px"><div style="font-size:10px;color:var(--muted)">${t.mealFed}</div><div style="display:flex;align-items:baseline;gap:8px"><span style="font-size:40px;font-weight:800;color:var(--orange)">${m.mealsServed}</span><span style="font-size:12px;color:var(--muted)">${t.mealServedN(m.mealsServed,present)}</span></div><div class="bar" style="height:8px"><i style="width:${pctw}%;background:var(--orange)"></i></div><div style="display:flex;gap:8px;margin-top:12px"><button class="btn outline" style="flex:1" onclick="mealServe(-1)">−1</button><button class="btn green" style="flex:1" onclick="mealServe(1)">${t.mealAddOne}</button></div></div><button class="btn ghost" onclick="openCountMic(mealSetServed)">${SVG.voice} ${t.mealVoice}</button><div style="font-size:9px;color:var(--muted);margin-top:6px">${t.mealVoiceHint}</div><div class="grid2" style="margin-top:14px"><div class="vital"><div class="l">${t.mealRationUsed}</div><div class="v">${m.rationUsed}</div></div><div class="vital"><div class="l">${t.mealRationLeft}</div><div class="v">${m.rationRemaining==null?'—':m.rationRemaining}</div><div class="d" style="color:var(--amber)">${m.rationRemaining==null?t.backendTag:'&nbsp;'}</div></div></div>${stock}</div></div>${nav('home')}</div>`;},
  health(){const t=T[lang];const vit=t.hVitals.map(v=>`<div class="vital"><div class="l">${v[0]}</div><div class="v">${v[1]}</div><div class="d" style="color:var(${v[3]?'--red':'--green'})">${v[2]||'&nbsp;'}</div></div>`).join('');
    return `<div class="screen active">${statusbar('1:20')}<div class="scroll"><div class="hero" style="background:var(--red);border-radius:0;padding:14px 20px 18px"><button class="backbtn" onclick="back()">‹ ${lang==='hi'?'वापस':'Back'}</button><div style="display:flex;justify-content:space-between;align-items:flex-start"><div><h2>${t.hName}</h2><p>${t.hAge}</p></div><span style="background:#fff;color:var(--red);font-size:10px;font-weight:800;padding:5px 12px;border-radius:12px">${t.hDanger}</span></div></div><div class="body"><div style="background:var(--rl);border:1px solid var(--red);border-left:4px solid var(--red);border-radius:12px;padding:13px;display:flex;gap:10px;margin-top:14px"><span style="color:var(--red);width:20px;height:20px;flex-shrink:0">${SVG.warn}</span><div><div style="font-size:12px;font-weight:700;color:var(--red)">${t.hSignal}</div><div style="font-size:10px;color:var(--red);line-height:1.5;margin-top:4px">${t.hSignalD}</div></div></div><div class="grid2" style="margin-top:14px">${vit}</div><div class="vcard" style="border-left-color:var(--red);margin-top:14px"><div style="font-size:9px;color:var(--muted)">${t.hScore}</div><div style="font-size:18px;font-weight:800;color:var(--red);margin-top:2px">${t.hVeryWeak}</div></div><div class="grid2" style="margin-top:6px"><button class="btn red" onclick="alert('${lang==='hi'?'वज़न दर्ज करने की स्क्रीन':'Weight entry screen'}')">${t.hWeigh}</button><button class="btn primary" onclick="alert('${lang==='hi'?'अस्पताल रेफरल बन गया ✓':'Hospital referral created ✓'}')">${t.hRefer}</button></div></div></div>${nav('health')}</div>`;},
  ece(){const t=T[lang];const flags=t.eceFlags.map(f=>`<div class="vcard" style="background:var(${f[3]==='--green'?'--gl':'--al'});border-left-color:var(${f[3]})"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;font-weight:700">${f[0]}</span><span style="background:var(${f[3]});color:#fff;font-size:7.5px;font-weight:600;padding:3px 8px;border-radius:9px">${f[1]}</span></div><div style="font-size:10px;margin-top:6px;line-height:1.5">${f[2]}</div></div>`).join('');
-   return `<div class="screen active">${statusbar('9:30')}${header()}<div class="scroll"><div class="body">${kw(t.eceKw,'--purple')}<div class="sub">${t.eceSub}</div><div class="vcard" style="border-left-color:var(--purple)"><div style="font-size:16px;font-weight:800">${t.eceGame}</div><div style="font-size:9.5px;color:var(--muted);margin-top:4px">${t.eceAge}</div><div style="font-size:10.5px;line-height:1.55;margin-top:8px">${t.eceDesc}</div><div style="font-size:8px;color:var(--muted);margin-top:8px">${t.ecePick}</div></div><button class="btn ghost" style="border-color:var(--purple);color:var(--purple)" onclick="alert('${lang==='hi'?'नवचेतना विकास जाँच (DSS) खुलेगी':'Navchetana development check (DSS) opens'}')">${SVG.clip} ${t.eceScreen}</button><div class="sectionlabel">${t.eceFocus}</div>${flags}<div class="sectionlabel">${t.eceNote}</div><div class="vcard" style="border-left-color:var(--muted)"><div style="font-size:10px;color:var(--muted)">${t.eceNoteV}</div></div></div></div>${nav('ece')}</div>`;},
+   let adapt='';
+   if(adaptState==='needsinput'){adapt=`<div class="vcard" style="border-left-color:var(--amber);background:var(--al)"><div style="font-size:11px;color:var(--amber);line-height:1.45">${t.eceNeedsInput}</div></div>`;}
+   else if(adaptState==='adapting'){adapt=`<div class="vcard" style="border-left-color:var(--purple)"><div style="font-size:12px;color:var(--purple)">${t.eceAdapting}</div><div class="bar" style="margin-top:8px"><i style="width:60%;background:var(--purple)"></i></div></div>`;}
+   else if(adaptState==='adapted'){const bands=[...new Set(STATE.roster.map(c=>t.ageBands[c.ageBand]))].join(', ')||'—';const inc=STATE.roster.some(c=>c.inclusion);const rules=['SAFE_CHOKE_01'];if(inc)rules.push('INC_ATTUNE_01');if(new Set(STATE.roster.map(c=>c.ageBand)).size>1)rules.push('AGE_MIX_01');const chips=rules.map(r=>`<span class="tag" style="background:var(--pl);color:var(--purple);border:1px solid var(--purple);margin:0 5px 5px 0;display:inline-block;font-family:monospace;letter-spacing:.3px">${r}</span>`).join('');const guard=(color,label,val)=>`<div style="display:flex;align-items:center;gap:6px;margin-top:8px"><span class="tag" style="background:var(--green);color:#fff">${SVG.check} ${t.activeTag}</span><span style="font-size:11px;font-weight:700;color:var(${color})">${label}</span></div><div style="font-size:10px;color:var(--muted);margin-top:3px;line-height:1.45">${val}</div>`;adapt=`<div class="vcard" style="border-left-color:var(--purple);background:var(--pl)"><div style="font-size:13px;font-weight:800;color:var(--purple)">${t.eceAdapted}</div><div style="font-size:9.5px;color:var(--muted);margin-top:5px;line-height:1.5">${t.eceCtx(bands,presentCount(),t.eceMaterials)}</div><div style="font-size:10.5px;line-height:1.55;margin-top:8px">${t.eceDesc}</div><div style="font-size:8px;color:var(--muted);margin-top:8px">${t.ecePick}</div><div style="border-top:1px solid var(--line);margin-top:10px;padding-top:8px">${guard('--green',t.eceGuardSafety,t.eceGuardSafetyV)}${guard('--navy',t.eceGuardInclusion,t.eceGuardInclusionV)}<div style="font-size:9px;font-weight:700;color:var(--purple);margin:10px 0 6px">${t.eceRulesFired}</div>${chips}</div></div>`;}
+   const adaptBtn=`<button class="btn" style="background:var(--purple);color:#fff${adaptState==='adapting'?';opacity:.6':''}" onclick="adaptActivity()" ${adaptState==='adapting'?'disabled':''}>${SVG.refer} ${adaptState==='adapting'?t.eceAdapting:t.eceAdapt}</button>`;
+   return `<div class="screen active">${statusbar('9:30')}${header()}<div class="scroll"><div class="body">${kw(t.eceKw,'--purple')}<div class="sub">${t.eceSub}</div><div class="vcard" style="border-left-color:var(--purple)"><div style="font-size:16px;font-weight:800">${t.eceGame}</div><div style="font-size:9.5px;color:var(--muted);margin-top:4px">${t.eceAge}</div><div style="font-size:10.5px;line-height:1.55;margin-top:8px">${t.eceDesc}</div><div style="font-size:8px;color:var(--muted);margin-top:8px">${t.ecePick}</div></div>${adaptBtn}${adapt}<button class="btn ghost" style="border-color:var(--purple);color:var(--purple);margin-top:9px" onclick="go('dss')">${SVG.clip} ${t.eceScreen}</button><div class="sectionlabel">${t.eceFocus}</div>${flags}<div class="sectionlabel">${t.eceNote}</div><div class="vcard" style="border-left-color:var(--muted)"><div style="font-size:10px;color:var(--muted)">${t.eceNoteV}</div></div></div></div>${nav('ece')}</div>`;},
  audit(){const t=T[lang];const items=t.auditItems.map(i=>`<div class="item" style="border-left-color:var(${i[1]?'--green':'--red'})"><span class="b" style="background:var(${i[1]?'--green':'--red'})">${i[1]?'✓':'!'}</span><span class="x">${i[0]}</span></div>`).join('');
-   return `<div class="screen active">${statusbar('2:30')}${header()}<div class="scroll"><div class="body" style="padding-top:6px"><button class="backbtn" style="background:var(--pl);color:var(--navy)" onclick="back()">‹ ${lang==='hi'?'वापस':'Back'}</button>${kw(t.auditKw,'--navy')}<div style="background:var(--al);border-left:6px solid var(--amber);border-radius:12px;padding:13px;margin:6px 0 14px"><div style="font-size:12px;font-weight:700;color:var(--amber)">${t.auditYes}</div><div style="font-size:9.5px;color:var(--amber);margin-top:4px">${t.auditYesD}</div></div><div class="sectionlabel">${t.auditWhat}</div>${items}<div style="background:var(--gl);border-radius:10px;padding:11px;margin-top:4px;font-size:9.5px;color:var(--green);line-height:1.5">${t.auditSafe}</div><button class="btn primary" style="margin-top:14px" onclick="alert('${lang==='hi'?'सब सेव हो गया ✓':'All saved ✓'}');jump('shell')">${t.auditApprove}</button></div></div>${nav('home')}</div>`;}
+   return `<div class="screen active">${statusbar('2:30')}${header()}<div class="scroll"><div class="body" style="padding-top:6px"><button class="backbtn" style="background:var(--pl);color:var(--navy)" onclick="back()">‹ ${lang==='hi'?'वापस':'Back'}</button>${kw(t.auditKw,'--navy')}<div style="background:var(--al);border-left:6px solid var(--amber);border-radius:12px;padding:13px;margin:6px 0 14px"><div style="font-size:12px;font-weight:700;color:var(--amber)">${t.auditYes}</div><div style="font-size:9.5px;color:var(--amber);margin-top:4px">${t.auditYesD}</div></div><div class="sectionlabel">${t.auditWhat}</div>${items}<div style="background:var(--gl);border-radius:10px;padding:11px;margin-top:4px;font-size:9.5px;color:var(--green);line-height:1.5">${t.auditSafe}</div><button class="btn ghost" style="margin-top:14px;border-color:var(--navy);color:var(--navy)" onclick="openReport()">${SVG.clip} ${t.moreReport}</button><button class="btn primary" style="margin-top:8px" onclick="alert('${lang==='hi'?'सब सेव हो गया ✓':'All saved ✓'}');jump('shell')">${t.auditApprove}</button></div></div>${nav('home')}</div>`;},
+ report(){const t=T[lang];let body;
+   if(pdfState==='loading'){body=`<div class="vcard" style="border-left-color:var(--navy)"><div style="font-size:12px;color:var(--navy)">${t.pdfLoading}</div><div class="bar" style="margin-top:8px"><i style="width:55%;background:var(--navy)"></i></div></div>`;}
+   else if(pdfState==='backend'){body=`<div style="background:var(--al);border-left:4px solid var(--amber);border-radius:11px;padding:13px;display:flex;gap:8px;align-items:center"><span style="color:var(--amber);width:18px;height:18px;flex-shrink:0">${SVG.warn}</span><div style="font-size:11px;font-weight:700;color:var(--amber);line-height:1.45">${t.pdfPending}</div></div>`;}
+   else{body=`<div class="vcard" style="border-left-color:var(--navy)"><div style="font-size:11px;color:var(--muted);line-height:1.5">${t.pdfSub}</div></div>`;}
+   return `<div class="screen active">${statusbar(nowTime24())}${header()}<div class="scroll"><div class="body" style="padding-top:6px"><button class="backbtn" style="background:var(--pl);color:var(--navy)" onclick="back()">‹ ${lang==='hi'?'वापस':'Back'}</button><div class="kw">${t.pdfTtl}</div><div class="sub">${t.pdfSub}</div><span class="tag" style="background:var(--al);color:var(--amber)">${t.backendTag}</span>${body}<button class="btn primary" style="margin-top:12px${pdfState==='loading'?';opacity:.6':''}" onclick="genPDF()" ${pdfState==='loading'?'disabled':''}>${SVG.clip} ${pdfState==='loading'?t.pdfLoading:t.pdfBtn}</button></div></div>${nav('home')}</div>`;},
+ yolo(){const t=T[lang];const present=presentCount();let body;
+   if(yoloState==='loading'){body=`<div class="vcard" style="border-left-color:var(--green)"><div style="font-size:12px;color:var(--green)">${t.yoloLoading}</div><div class="bar" style="margin-top:8px"><i style="width:55%;background:var(--green)"></i></div></div>`;}
+   else if(yoloState==='backend'){body=`<div style="background:var(--al);border-left:4px solid var(--amber);border-radius:11px;padding:13px;display:flex;gap:8px;align-items:center"><span style="color:var(--amber);width:18px;height:18px;flex-shrink:0">${SVG.warn}</span><div style="font-size:11px;font-weight:700;color:var(--amber);line-height:1.45">${t.yoloPending}</div></div>`;}
+   else if(yoloState==='unsupported'){body=`<div class="vcard" style="border-left-color:var(--red)"><div style="font-size:11px;color:var(--red)">${t.speechOff}</div></div>`;}
+   else{body=`<div class="vcard" style="border-left-color:var(--green)"><div style="font-size:11px;color:var(--muted);line-height:1.5">${t.yoloSub}</div></div>`;}
+   return `<div class="screen active">${statusbar(nowTime24())}${header()}<div class="scroll"><div class="body" style="padding-top:6px"><button class="backbtn" style="background:var(--gl);color:var(--green)" onclick="back()">‹ ${lang==='hi'?'वापस':'Back'}</button><div class="kw">${t.yoloTtl}</div><div class="sub">${t.yoloSub}</div><span class="tag" style="background:var(--al);color:var(--amber)">${t.modelTag}</span><div class="vital" style="margin:10px 0"><div class="l">${t.yoloManual(present)}</div></div>${body}<div class="camline" onclick="runYolo()"><span class="ci">${SVG.cam}</span><div><div style="color:#cdeede;font-size:11px;font-weight:600">${t.yoloBtn}</div><div style="color:#7fae97;font-size:9px">${t.modelTag}</div></div></div></div></div>${nav('home')}</div>`;},
+ dss(){const t=T[lang];
+   if(STATE.roster.length&&!STATE.dss.childId){STATE.dss.childId=STATE.roster[0].id;}
+   const opts=STATE.roster.map(c=>`<option value="${c.id}" ${STATE.dss.childId===c.id?'selected':''}>${c.name||t.rosName}</option>`).join('');
+   const picker=STATE.roster.length?`<select onchange="dssPick(this.value)" style="width:100%;border:1px solid var(--line);border-radius:10px;padding:11px;font-size:13px;background:#fff;color:var(--ink)">${opts}</select>`:`<div class="vcard" style="border-left-color:var(--amber)"><div style="font-size:12px;color:var(--muted)">${t.mastEmpty}</div></div>`;
+   const qs=(STATE.roster.length&&STATE.dss.childId)?t.dssQ.map((q,i)=>`<div class="vcard" style="border-left-color:var(--purple)"><div style="font-size:12px;line-height:1.5">${q}</div><div style="display:flex;gap:8px;margin-top:9px"><button class="btn ${STATE.dss.answers[i]==='y'?'green':'outline'}" style="flex:1" onclick="dssAns(${i},'y')">${t.dssYes}</button><button class="btn ${STATE.dss.answers[i]==='n'?'red':'outline'}" style="flex:1" onclick="dssAns(${i},'n')">${t.dssNo}</button></div></div>`).join(''):'';
+   const saveBtn=(STATE.roster.length&&STATE.dss.childId)?`<button class="btn primary" style="margin-top:6px" onclick="dssSave()">${t.dssSave}</button>`:'';
+   return `<div class="screen active">${statusbar(nowTime24())}${header()}<div class="scroll"><div class="body" style="padding-top:6px"><button class="backbtn" style="background:var(--pl);color:var(--purple)" onclick="back()">‹ ${lang==='hi'?'वापस':'Back'}</button><div class="kw">${t.dssTtl}</div><div class="sub">${t.dssSub}</div><div class="sectionlabel">${t.dssPickChild}</div>${picker}${qs}${saveBtn}<div class="vcard" style="border-left-color:var(--muted);margin-top:10px"><div style="font-size:10px;color:var(--muted);line-height:1.5">${t.dssNote}</div></div></div></div>${nav('ece')}</div>`;},
+ more(){const t=T[lang];const row=(label,action,tag,color)=>`<div class="slot" onclick="${action}"><div class="dot">${SVG.grid}</div><div class="meta"><div class="a" style="color:var(--ink)">${label}</div></div>${tag?`<span class="stt" style="color:var(${color||'--amber'})">${tag}</span>`:''}</div>`;
+   return `<div class="screen active">${statusbar(nowTime24())}${header()}<div class="scroll"><div class="body" style="padding-top:14px"><div class="kw">${t.moreTtl}</div>${row(t.moreMastery,"go('mastery')")}${row(t.moreDss,"go('dss')")}${row(t.moreRoster,"go('roster')")}${row(t.moreReport,"openReport()",t.backendTag)}${row(t.morePhoto,"openYolo()",t.modelTag)}${row(t.moreAudit,"go('audit')")}</div></div>${nav('more')}</div>`;},
+ mastery(){const t=T[lang];
+   if(!STATE.roster.length){return `<div class="screen active">${statusbar(nowTime24())}${header()}<div class="scroll"><div class="body" style="padding-top:6px"><button class="backbtn" style="background:var(--gl);color:var(--green)" onclick="back()">‹ ${lang==='hi'?'वापस':'Back'}</button><div class="kw">${t.mastTtl}</div><div class="vcard" style="border-left-color:var(--amber)"><div style="font-size:12px;color:var(--muted)">${t.mastEmpty}</div></div></div></div>${nav('more')}</div>`;}
+   const cell=(c)=>{const att=c.mastery==='attention';return `<div class="vital" style="border-left:4px solid var(${att?'--red':'--green'});cursor:pointer" onclick="toggleMastery('${c.id}')"><div class="v" style="font-size:13px">${c.name}</div><div class="l">${t.ageBands[c.ageBand]}${c.room?' · '+c.room:''}</div><div class="d" style="color:var(${att?'--red':'--green'});font-weight:700">${att?t.mastAttention:t.mastMastered}</div></div>`;};
+   const attention=STATE.roster.filter(c=>c.mastery==='attention');const mastered=STATE.roster.filter(c=>c.mastery!=='attention');
+   return `<div class="screen active">${statusbar(nowTime24())}${header()}<div class="scroll"><div class="body" style="padding-top:6px"><button class="backbtn" style="background:var(--gl);color:var(--green)" onclick="back()">‹ ${lang==='hi'?'वापस':'Back'}</button><div class="kw">${t.mastTtl}</div><div class="sub">${t.mastSub}</div><div style="display:flex;gap:8px;margin-bottom:12px"><span class="tag" style="background:var(--rl);color:var(--red);border:1px solid var(--red)">${t.mastAttention} · ${attention.length}</span><span class="tag" style="background:var(--gl);color:var(--green);border:1px solid var(--green)">${t.mastMastered} · ${mastered.length}</span></div><div class="sectionlabel" style="color:var(--red)">${t.mastAttention}</div><div class="grid2">${attention.length?attention.map(cell).join(''):`<div style="font-size:11px;color:var(--muted)">—</div>`}</div><div class="sectionlabel" style="color:var(--green)">${t.mastMastered}</div><div class="grid2">${mastered.length?mastered.map(cell).join(''):`<div style="font-size:11px;color:var(--muted)">—</div>`}</div><div class="vcard" style="border-left-color:var(--muted);margin-top:12px"><div style="font-size:10px;color:var(--muted);line-height:1.5">${t.mastNote}</div></div></div></div>${nav('more')}</div>`;}
 };
+
+/* Roster actions (Issue 1). Local/offline persistence only; real DB sync is
+   routed through backendSaveRoster() and is intentionally not implemented. */
+function addRoster(){STATE.roster.push({id:uid(),name:'',localId:'',ageBand:1,room:'',inclusion:false,medical:false,present:true,mastery:'mastered'});saveState();render();}
+function updRoster(id,k,v){const c=STATE.roster.find(x=>x.id===id);if(c){c[k]=v;saveState();}}
+function rmRoster(id){STATE.roster=STATE.roster.filter(x=>x.id!==id);saveState();render();}
+async function saveRoster(){const t=T[lang];if(!STATE.roster.length||STATE.roster.some(c=>!c.name.trim())){alert(t.rosNeedName);return;}saveState();try{await backendSaveRoster(STATE.roster);STATE.synced=true;saveState();}catch(e){/* backend not wired yet — kept on-device, will sync later */}alert(t.rosSavedLocal);jump('shell');}
+
+/* PDF + YOLO entry points (Issue 3). No fake output: each action attempts the
+   backend placeholder and surfaces a clear backend/model-required state. */
+let pdfState='idle';   // idle | loading | backend
+let yoloState='idle';  // idle | loading | backend | unsupported
+function openReport(){pdfState='idle';go('report');}
+function openYolo(){yoloState='idle';go('yolo');}
+async function genPDF(){pdfState='loading';render();try{await backendGeneratePDF({roster:STATE.roster,attendance:STATE.attendance,meal:STATE.meal});pdfState='idle';}catch(e){pdfState='backend';}render();}
+async function runYolo(){yoloState='loading';render();try{const c=await backendYoloCount(null);yoloState='idle';}catch(e){yoloState='backend';}render();}
+
+/* Activity adaptation + DSS screening (Issue 5).
+   adaptActivity reads live room context (age mix, present count, materials,
+   inclusion flags). It attempts the server adaptation, then falls back to a
+   local mock adaptation so the worker still gets a usable card offline. */
+let adaptState='ready';   // ready | needsinput | adapting | adapted
+async function adaptActivity(){
+  if(!STATE.attendance.recordedAt){adaptState='needsinput';render();return;}
+  adaptState='adapting';render();
+  const ctx={ageBands:[...new Set(STATE.roster.map(c=>c.ageBand))],present:presentCount(),inclusion:STATE.roster.some(c=>c.inclusion)};
+  try{await backendAdaptActivity(ctx);}catch(e){/* offline: local mock adaptation below */}
+  setTimeout(()=>{adaptState='adapted';render();},700);
+}
+function dssPick(id){STATE.dss.childId=id;STATE.dss.answers={};saveState();render();}
+function dssAns(i,v){STATE.dss.answers[i]=v;saveState();render();}
+function dssSave(){const t=T[lang];const c=STATE.roster.find(x=>x.id===STATE.dss.childId);if(c){const anyNo=Object.values(STATE.dss.answers).includes('n');c.mastery=anyNo?'attention':'mastered';}saveState();alert(t.dssDone);go('mastery');}
+function toggleMastery(id){const c=STATE.roster.find(x=>x.id===id);if(c){c.mastery=c.mastery==='attention'?'mastered':'attention';saveState();render();}}
+
+/* Attendance actions (Issue 2) */
+let attMenuOpen=false;
+function toggleAttMenu(){attMenuOpen=!attMenuOpen;render();}
+function toggleAbsent(id){const c=STATE.roster.find(x=>x.id===id);if(c){c.present=!c.present;saveState();render();}}
+function allPresent(){STATE.roster.forEach(c=>c.present=true);attMenuOpen=false;saveState();render();}
+function recordAttendance(){STATE.attendance.recordedAt=nowTime();attMenuOpen=false;saveState();go('audit');}
+
+/* Hot meal actions (Issue 4) */
+function startMeal(){STATE.meal={date:new Date().toISOString().slice(0,10),room:STATE.roster[0]?STATE.roster[0].room:'',childrenPresent:presentCount(),mealsServed:0,rationUsed:0,rationRemaining:null,notes:''};saveState();render();}
+function mealServe(n){if(!STATE.meal)return;STATE.meal.mealsServed=Math.max(0,STATE.meal.mealsServed+n);STATE.meal.rationUsed=STATE.meal.mealsServed;saveState();render();}
+function mealSetServed(v){if(!STATE.meal)return;STATE.meal.mealsServed=Math.max(0,v);STATE.meal.rationUsed=STATE.meal.mealsServed;saveState();render();}
 
 function go(id){stack.push(id);render();}
 function jump(id){stack=[id];render();}
 function back(){if(stack.length>1){stack.pop();render();}}
-function selectWorker(i){document.querySelectorAll('.prow').forEach(p=>p.classList.remove('on'));document.getElementById('pw'+i).classList.add('on');}
-function openMic(){const t=T[lang];document.getElementById('micl').textContent=t.micL;document.getElementById('mics').textContent=t.micS;document.getElementById('micc').textContent=t.micC;document.getElementById('micmodal').classList.add('show');}
-function closeMic(){document.getElementById('micmodal').classList.remove('show');go('voice');}
+/* Offline placeholder auth (no real backend auth). Identity is stored locally
+   only; wire to a real auth/session service later. */
+function readAuth(){const n=document.getElementById('auth-name'),w=document.getElementById('auth-id');STATE.auth={name:n?n.value.trim():'',workerId:w?w.value.trim():'',loggedIn:true};saveState();}
+function doSignup(){readAuth();jump('roster');}
+function doLogin(){readAuth();jump(STATE.roster.length?'shell':'roster');}
+function openMic(){const t=T[lang];micTarget='voice';document.getElementById('micl').textContent=t.micL;document.getElementById('mics').textContent=t.micS;document.getElementById('micc').textContent=t.micC;document.getElementById('micmodal').classList.add('show');}
+function closeMic(){document.getElementById('micmodal').classList.remove('show');const wasVoice=micTarget==='voice';micTarget='voice';if(wasVoice)go('voice');}
 
 function setLang(l){lang=l;document.getElementById('lang-hi').classList.toggle('on',l==='hi');document.getElementById('lang-en').classList.toggle('on',l==='en');render();}
 function render(){const id=stack[stack.length-1];document.getElementById('app').innerHTML=(screens[id]||screens.shell)();
