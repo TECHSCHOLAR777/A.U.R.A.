@@ -251,12 +251,12 @@ const SVG={
   clip:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M7 4H5V17H15V4H13"/><rect x="7" y="2.5" width="6" height="3.2" rx="1"/><path d="M7.5 9H12.5M7.5 12H11" stroke-linecap="round"/></svg>',
   refer:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10H15M11 6L15 10L11 14"/></svg>'
 };
-const navic={att:'clock',ece:'book',meal:'meal',health:'heart',audit:'grid'};
+const navic={att:'clock',ece:'book',health:'heart',audit:'grid'};
 
 const T={
  hi:{
   govA:"भारत सरकार",govB:"महिला एवं बाल विकास मंत्रालय",govC:"समेकित बाल विकास सेवा (ICDS)",
-  pill:"हिं | A",nav:["घर","सेहत","खेल","और"],
+  pill:"हिं | A",nav:["घर","जाँच","खेल","और"],
   splashTag:"आँगनवाड़ी का दिन, एक जगह। बिना इंटरनेट के भी चलता है।",
   splashStart:"साइनअप/लॉगिन",splashChip:"ऑफ़लाइन तैयार",splashFine:"आपका डेटा इसी फ़ोन में सुरक्षित रहता है।",
   pTtlLogin:"लॉगिन करें",pTtlSignUp:"पंजीकरण करें",
@@ -267,13 +267,13 @@ const T={
   greet:"सुप्रभात, मीरा।",date:"सोमवार, 15 जून।",
   nowClock:"अभी 8:04 बजे",nowLabel:"अभी का काम",nowTask:"सुबह की हाज़िरी",nowSub:"और नाश्ता देना",start:"हाज़िरी शुरू करें",
   alert:"3 बच्चे ज़रूरी: तुरंत देखें",day:"दिन का नक्शा",nowtag:"अभी",doneShort:"हो गया",pendShort:"बाकी",
-  slots:[["हाज़िरी और नाश्ता","8 से 9 बजे","att",1,0],["खेल और जाँच","9 से 12 बजे","ece",0,0],["गरम खाना","12 से 1 बजे","meal",0,0],["सेहत जाँच","1 से 2 बजे","health",0,0],["दिन की जाँच","2 बजे बाद","audit",0,0]],
+  slots:[["हाज़िरी और नाश्ता","8 से 9 बजे","att",1,0],["खेल और जाँच","9 से 12 बजे","ece",0,0],["दिन की जाँच","2 बजे बाद","audit",0,0]],
   triageKw:["आज किसे ","देखना है"],
   blocks:[{n:"01",t:"तुरंत देखें",s:"बहुत कमज़ोर बच्चे",c:"--red",bg:"--rl",kids:[{nm:"मीरा शर्मा",ag:"3 साल",ds:"वज़न 3 हफ़्ते से घट रहा है। आज नाप लें।",tag:"बहुत कमज़ोर"},{nm:"रवि दास",ag:"2 साल",ds:"बाँह बहुत पतली (10.8 सेमी)। अस्पताल भेजें।",tag:"बहुत कमज़ोर"}]},{n:"02",t:"बाकी है",s:"2 दिन से जानकारी नहीं",c:"--amber",bg:"--al",kids:[{nm:"अनिता कुमारी",ag:"4 साल",ds:"3 दिन से कुछ दर्ज नहीं हुआ।",tag:null},{nm:"राहुल मुर्मू",ag:"2 साल",ds:"5 दिन नहीं आया। आज लौटा।",tag:"आज लौटा"}]},{n:"03",t:"बाकी काम",s:"टीका, राशन",c:"--green",bg:"--gl",kids:[{nm:"सुरेश यादव",ag:"3 साल",ds:"विटामिन A का टीका बाकी। आज दें।",tag:null}]}],
   voiceKw:["बस ","बोल दें"],voiceSub:"एक बार बोलें, हर रजिस्टर में अपने आप दर्ज हो जाएगा।",
-  voiceQ:"राहुल आज नहीं आया, प्रिया को दुगना राशन, मीरा का वज़न नापना है",voiceH:"सही सुना: 94%",
+  voiceQ:"12 उपस्थित, 8 गेंदें, 5 दरी, 2 क्रेयॉन डिब्बे",
   filling:"अपने आप भर रहा है",sure:"कितना पक्का है",
-  regs:[["हाज़िरी रजिस्टर","राहुल: अनुपस्थित दर्ज",1],["राशन रजिस्टर","प्रिया: दुगना राशन",1],["सेहत रजिस्टर","मीरा: वज़न नापना बाकी",0]],
+  regs:[["हाज़िरी गिनती","आज 12 उपस्थित",1],["सामग्री रजिस्टर","8 गेंदें · 5 दरी",1],["आपूर्ति","2 क्रेयॉन डिब्बे",0]],
   tiers:[["पक्का (अपने आप दर्ज)","94% से ऊपर","--green",1],["एक बार देख लें","75% से 94%","--amber",0],["खुद भरें","75% से नीचे","--red",0]],
   attKw:["आज ","सब आए हैं"],allHere:"सभी 42 बच्चे आए हैं",allCount:"केंद्र के सभी बच्चे उपस्थित",allTime:"8:04 बजे दर्ज",
   camLine:"फ़ोटो से गिनती मिलाएँ",camMatch:"कैमरा खोलने के लिए टैप करें",absent:"अनुपस्थित चुनें",absTag:" · टैप करके अनुपस्थित करें",
@@ -297,12 +297,12 @@ const T={
   auditWhat:"आज क्या हुआ",
   auditItems:[["हाज़िरी: 40 उपस्थित, 2 अनुपस्थित",1],["गरम खाना: 40 बच्चों को मिला",1],["सेहत जाँच: 3 बच्चे रेफर हुए",1],["खेल और जाँच: 1 बच्चे की DSS बाकी",0]],
   auditSafe:"सारा डेटा इसी फ़ोन में सुरक्षित है। इंटरनेट आने पर अपने आप भेजा जाएगा।",auditApprove:"पक्का करें और दिन बंद करें",
-  micL:"सुन रहे हैं...",micS:"साफ़ बोलें। नाम, गिनती या सामान बोल सकते हैं।",micC:"बंद करें",
+  micL:"सुन रहे हैं...",micS:"साफ़ बोलें। केवल गिनती या सामान बोलें (नाम नहीं)।",micC:"बंद करें",
   notif:"सूचनाएँ"
  },
  en:{
   govA:"Government of India",govB:"Ministry of Women and Child Development",govC:"Integrated Child Development Services (ICDS)",
-  pill:"EN | अ",nav:["Home","Health","Play","More"],
+  pill:"EN | अ",nav:["Home","Screening","Play","More"],
   splashTag:"The whole Anganwadi day in one place. Works without internet.",
   splashStart:"SignUp/Login",splashChip:"Offline ready",splashFine:"Your data stays safe on this phone.",
   pTtlLogin:"Login to AURA",pTtlSignUp:"Sign Up to AURA",
@@ -313,13 +313,13 @@ const T={
   greet:"Good morning, Meera.",date:"Monday, 15 June.",
   nowClock:"Now, 8:04 AM",nowLabel:"Right now",nowTask:"Morning attendance",nowSub:"and serving breakfast",start:"Start attendance",
   alert:"3 children need attention now",day:"Today's plan",nowtag:"now",doneShort:"done",pendShort:"left",
-  slots:[["Attendance and breakfast","8 to 9 AM","att",1,0],["Play and screening","9 to 12","ece",0,0],["Hot meal","12 to 1","meal",0,0],["Health check","1 to 2","health",0,0],["Day review","After 2","audit",0,0]],
+  slots:[["Attendance and breakfast","8 to 9 AM","att",1,0],["Play and screening","9 to 12","ece",0,0],["Day review","After 2","audit",0,0]],
   triageKw:["Who needs ","attention today"],
   blocks:[{n:"01",t:"See now",s:"Very weak children",c:"--red",bg:"--rl",kids:[{nm:"Meera Sharma",ag:"3 years",ds:"Weight falling for 3 weeks. Weigh today.",tag:"Very weak"},{nm:"Ravi Das",ag:"2 years",ds:"Arm very thin (10.8 cm). Refer to hospital.",tag:"Very weak"}]},{n:"02",t:"Pending",s:"No update for 2 days",c:"--amber",bg:"--al",kids:[{nm:"Anita Kumari",ag:"4 years",ds:"Nothing recorded for 3 days.",tag:null},{nm:"Rahul Murmu",ag:"2 years",ds:"Absent 5 days. Returned today.",tag:"Back today"}]},{n:"03",t:"Remaining",s:"Vaccine, ration",c:"--green",bg:"--gl",kids:[{nm:"Suresh Yadav",ag:"3 years",ds:"Vitamin A dose pending. Give today.",tag:null}]}],
   voiceKw:["Just ","say it"],voiceSub:"Speak once. It records into every register on its own.",
-  voiceQ:"Rahul absent today, double ration for Priya, weigh Meera",voiceH:"Heard correctly: 94%",
+  voiceQ:"12 present, 8 balls, 5 floor mats, 2 crayon boxes",
   filling:"Filling on its own",sure:"How sure",
-  regs:[["Attendance register","Rahul: marked absent",1],["Ration register","Priya: double ration",1],["Health register","Meera: weight pending",0]],
+  regs:[["Headcount","12 present today",1],["Materials register","8 balls · 5 mats",1],["Supplies","2 crayon boxes",0]],
   tiers:[["Confirmed (auto saved)","Above 94%","--green",1],["Please check once","75% to 94%","--amber",0],["Enter yourself","Below 75%","--red",0]],
   attKw:["Everyone ","is here today"],allHere:"All 42 children present",allCount:"Every child in the centre is here",allTime:"Recorded at 8:04 AM",
   camLine:"Match the count with a photo",camMatch:"Tap to open the camera",absent:"Mark absent",absTag:" · tap to mark absent",
@@ -343,7 +343,7 @@ const T={
   auditWhat:"What happened today",
   auditItems:[["Attendance: 40 present, 2 absent",1],["Hot meal: served to 40 children",1],["Health check: 3 children referred",1],["Play and screening: 1 child's DSS pending",0]],
   auditSafe:"All data is safe on this phone. It will send on its own when internet returns.",auditApprove:"Confirm and close the day",
-  micL:"Listening...",micS:"Speak clearly. You can say a name, a count or a material.",micC:"Close",
+  micL:"Listening...",micS:"Speak clearly. Say a count or a material only (no names).",micC:"Close",
   notif:"Notifications"
  }
 };
@@ -394,7 +394,7 @@ function kw(arr,color){return `<div class="kw">${arr[0]}<span class="hl" style="
 
 function nav(active){
   const t=T[lang];
-  const tabs=[['home','home',()=>jump('shell')],['health','heart',()=>jump('health')],['__fab','voice',()=>openMic()],['ece','book',()=>jump('ece')],['more','grid',()=>jump('more')]];
+  const tabs=[['home','home',()=>jump('shell')],['dss','clip',()=>jump('dss')],['__fab','voice',()=>openMic()],['ece','book',()=>jump('ece')],['more','grid',()=>jump('more')]];
   let html='<div class="nav" role="navigation">';
   const labels=[t.nav[0],t.nav[1],'',t.nav[2],t.nav[3]];
   tabs.forEach((tb,i)=>{
@@ -411,9 +411,9 @@ function nav(active){
 
 function navTap(id){
   if(id==='home')jump('shell');
-  else if(id==='health') {
+  else if(id==='dss') {
     if (activeChildren.length > 0) {
-      jump('health');
+      jump('dss');
     } else {
       alert(lang==='hi' ? 'कृपया पहले लॉगिन करें।' : 'Please sign in first.');
     }
@@ -503,7 +503,7 @@ const screens={
       <div class="screen active">${statusbar('8:04')}${header()}
         <div class="scroll">
           <div class="body">
-            <div class="greet">${t.greet}<small>${t.date}</small></div>
+            <div class="greet">${lang==='hi' ? 'सुप्रभात' : 'Good morning'}, ${activeWorker ? activeWorker.name : (lang==='hi' ? 'कार्यकर्ता' : 'Worker')}<small>${new Date().toLocaleDateString(lang==='hi'?'hi-IN':'en-IN',{weekday:'long',day:'numeric',month:'long'})}</small></div>
             <div class="nowcard">
               <div class="nclock">${SVG.clock} ${t.nowClock}</div>
               <div class="nlabel">${t.nowLabel}</div>
@@ -563,8 +563,6 @@ const screens={
             <div class="sub">${t.voiceSub}</div>
             <div class="transcript">
               <div class="q">${t.voiceQ}</div>
-              <div class="h">${SVG.check} ${t.voiceH}</div>
-              <div class="bar"><i style="width:94%"></i></div>
             </div>
             <div class="sectionlabel">${t.filling}</div>
             ${regs}
@@ -640,16 +638,6 @@ const screens={
             <div class="sectionlabel">${lang==='hi' ? 'दैनिक उपस्थिति रजिस्टर' : 'Daily Attendance Register'}</div>
             ${kids}
             
-            ${isOnline() ? `
-            <button class="btn ghost" onclick="alert('${lang==='hi'?'आवाज पहचान शुरू...':'Voice recognizer listening...'}')">
-              ${SVG.voice} ${t.addVoice}
-            </button>
-            ` : `
-            <button class="btn ghost outline" disabled style="opacity:0.5;cursor:not-allowed;">
-              🔒 ${t.addVoice} (${lang==='hi'?'ऑफ़लाइन':'Offline'})
-            </button>
-            `}
-            
             <div class="hero" style="background:var(--forest);margin-top:16px">
               <p style="opacity:.85">${t.sumLine}</p>
               <h2 style="font-size:20px">${attendanceSummary}</h2>
@@ -661,17 +649,10 @@ const screens={
       </div>
     `;
   },
-  meal(){
-    const t=T[lang];
-    const totalCount = activeChildren.length;
-    const presentCount = activeChildren.filter(c => c.present).length;
-    
-    return `<div class="screen active">${statusbar('12:14')}${header()}<div class="scroll"><div class="body" style="padding-top:6px"><button class="backbtn" style="background:var(--al);color:var(--orange)" onclick="back()">‹ ${lang==='hi'?'वापस':'Back'}</button>${kw(t.mealKw,'--orange')}<div class="sub">${t.mealSub}</div><div class="vcard" style="border-left-color:var(--orange)"><div class="mh" style="color:var(--orange)">${SVG.meal}<span style="font-size:10px;font-weight:600">${t.mealToday}</span></div><div style="font-size:16px;font-weight:800">${t.mealFood}</div><div style="font-size:10px;color:var(--muted);margin-top:4px">${t.mealPer}</div></div><div style="background:var(--al);border-left:4px solid var(--orange);border-radius:12px;padding:14px;margin-bottom:10px"><div style="font-size:10px;color:var(--muted)">${t.mealFed}</div><div style="display:flex;align-items:baseline;gap:8px"><span style="font-size:40px;font-weight:800;color:var(--orange)">${presentCount}</span><span style="font-size:12px;color:var(--muted)">${t.mealOf} ${totalCount}</span></div><div class="bar" style="height:8px"><i style="width:${totalCount > 0 ? (presentCount / totalCount * 100) : 0}%;background:var(--orange)"></i></div></div>${isOnline() ? `<button class="btn ghost" onclick="openMic()">${SVG.voice} ${t.mealVoice}</button>` : `<button class="btn ghost outline" disabled style="opacity:0.5;cursor:not-allowed;">🔒 ${t.mealVoice} (${lang==='hi'?'ऑफ़लाइन':'Offline'})</button>`}<button class="btn green" style="margin-top:10px" onclick="submitMealFeed()">${lang === 'hi' ? 'भोजन विवरण सबमिट करें' : 'Submit Meal Details'}</button><div style="background:var(--al);border-left:4px solid var(--amber);border-radius:11px;padding:13px;margin-top:14px"><div style="font-size:12px;font-weight:700;color:var(--amber)">${t.mealStock}</div><div style="font-size:10px;color:var(--amber);margin-top:4px">${t.mealStockS}</div></div></div></div>${nav('home')}</div>`;
-  },
   health(){
     const t=T[lang];
     const vit=t.hVitals.map(v=>`<div class="vital"><div class="l">${v[0]}</div><div class="v">${v[1]}</div><div class="d" style="color:var(${v[3]?'--red':'--green'})">${v[2]||'&nbsp;'}</div></div>`).join('');
-    return `<div class="screen active">${statusbar('1:20')}<div class="scroll"><div class="hero" style="background:var(--red);border-radius:0;padding:14px 20px 18px"><button class="backbtn" onclick="back()">‹ ${lang==='hi'?'वापस':'Back'}</button><div style="display:flex;justify-content:space-between;align-items:flex-start"><div><h2>${t.hName}</h2><p>${t.hAge}</p></div><span style="background:#fff;color:var(--red);font-size:10px;font-weight:800;padding:5px 12px;border-radius:12px">${t.hDanger}</span></div></div><div class="body"><div style="background:var(--rl);border:1px solid var(--red);border-left:4px solid var(--red);border-radius:12px;padding:13px;display:flex;gap:10px;margin-top:14px"><span style="color:var(--red);width:20px;height:20px;flex-shrink:0">${SVG.warn}</span><div><div style="font-size:12px;font-weight:700;color:var(--red)">${t.hSignal}</div><div style="font-size:10px;color:var(--red);line-height:1.5;margin-top:4px">${t.hSignalD}</div></div></div><div class="grid2" style="margin-top:14px">${vit}</div><div class="vcard" style="border-left-color:var(--red);margin-top:14px"><div style="font-size:9px;color:var(--muted)">${t.hScore}</div><div style="font-size:18px;font-weight:800;color:var(--red);margin-top:2px">${t.hVeryWeak}</div></div><div class="grid2" style="margin-top:6px"><button class="btn red" onclick="alert('${lang==='hi'?'वज़न दर्ज करने की स्क्रीन':'Weight entry screen'}')">${t.hWeigh}</button><button class="btn primary" onclick="alert('${lang==='hi'?'अस्पताल रेफरल बन गया ✓':'Hospital referral created ✓'}')">${t.hRefer}</button></div></div></div>${nav('health')}</div>`;
+    return `<div class="screen active">${statusbar('1:20')}<div class="scroll"><div class="hero" style="background:var(--red);border-radius:0;padding:14px 20px 18px"><button class="backbtn" onclick="back()">‹ ${lang==='hi'?'वापस':'Back'}</button><div style="display:flex;justify-content:space-between;align-items:flex-start"><div><h2>${t.hName}</h2><p>${t.hAge}</p></div><span style="background:#fff;color:var(--red);font-size:10px;font-weight:800;padding:5px 12px;border-radius:12px">${t.hDanger}</span></div></div><div class="body"><div style="background:var(--rl);border:1px solid var(--red);border-left:4px solid var(--red);border-radius:12px;padding:13px;display:flex;gap:10px;margin-top:14px"><span style="color:var(--red);width:20px;height:20px;flex-shrink:0">${SVG.warn}</span><div><div style="font-size:12px;font-weight:700;color:var(--red)">${t.hSignal}</div><div style="font-size:10px;color:var(--red);line-height:1.5;margin-top:4px">${t.hSignalD}</div></div></div><div class="grid2" style="margin-top:14px">${vit}</div><div class="vcard" style="border-left-color:var(--red);margin-top:14px"><div style="font-size:9px;color:var(--muted)">${t.hScore}</div><div style="font-size:18px;font-weight:800;color:var(--red);margin-top:2px">${t.hVeryWeak}</div></div><div class="grid2" style="margin-top:6px"><button class="btn red" onclick="alert('${lang==='hi'?'वज़न दर्ज करना — बैकएंड ज़रूरी':'Weight entry — backend required'}')">${t.hWeigh}</button><button class="btn primary" onclick="alert('${lang==='hi'?'रेफरल इस फ़ोन में दर्ज — बैकएंड सिंक ज़रूरी':'Referral saved locally — backend sync required'}')">${t.hRefer}</button></div></div></div>${nav('health')}</div>`;
   },
   ece(){
     const t = T[lang];
@@ -852,13 +833,22 @@ const screens={
             <div id="dss-result-panel" style="display:none;margin-top:16px;"></div>
           </div>
         </div>
-        ${nav('ece')}
+        ${nav('dss')}
       </div>
     `;
   },
   audit(){
     const t=T[lang];
-    const items=t.auditItems.map(i=>`<div class="item" style="border-left-color:var(${i[1]?'--green':'--red'})"><span class="b" style="background:var(${i[1]?'--green':'--red'})">${i[1]?'✓':'!'}</span><span class="x">${i[0]}</span></div>`).join('');
+    // State-driven day review (no invented backend data; Hot Meals removed).
+    const totalCount = activeChildren.length;
+    const presentCount = activeChildren.filter(c => c.present).length;
+    const absentCount = totalCount - presentCount;
+    const masteredCount = activeChildren.filter(c => { const r = masteryMap.get(c.childId); return r && r.trajectory_flag === 'mastered'; }).length;
+    const auditRows = [
+      [lang==='hi' ? `हाज़िरी: ${presentCount} उपस्थित, ${absentCount} अनुपस्थित` : `Attendance: ${presentCount} present, ${absentCount} absent`, 1],
+      [lang==='hi' ? `दक्षता: ${totalCount} में से ${masteredCount} ने सीखा` : `Mastery: ${masteredCount} of ${totalCount} mastered`, 1]
+    ];
+    const items=auditRows.map(i=>`<div class="item" style="border-left-color:var(${i[1]?'--green':'--red'})"><span class="b" style="background:var(${i[1]?'--green':'--red'})">${i[1]?'✓':'!'}</span><span class="x">${i[0]}</span></div>`).join('');
     return `<div class="screen active">${statusbar('2:30')}${header()}<div class="scroll"><div class="body" style="padding-top:6px"><button class="backbtn" style="background:var(--pl);color:var(--navy)" onclick="back()">‹ ${lang==='hi'?'वापस':'Back'}</button>${kw(t.auditKw,'--navy')}<div style="background:var(--al);border-left:6px solid var(--amber);border-radius:12px;padding:13px;margin:6px 0 14px"><div style="font-size:12px;font-weight:700;color:var(--amber)">${t.auditYes}</div><div style="font-size:9.5px;color:var(--amber);margin-top:4px">${t.auditYesD}</div></div><div class="sectionlabel">${t.auditWhat}</div>${items}<div style="background:var(--gl);border-radius:10px;padding:11px;margin-top:4px;font-size:9.5px;color:var(--green);line-height:1.5">${t.auditSafe}</div><button class="btn primary" style="margin-top:14px" onclick="alert('${lang==='hi' ? 'दिन बंद किया गया। सारा काम स्थानीय स्तर पर सुरक्षित है।' : 'Day review closed. All actions saved locally on device.'}');jump('shell')">${t.auditApprove}</button></div></div>${nav('home')}</div>`;
   },
   more() {
@@ -918,6 +908,12 @@ const screens={
                   : 'Zero-PII compliance active. Child names and medical details are restricted. Data uploaded consists of aggregated local weights and anonymous child UUID indexes only.'}
               </div>
             </div>
+
+            <div class="sectionlabel">${lang === 'hi' ? 'सेहत और पोषण (P2)' : 'Health & Nutrition (P2)'}</div>
+            <button class="btn ghost" style="border-color:var(--red);color:var(--red)" onclick="go('health')">
+              ${SVG.heart} ${lang === 'hi' ? 'सेहत जाँच खोलें' : 'Open health check'}
+            </button>
+            <div style="font-size:9px;color:var(--muted);font-weight:600;margin:6px 2px 12px;">${lang === 'hi' ? 'बाद का चरण · मुख्य प्रवाह से अलग' : 'Later-stage · outside the core flow'}</div>
 
             <div class="sectionlabel">${lang === 'hi' ? 'रिपोर्ट और उपकरण' : 'Reports & Tools'}</div>
             <button class="btn ghost" style="border-color:var(--navy);color:var(--navy)" onclick="generateDayReportPDF()">
@@ -1263,14 +1259,6 @@ async function submitAttendanceRoster() {
   go('audit');
 }
 
-async function submitMealFeed() {
-  const presentCount = activeChildren.filter(c => c.present).length;
-  await AURA_API.logMeal({ centreId: activeCentre, fedCount: presentCount, totalPresent: presentCount });
-  syncQueueSize = (await AURA_DB.getPendingSync()).length;
-  
-  showBktToast(lang==='hi' ? 'भोजन विवरण दर्ज ✓' : 'Meal details submitted ✓');
-  jump('shell');
-}
 
 async function loadECEActivity() {
   const btn = document.getElementById('btn-load-activity');
@@ -1422,6 +1410,7 @@ function render(){
 window.setLang = setLang;
 window.go = go;
 window.jump = jump;
+window.navTap = navTap;
 window.back = back;
 window.setAuthMode = setAuthMode;
 window.handleAuthSubmit = handleAuthSubmit;
@@ -1440,7 +1429,6 @@ window.openMic = openMic;
 window.closeMic = closeMic;
 window.loadECEActivity = loadECEActivity;
 window.submitAttendanceRoster = submitAttendanceRoster;
-window.submitMealFeed = submitMealFeed;
 window.generateDayReportPDF = generateDayReportPDF;
 window.openHeadcountModel = openHeadcountModel;
 
