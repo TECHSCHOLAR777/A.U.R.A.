@@ -367,6 +367,7 @@ function isOnline() {
 }
 
 // ── Statusbar rendering dynamically responding to Online simulator ──────────
+function nowClock(){const d=new Date();let h=d.getHours();const m=String(d.getMinutes()).padStart(2,'0');const ap=h<12?'AM':'PM';const h12=h%12||12;return `${h12}:${m} ${ap}`;}
 function statusbar(time){
   const online = isOnline();
   const networkLabel = online 
@@ -377,7 +378,7 @@ function statusbar(time){
     <span style="width:6px;height:6px;border-radius:50%;background:${online ? '#6fd29b' : '#ff4d4d'};display:inline-block;animation:${online ? 'pulse 2s infinite' : 'none'}"></span>
     ${networkLabel}
   </button>`;
-  return `<div class="govbar"><span class="tri" aria-hidden="true"><i style="background:#FF9933"></i><i style="background:#fff"></i><i style="background:#138808"></i></span><span>${T[lang].govC}</span></div><div class="statusbar" style="padding: 0 16px;"><span>${time}</span><span class="r">${SVG.globe} ${indicatorHtml}</span></div>`;
+  return `<div class="statusbar" style="padding: 0 16px;"><span>${time}</span><span class="r">${SVG.globe} ${indicatorHtml}</span></div>`;
 }
 
 function header(){
@@ -386,7 +387,7 @@ function header(){
   if (activeWorker && activeWorker.name) {
     avatarLetter = activeWorker.name.charAt(0).toUpperCase();
   }
-  return `<div class="header"><div class="avatar">${avatarLetter}</div><div class="brand">A.U.R.A.<small>${t.govC}</small></div><div class="right"><button class="pill-lang" onclick="setLang('${lang==='hi'?'en':'hi'}')">${t.pill}</button><button class="bellbtn" aria-label="${t.notif}" onclick="alert('${t.notif}')">${SVG.bell}<span class="dotn"></span></button></div></div>`;
+  return `<div class="header"><div class="avatar">${avatarLetter}</div><div class="brand">A.U.R.A.</div><div class="right"><button class="pill-lang" onclick="setLang('${lang==='hi'?'en':'hi'}')">${t.pill}</button><button class="bellbtn" aria-label="${t.notif}" onclick="alert('${t.notif}')">${SVG.bell}<span class="dotn"></span></button></div></div>`;
 }
 
 function kw(arr,color){return `<div class="kw">${arr[0]}<span class="hl" style="background:var(${color})">${arr[1]}</span></div>`;}
@@ -424,7 +425,7 @@ function navTap(id){
 const screens={
   splash(){
     const t=T[lang];
-    return `<div class="screen dark active"><div class="logo">${SVG.book}</div><h1>A.U.R.A.</h1><div class="fullform">Anganwadi Unified<br>Resource Assistant</div><div class="rule"></div><div class="chip"><span class="pulse"></span>${t.splashChip}</div><div class="tag">${t.splashTag}</div><button class="startbtn" onclick="jump('profile')">${t.splashStart} ${SVG.refer}</button><div class="fine">${t.splashFine}</div><div class="govstrip">${t.govA} · ${t.govB}</div></div>`;
+    return `<div class="screen dark active"><div class="logo">${SVG.book}</div><h1>A.U.R.A.</h1><div class="fullform">Anganwadi Unified<br>Resource Assistant</div><div class="rule"></div><div class="chip"><span class="pulse"></span>${t.splashChip}</div><div class="tag">${t.splashTag}</div><button class="startbtn" onclick="jump('profile')">${t.splashStart} ${SVG.refer}</button><div class="fine">${t.splashFine}</div></div>`;
   },
   profile() {
     const t = T[lang];
@@ -483,14 +484,6 @@ const screens={
 
     return `
       <div class="screen active" style="background:#fff">
-        <div class="govbar">
-          <span class="tri" aria-hidden="true">
-            <i style="background:#FF9933"></i>
-            <i style="background:#fff"></i>
-            <i style="background:#138808"></i>
-          </span>
-          <span>${t.govC}</span>
-        </div>
         <div class="scroll">
           <div class="pselect" style="padding:24px 26px 26px;">
             <div class="globewrap" style="margin-bottom:16px">${SVG.home}</div>
@@ -616,9 +609,9 @@ const screens={
 
     const allPresentHero = presentCount === totalCount
       ? `<div class="hero" style="background:var(--green);margin-top:6px">
-          <h2>${t.allHere}</h2>
+          <h2>${lang === 'hi' ? `सभी ${totalCount} बच्चे उपस्थित` : `All ${totalCount} children present`}</h2>
           <p>${t.allCount}</p>
-          <p style="font-size:10px;margin-top:6px;opacity:.85">${t.allTime}</p>
+          <p style="font-size:10px;margin-top:6px;opacity:.85">${lang === 'hi' ? `${nowClock()} दर्ज` : `Recorded at ${nowClock()}`}</p>
          </div>`
       : `<div class="hero" style="background:var(--amber);margin-top:6px">
           <h2>${lang === 'hi' ? `${presentCount} बच्चे उपस्थित` : `${presentCount} Children Present`}</h2>
@@ -626,7 +619,7 @@ const screens={
          </div>`;
 
     return `
-      <div class="screen active">${statusbar('8:04')}${header()}
+      <div class="screen active">${statusbar(nowClock())}${header()}
         <div class="scroll">
           <div class="body" style="padding-top:6px">
             <button class="backbtn" style="background:var(--gl);color:var(--green)" onclick="back()">
@@ -636,7 +629,7 @@ const screens={
             
             ${allPresentHero}
             
-            <div class="camline" onclick="alert('${lang==='hi'?'फोटो खींच कर स्वचालित गणना खुल रही है...':'Photo headcount scanning opens...'}')">
+            <div class="camline" onclick="openHeadcountModel()">
               <span class="ci">${SVG.cam}</span>
               <div>
                 <div style="color:#cdeede;font-size:11px;font-weight:600">${t.camLine}</div>
@@ -698,12 +691,12 @@ const screens={
       const record = masteryMap.get(c.childId);
       const flag = record ? record.trajectory_flag : null;
       const initials = c.name[lang].charAt(0).toUpperCase();
-      let color = 'var(--muted)';
-      let label = 'None';
+      // Two-state mastery model only: Mastered (green) or Needs Attention (red).
+      // Any non-mastered trajectory flag (rising/stalled/at_risk/none) collapses
+      // to Needs Attention so the grid stays a simple two-state view.
+      let color = 'var(--red)';
+      let label = lang === 'hi' ? 'ध्यान दें' : 'Needs Attention';
       if (flag === 'mastered') { color = 'var(--green)'; label = lang === 'hi' ? 'सफल' : 'Mastered'; }
-      else if (flag === 'rising') { color = 'var(--purple)'; label = lang === 'hi' ? 'प्रगति' : 'Rising'; }
-      else if (flag === 'stalled') { color = 'var(--amber)'; label = lang === 'hi' ? 'रुका हुआ' : 'Stalled'; }
-      else if (flag === 'at_risk') { color = 'var(--red)'; label = lang === 'hi' ? 'जोखिम' : 'At Risk'; }
 
       return `
         <div class="avatar-card" 
@@ -926,6 +919,16 @@ const screens={
               </div>
             </div>
 
+            <div class="sectionlabel">${lang === 'hi' ? 'रिपोर्ट और उपकरण' : 'Reports & Tools'}</div>
+            <button class="btn ghost" style="border-color:var(--navy);color:var(--navy)" onclick="generateDayReportPDF()">
+              ${SVG.clip} ${lang === 'hi' ? 'दिन की रिपोर्ट (PDF)' : 'Day report (PDF)'}
+            </button>
+            <div style="font-size:9px;color:var(--amber);font-weight:700;margin:6px 2px 12px;">${lang === 'hi' ? 'एक्सपोर्ट तैयार – बैकएंड/एक्सपोर्ट सेवा ज़रूरी' : 'Export ready – backend/export service required'}</div>
+            <button class="btn ghost" style="border-color:var(--green);color:var(--green)" onclick="openHeadcountModel()">
+              ${SVG.cam} ${lang === 'hi' ? 'फ़ोटो से गिनती (YOLO)' : 'Photo headcount (YOLO)'}
+            </button>
+            <div style="font-size:9px;color:var(--amber);font-weight:700;margin:6px 2px 0;">${lang === 'hi' ? 'मॉडल इंटीग्रेशन ज़रूरी' : 'Model integration required'}</div>
+
             <button class="btn red" style="margin-top:24px;background:#fff;border:1.5px solid var(--red);color:var(--red);" onclick="resetProfileIdentity()">
               ⚠️ ${lang === 'hi' ? 'प्रोफ़ाइल हटाएं (Reset)' : 'Reset Profile Identity'}
             </button>
@@ -936,6 +939,30 @@ const screens={
     `;
   }
 };
+
+/* Backend-ready integration points. These call real services when available
+   and surface an honest "backend/model required" state otherwise — no fake
+   output, no hardcoded secrets, no faked success. */
+async function generateDayReportPDF(){
+  try{
+    const res = await fetch('/api/report/day', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({worker:activeWorker?activeWorker.id:null,centre:activeCentre||null})});
+    if(!res.ok) throw new Error('export service unavailable');
+    const blob = await res.blob();
+    window.open(URL.createObjectURL(blob),'_blank');
+  }catch(e){
+    showBktToast(lang==='hi' ? 'एक्सपोर्ट तैयार – बैकएंड/एक्सपोर्ट सेवा ज़रूरी' : 'Export ready – backend/export service required');
+  }
+}
+async function openHeadcountModel(){
+  try{
+    const res = await fetch('/api/vision/headcount', {method:'POST'});
+    if(!res.ok) throw new Error('model service unavailable');
+    const data = await res.json();
+    showBktToast((lang==='hi'?'गिनती: ':'Count: ') + data.count);
+  }catch(e){
+    showBktToast(lang==='hi' ? 'मॉडल इंटीग्रेशन ज़रूरी' : 'Model integration required');
+  }
+}
 
 function go(id){stack.push(id);render();}
 function jump(id){stack=[id];render();}
@@ -1098,7 +1125,7 @@ async function updateBktStatus(childId, isCorrect) {
     const nameStr = getChildName(childId);
     const statusMsg = record.trajectory_flag === 'mastered'
       ? (lang === 'hi' ? `${nameStr}: सफल ✓` : `${nameStr}: Mastered ✓`)
-      : (lang === 'hi' ? `${nameStr}: ध्यान दें ⚠️` : `${nameStr}: At Risk ⚠️`);
+      : (lang === 'hi' ? `${nameStr}: ध्यान दें ⚠️` : `${nameStr}: Needs Attention ⚠️`);
     
     showBktToast(statusMsg);
     render();
@@ -1414,6 +1441,8 @@ window.closeMic = closeMic;
 window.loadECEActivity = loadECEActivity;
 window.submitAttendanceRoster = submitAttendanceRoster;
 window.submitMealFeed = submitMealFeed;
+window.generateDayReportPDF = generateDayReportPDF;
+window.openHeadcountModel = openHeadcountModel;
 
 // ── DOM Bootstrap ───────────────────────────────────────────────────────────
 (async () => {
