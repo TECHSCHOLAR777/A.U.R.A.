@@ -359,6 +359,9 @@ let activeWorker = null;
 let activeCentre = null;
 let dssAnswers = {};
 let dssQuestions = [];
+let dssPlaceholder = false;
+let roomMaterials = ['soft_ball', 'cloth_pieces'];
+let voiceRecognition = null;
 let masteryMap = new Map();
 
 // Online check maps to the inverse of the debug offline mode flag
@@ -394,15 +397,13 @@ function kw(arr,color){return `<div class="kw">${arr[0]}<span class="hl" style="
 
 function nav(active){
   const t=T[lang];
-  const tabs=[['home','home',()=>jump('shell')],['dss','clip',()=>jump('dss')],['__fab','voice',()=>openMic()],['ece','book',()=>jump('ece')],['more','grid',()=>jump('more')]];
+  const tabs=[['home','home',()=>jump('shell')],['dss','clip',()=>jump('dss')],['__fab','arrow',()=>jump('audit')],['ece','book',()=>jump('ece')],['more','grid',()=>jump('more')]];
   let html='<div class="nav" role="navigation">';
   const labels=[t.nav[0],t.nav[1],'',t.nav[2],t.nav[3]];
   tabs.forEach((tb,i)=>{
     if(tb[0]==='__fab'){
-      const online = isOnline();
-      const fabStyle = online ? '' : 'background:var(--muted);box-shadow:none;opacity:0.75;';
-      const onClickStr = online ? 'openMic()' : `alert(lang==='hi'?'ऑफ़लाइन: बोलकर इनपुट बंद है':'Offline: Voice input is disabled')`;
-      html+=`<div class="navspacer"></div><div class="fab" role="button" aria-label="Voice" style="${fabStyle}" onclick="${onClickStr}">${online ? SVG.voice : '🔒'}</div><div class="navspacer"></div>`;
+      // Center action: forward-arrow opens the Day Review / send screen (Req 4). No voice here.
+      html+=`<div class="navspacer"></div><div class="fab" role="button" aria-label="${lang==='hi'?'दिन की समीक्षा':'Day review'}" onclick="jump('audit')">${SVG.refer}</div><div class="navspacer"></div>`;
     }
     else{const on=tb[0]===active?'on':'';html+=`<div class="tab ${on}" role="button" onclick="navTap('${tb[0]}')"><span>${SVG[tb[1]]}</span><span class="lab">${labels[i]}</span></div>`;}
   });
@@ -543,37 +544,34 @@ const screens={
   },
   voice() {
     const t = T[lang];
-    const regs = t.regs.map(r => {
-      const c = r[2] ? '--green' : '--amber';
-      const bg = r[2] ? '--gl' : '--al';
-      return `<div class="reg" style="background:var(${bg});border-left-color:var(${c})"><div><div class="l" style="color:var(${c})">${r[0]}</div><div class="v">${r[1]}</div></div><span class="st" style="background:var(${c})">${r[2] ? t.doneShort : t.pendShort}</span></div>`;
-    }).join('');
-    const tiers = t.tiers.map(ti => {
-      const lt = ti[2] === '--green' ? '--gl' : ti[2] === '--amber' ? '--al' : '--rl';
-      return `<div class="tier ${ti[3] ? 'on' : ''}" style="${ti[3] ? `background:var(${lt});border-color:var(${ti[2]})` : ''};border-left-color:var(${ti[3] ? ti[2] : '--line'})"><div><div class="tl" style="${ti[3] ? `color:var(${ti[2]})` : 'color:var(--muted)'}">${ti[0]}</div><div class="td">${ti[1]}</div></div>${ti[3] ? `<span class="ck" style="background:var(${ti[2]})">${SVG.check}</span>` : ''}</div>`;
-    }).join('');
+    const online = (typeof navigator !== 'undefined' && navigator.onLine) && isOnline();
+    const supported = ('webkitSpeechRecognition' in window) || ('SpeechRecognition' in window);
+    let panel;
+    if (!online) {
+      panel = `<div class="vcard" style="border-left-color:var(--amber)"><div style="font-size:12px;color:var(--amber);font-weight:700">${lang==='hi'?'आवाज़ के लिए इंटरनेट चाहिए':'Voice requires internet'}</div><div style="font-size:10.5px;color:var(--muted);margin-top:4px">${lang==='hi'?'कृपया टैप / मैनुअल इनपुट का उपयोग करें।':'Please use tap / manual input.'}</div></div>`;
+    } else if (!supported) {
+      panel = `<div class="vcard" style="border-left-color:var(--red)"><div style="font-size:12px;color:var(--red);font-weight:700">${lang==='hi'?'इस डिवाइस पर आवाज़ समर्थित नहीं':'Voice not supported on this device'}</div><div style="font-size:10.5px;color:var(--muted);margin-top:4px">${lang==='hi'?'कृपया मैनुअल इनपुट का उपयोग करें।':'Please use manual input.'}</div></div>`;
+    } else {
+      panel = `
+        <button class="btn green" id="voice-mic-btn" onclick="startVoiceCapture()">${SVG.voice} ${lang==='hi'?'बोलें (सामग्री / गिनती)':'Speak (materials / counts)'}</button>
+        <div id="voice-status" style="font-size:10px;color:var(--muted);text-align:center;margin-top:8px">${lang==='hi'?'सिर्फ़ संख्या या सामग्री बोलें। नाम नहीं।':'Say a count or a material only. No names.'}</div>
+        <div class="transcript" style="margin-top:12px;min-height:44px"><div class="q" id="voice-transcript" style="color:var(--muted)">…</div></div>`;
+    }
     return `
-      <div class="screen active">${statusbar('8:10')}${header()}
+      <div class="screen active">${statusbar(nowClock())}${header()}
         <div class="scroll">
           <div class="body" style="padding-top:6px">
-            <button class="backbtn" style="background:var(--gl);color:var(--green)" onclick="back()">
-              ‹ ${lang === 'hi' ? 'वापस' : 'Back'}
-            </button>
-            ${kw(t.voiceKw, '--green')}
-            <div class="sub">${t.voiceSub}</div>
-            <div class="transcript">
-              <div class="q">${t.voiceQ}</div>
-            </div>
-            <div class="sectionlabel">${t.filling}</div>
-            ${regs}
-            <div class="sectionlabel">${t.sure}</div>
-            ${tiers}
+            <button class="backbtn" style="background:var(--gl);color:var(--green)" onclick="back()">‹ ${lang==='hi'?'वापस':'Back'}</button>
+            ${kw(t.voiceKw,'--green')}
+            <div class="sub">${lang==='hi'?'केवल सामग्री और गिनती के लिए — कोई बच्चों के नाम या निजी जानकारी नहीं।':'For materials and counts only — never child names or personal data.'}</div>
+            ${panel}
           </div>
         </div>
-        ${nav('home')}
+        ${nav('ece')}
       </div>
     `;
   },
+
   att() {
     const t = T[lang];
     const totalCount = activeChildren.length;
@@ -659,14 +657,14 @@ const screens={
     const online = isOnline();
     
     const sourceLabel = online 
-      ? (lang === 'hi' ? 'स्रोत: क्लाउड एलएलएम (जेमिनी फ़्लैश)' : 'Source: Cloud LLM (Gemini Flash)')
-      : (lang === 'hi' ? 'स्रोत: लोकल टेम्पलेट (ऑफ़लाइन फ़ालबैक)' : 'Source: Local Template (Offline Fallback)');
+      ? (lang === 'hi' ? 'स्रोत: ऑनलाइन अनुकूलन (बैकएंड)' : 'Source: Online adaptation (backend)')
+      : (lang === 'hi' ? 'स्रोत: लोकल टेम्पलेट (ऑफ़लाइन)' : 'Source: Local template (offline)');
       
-    const voiceWarningHtml = online 
-      ? '' 
-      : `<div style="background:var(--rl);color:var(--red);border-radius:10px;padding:8px;font-size:9.5px;font-weight:700;margin-bottom:10px;text-align:center;">
-          ⚠️ ${lang === 'hi' ? 'ऑफ़लाइन: बोलकर सामग्री जोड़ना बंद है (केवल टैप करें)' : 'Offline: Voice materials disabled (Tap-only)'}
-         </div>`;
+    // Voice only for non-PII materials/counts; online + Web Speech only (Req 5).
+    const voiceOnline = (typeof navigator !== 'undefined' && navigator.onLine) && isOnline();
+    const voiceWarningHtml = voiceOnline
+      ? `<button class="btn ghost" style="border-color:var(--green);color:var(--green);margin-bottom:10px;" onclick="go('voice')">${SVG.voice} ${lang === 'hi' ? 'सामग्री / गिनती — आवाज़ (नाम नहीं)' : 'Materials / count — voice (no names)'}</button>`
+      : `<div style="background:var(--rl);color:var(--red);border-radius:10px;padding:8px;font-size:9.5px;font-weight:700;margin-bottom:10px;text-align:center;">⚠️ ${lang === 'hi' ? 'ऑफ़लाइन: आवाज़ बंद; टैप/मैनुअल इनपुट करें' : 'Voice requires internet; use tap/manual input'}</div>`;
 
     const kidsGridHtml = activeChildren.map(c => {
       const record = masteryMap.get(c.childId);
@@ -758,7 +756,8 @@ const screens={
               <div style="font-size:9.5px;color:var(--muted);margin-top:4px">${currentActivity ? (currentActivity.age_band_months + ' months · ' + currentActivity.targeted_domain) : t.eceAge}</div>
               <div style="font-size:10.5px;line-height:1.55;margin-top:8px">${currentActivity ? currentActivity.step_by_step_instructions.join('<br>') : t.eceDesc}</div>
               <div style="font-size:8px;color:var(--muted);margin-top:8px">${currentActivity ? ('milestone: ' + currentActivity.milestone_targeted) : t.ecePick}</div>
-              
+              ${currentActivity && currentActivity.inclusion_modifications && currentActivity.inclusion_modifications.length ? `<div style="margin-top:8px;font-size:9.5px;color:var(--navy);line-height:1.4;"><strong style="font-size:8px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:2px;">${lang==='hi'?'समावेश संशोधन':'Inclusion modifications'}</strong>${currentActivity.inclusion_modifications.map(m => '• ' + m).join('<br>')}</div>` : ''}
+
               ${guardrailHtml}
             </div>
             
@@ -782,10 +781,10 @@ const screens={
             <div class="sectionlabel">${t.eceFocus}</div>
             <div class="vcard" style="background:var(--al);border-left-color:var(--amber)">
               <div style="display:flex;justify-content:space-between;align-items:center">
-                <span style="font-size:13px;font-weight:700">${lang === 'hi' ? 'आरती (3 साल)' : 'Aarti (3 years)'}</span>
-                <span style="background:var(--amber);color:#fff;font-size:7.5px;font-weight:600;padding:3px 8px;border-radius:9px">${lang === 'hi' ? 'संकेत विकल्प' : 'Gesture Override'}</span>
+                <span style="font-size:13px;font-weight:700">${lang === 'hi' ? 'इन्क्लूज़न अनुकूलन (उदाहरण)' : 'Inclusion adaptation (example)'}</span>
+                <span style="background:var(--muted);color:#fff;font-size:7.5px;font-weight:600;padding:3px 8px;border-radius:9px">${lang === 'hi' ? 'उदाहरण' : 'Example'}</span>
               </div>
-              <div style="font-size:10px;margin-top:6px;line-height:1.5">${lang === 'hi' ? 'गैर-मूक (Non-verbal) होने के कारण, हाथ के इशारे से गेंद छूने की गतिविधि दी गई।' : 'Attunement rule fired: Non-verbal response path (clapping/gestures) mapped for interaction.'}</div>
+              <div style="font-size:10px;margin-top:6px;line-height:1.5">${lang === 'hi' ? 'उदाहरण: गैर-मौखिक बच्चे के लिए इशारों से जवाब का रास्ता। (वास्तविक बच्चा नहीं — चित्रण मात्र)' : 'Example: a non-verbal response path (gestures) for an inclusion need. (Illustrative — not a real child.)'}</div>
             </div>
           </div>
         </div>
@@ -795,10 +794,11 @@ const screens={
   },
   dss() {
     const t = T[lang];
-    const questionsToRender = dssQuestions.slice(0, 5); // Load 5 questions for screen space
+    const questionsToRender = dssQuestions.slice(0, 8); // child-development milestone red-flags
 
     const dssHtml = questionsToRender.map((q, idx) => `
       <div class="form-group" style="background:#fff;border:1px solid var(--line);border-radius:var(--r-tile);padding:14px;margin-bottom:10px;">
+        ${q.milestone_due ? `<span style="display:inline-block;background:var(--pl);color:var(--purple);font-size:8px;font-weight:800;padding:2px 7px;border-radius:8px;margin-bottom:6px;">${lang==='hi'?'मील का पत्थर':'milestone'}: ${q.milestone_due}</span>` : ''}
         <div style="font-size:12px;font-weight:700;color:var(--ink);line-height:1.4;">${idx + 1}. ${q.question}</div>
         <div style="display:flex;gap:12px;margin-top:10px;">
           <button onclick="toggleDssQuestion('${q.item_id || 'q' + idx}', true)" id="btn-${q.item_id || 'q' + idx}-yes" style="flex:1;background:#fff;border:1.5px solid var(--line);border-radius:8px;padding:8px;font-size:12px;font-weight:700;cursor:pointer;color:var(--muted);min-height:36px;">
@@ -820,8 +820,9 @@ const screens={
             </button>
             ${kw(lang === 'hi' ? ["विकास ", "जाँच (DSS)"] : ["Developmental ", "Screening (DSS)"], '--purple')}
             <div class="sub">
-              ${lang === 'hi' ? 'अक्षमता स्क्रीनिंग अनुसूची (Navchetana 2024)। लाल झंडे और RBSK रेफरल पहचान।' : 'Navchetana clinical disability screening schedule. Identify developmental red flags.'}
+              ${lang === 'hi' ? 'Navchetana बाल विकास जाँच (0–3)। उम्र के अनुसार मील के पत्थर। यह जाँच है, चिकित्सा निदान नहीं।' : 'Navchetana child developmental screening (0–3). Age-wise milestones. This is a screening checklist, not a medical diagnosis.'}
             </div>
+            ${dssPlaceholder ? `<div style="background:var(--al);border-left:4px solid var(--amber);border-radius:10px;padding:9px;font-size:9.5px;color:var(--amber);font-weight:700;margin-bottom:10px;">${lang==='hi'?'Navchetana DSS — अंतिम डेटा लंबित (प्लेसहोल्डर)':'Navchetana DSS — final data pending (placeholder)'}</div>` : ''}
 
             <div id="dss-questions-panel">
               ${dssHtml}
@@ -844,9 +845,27 @@ const screens={
     const presentCount = activeChildren.filter(c => c.present).length;
     const absentCount = totalCount - presentCount;
     const masteredCount = activeChildren.filter(c => { const r = masteryMap.get(c.childId); return r && r.trajectory_flag === 'mastered'; }).length;
+    // DSS status (deterministic from current answers)
+    const dssAnswered = Object.keys(dssAnswers).length;
+    const dssRed = Object.values(dssAnswers).filter(v => v === true).length;
+    const dssLabel = dssAnswered === 0
+      ? (lang==='hi' ? 'DSS: अभी नहीं की गई' : 'DSS: not run yet')
+      : (lang==='hi' ? `DSS: ${dssRed} लाल झंडे · ${dssRed===0?'सामान्य':dssRed===1?'निगरानी':'रेफर'}` : `DSS: ${dssRed} red flag(s) · ${dssRed===0?'typical':dssRed===1?'monitor':'refer'}`);
+    // Activity / play outcome
+    const actLabel = currentActivity
+      ? ((lang==='hi' ? `गतिविधि: ${currentActivity.adapted_title}` : `Activity: ${currentActivity.adapted_title}`) + ` (${currentActivity.fallback_tier || currentActivity.source})`)
+      : (lang==='hi' ? 'गतिविधि: अभी अनुकूलित नहीं' : 'Activity: not adapted yet');
+    // Sync / backend status (no fake send)
+    const onlineNow = (typeof navigator !== 'undefined' && navigator.onLine) && isOnline();
+    const syncLabel = lang==='hi'
+      ? `सिंक: ${syncQueueSize} कतार में · ${onlineNow?'ऑनलाइन':'ऑफ़लाइन'} (बैकएंड सिंक आवश्यक)`
+      : `Sync: ${syncQueueSize} queued · ${onlineNow?'online':'offline'} (backend sync required)`;
     const auditRows = [
       [lang==='hi' ? `हाज़िरी: ${presentCount} उपस्थित, ${absentCount} अनुपस्थित` : `Attendance: ${presentCount} present, ${absentCount} absent`, 1],
-      [lang==='hi' ? `दक्षता: ${totalCount} में से ${masteredCount} ने सीखा` : `Mastery: ${masteredCount} of ${totalCount} mastered`, 1]
+      [lang==='hi' ? `दक्षता: ${totalCount} में से ${masteredCount} ने सीखा` : `Mastery: ${masteredCount} of ${totalCount} mastered`, 1],
+      [dssLabel, dssAnswered===0 ? 0 : (dssRed===0 ? 1 : 0)],
+      [actLabel, currentActivity ? 1 : 0],
+      [syncLabel, syncQueueSize===0 ? 1 : 0]
     ];
     const items=auditRows.map(i=>`<div class="item" style="border-left-color:var(${i[1]?'--green':'--red'})"><span class="b" style="background:var(${i[1]?'--green':'--red'})">${i[1]?'✓':'!'}</span><span class="x">${i[0]}</span></div>`).join('');
     return `<div class="screen active">${statusbar('2:30')}${header()}<div class="scroll"><div class="body" style="padding-top:6px"><button class="backbtn" style="background:var(--pl);color:var(--navy)" onclick="back()">‹ ${lang==='hi'?'वापस':'Back'}</button>${kw(t.auditKw,'--navy')}<div style="background:var(--al);border-left:6px solid var(--amber);border-radius:12px;padding:13px;margin:6px 0 14px"><div style="font-size:12px;font-weight:700;color:var(--amber)">${t.auditYes}</div><div style="font-size:9.5px;color:var(--amber);margin-top:4px">${t.auditYesD}</div></div><div class="sectionlabel">${t.auditWhat}</div>${items}<div style="background:var(--gl);border-radius:10px;padding:11px;margin-top:4px;font-size:9.5px;color:var(--green);line-height:1.5">${t.auditSafe}</div><button class="btn primary" style="margin-top:14px" onclick="alert('${lang==='hi' ? 'दिन बंद किया गया। सारा काम स्थानीय स्तर पर सुरक्षित है।' : 'Day review closed. All actions saved locally on device.'}');jump('shell')">${t.auditApprove}</button></div></div>${nav('home')}</div>`;
@@ -1191,6 +1210,14 @@ function calculateDssResult() {
   const resultDiv = document.getElementById('dss-result-panel');
   if (!resultDiv) return;
 
+  // Red flags fired (deterministic) — list the actual milestone items answered "yes".
+  const firedFlags = dssQuestions.filter(q => dssAnswers[q.item_id] === true);
+  const firedHtml = firedFlags.length ? `
+    <div style="background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px;margin-top:12px;text-align:left;">
+      <div style="font-size:9px;font-weight:800;color:var(--muted);text-transform:uppercase;margin-bottom:6px;">${lang==='hi'?'लागू लाल झंडे':'Red flags fired'} (${firedFlags.length})</div>
+      ${firedFlags.map(q => `<div style="font-size:10.5px;color:var(--red);line-height:1.4;margin-bottom:4px;">• ${q.milestone_due ? '['+q.milestone_due+'] ' : ''}${q.question}</div>`).join('')}
+    </div>` : '';
+
   let resultHtml = '';
   if (redFlagsCount === 0) {
     resultHtml = `
@@ -1218,13 +1245,13 @@ function calculateDssResult() {
         <span style="font-size:32px;display:block;margin-bottom:8px;">🚨</span>
         <div style="font-size:16px;font-weight:800;color:var(--red);">${lang === 'hi' ? 'रेफरल आवश्यक (Refer to DEIC)' : 'RBSK / DEIC Referral Required'}</div>
         <div style="font-size:11.5px;color:var(--red);margin-top:6px;line-height:1.4;">
-          ${lang === 'hi' ? `${redFlagsCount} लाल झंडे मिले। बच्चे को तुरंत RBSK / जिला प्रारंभिक हस्तक्षेप केंद्र (DEIC) रेफर करें।` : `${redFlagsCount} Red Flags detected. High risk of clinical delay. Refer child to RBSK / District Early Intervention Centre immediately.`}
+          ${lang === 'hi' ? `${redFlagsCount} लाल झंडे मिले। आकलन के लिए बच्चे को RBSK / जिला प्रारंभिक हस्तक्षेप केंद्र (DEIC) रेफर करें।` : `${redFlagsCount} red flag(s) detected. Developmental concern observed. Refer the child to RBSK / District Early Intervention Centre (DEIC) for assessment.`}
         </div>
       </div>
     `;
   }
 
-  resultHtml += `
+  resultHtml += firedHtml + `
     <button class="btn ghost" style="margin-top:14px;border-color:var(--purple);color:var(--purple);" onclick="resetDssScreener()">
       ${lang === 'hi' ? 'दोबारा जाँच करें' : 'Run Screener Again'}
     </button>
@@ -1262,70 +1289,114 @@ async function submitAttendanceRoster() {
 
 async function loadECEActivity() {
   const btn = document.getElementById('btn-load-activity');
-  if (btn) {
-    btn.disabled = true;
-    btn.textContent = lang==='hi' ? '⏳ अनुकूलन जारी...' : '⏳ Adapting...';
-  }
-  
+  if (btn) { btn.disabled = true; btn.textContent = lang==='hi' ? '⏳ अनुकूलन जारी...' : '⏳ Adapting...'; }
+
+  // Live room context from state (Req 3): present children, mastery, materials, inclusion.
+  const present = activeChildren.filter(c => c.present);
+  const masteredCount = present.filter(c => { const r = masteryMap.get(c.childId); return r && r.trajectory_flag === 'mastered'; }).length;
+  const roomContext = {
+    present_count: present.length,
+    mastered_count: masteredCount,
+    needs_attention_count: present.length - masteredCount,
+    materials: roomMaterials,
+    inclusion_flags: present.filter(c => c.inclusion).map(c => String(c.childId).slice(0, 4))
+  };
+  const childProfiles = present.map(c => ({ child_id: c.childId, age_months: c.age_months || 36 }));
+  const payload = { node_id: activeNode, age_band_months: '36-48', child_profiles: childProfiles, context: roomContext };
+
+  const online = (typeof navigator !== 'undefined' && navigator.onLine) && isOnline();
+
+  // OFFLINE: local template/retrieval fallback ONLY -- never call any cloud LLM (Req 2).
+  if (!online) { currentActivity = localActivityFallback('offline_template'); render(); return; }
+
   try {
-    const response = await fetch('/api/activity/next', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        child_profiles: activeChildren.map(c => ({
-          child_id: c.childId,
-          name: c.name[lang],
-          age_months: 36 // default representative age
-        })),
-        node_id: activeNode,
-        age_band_months: '36-48',
-        is_offline: window.DEBUG_OFFLINE_MODE
-      }),
+    // ONLINE. SECURITY: any LLM (Groq) API key lives ONLY on the server proxy, never in the browser.
+    // Tier 1: backend Groq LLM proxy. BACKEND WORK REQUIRED: implement POST /api/llm/activity
+    // (server-side Groq call using process.env.GROQ_API_KEY). Until then this 404s and we fall back.
+    let resp = await fetch('/api/llm/activity', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+    }).catch(() => null);
+
+    if (resp && resp.ok) {
+      currentActivity = normalizeActivity(await resp.json(), 'cloud_llm_proxy', 'cloud_llm');
+      render(); return;
+    }
+
+    // Tier 2: deterministic retrieval + guardrail engine (existing backend).
+    resp = await fetch('/api/activity/next', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
     });
-    
-    if (!response.ok) throw new Error('Network error');
-    
-    currentActivity = await response.json();
+    if (!resp.ok) throw new Error('retrieval engine error');
+    currentActivity = normalizeActivity(await resp.json(), 'retrieval_engine', 'retrieval_engine');
     render();
   } catch (err) {
-    console.warn('[Offline Fallback Activated]', err);
-    currentActivity = {
-      schema_version: "1.0",
-      activity_id: "ACT-OFFLINE-01",
-      source: "local_template",
-      targeted_domain: "physical",
-      age_band_months: "36-48",
-      milestone_targeted: "FM-3",
-      adapted_title: lang === 'hi' ? "गेंद की ओर बढ़ना (ऑफ़लाइन फ़ालबैक)" : "Reaching for the ball (Offline Fallback)",
-      step_by_step_instructions: lang === 'hi' 
-        ? ["बच्चे के सामने नरम गेंद रखें और पकड़ने के लिए बढ़ावा दें।", "गेंद थोड़ा दूर खिसकाएँ।"]
-        : ["Place a soft ball within reach and encourage child to grasp it.", "Move ball slightly further away."],
-      required_materials: ["soft_ball"],
-      safety_guard_applied: true,
-      provenance: {
-        generated_offline: true,
-        rules_fired: ["SAFE_CHOKE_01", "INC_ATTUNE_01"]
-      }
-    };
+    // Tier 3: local template fallback (no fake success).
+    console.warn('[Activity online path failed -> local template]', err);
+    currentActivity = localActivityFallback('offline_template');
     render();
   }
 }
+
+function normalizeActivity(a, sourceDefault, tier) {
+  a = a || {};
+  const prov = a.provenance || {};
+  return {
+    activity_id: a.activity_id || a.id || 'ACT-UNKNOWN',
+    source: a.source || sourceDefault,
+    targeted_domain: a.targeted_domain || a.domain || 'physical',
+    age_band_months: a.age_band_months || '36-48',
+    milestone_targeted: a.milestone_targeted || a.milestone || activeNode,
+    adapted_title: a.adapted_title || a.title || (lang === 'hi' ? 'गतिविधि' : 'Activity'),
+    step_by_step_instructions: Array.isArray(a.step_by_step_instructions) ? a.step_by_step_instructions : (Array.isArray(a.steps) ? a.steps : []),
+    required_materials: a.required_materials || a.materials || [],
+    safety_guard_applied: a.safety_guard_applied != null ? a.safety_guard_applied : true,
+    inclusion_modifications: a.inclusion_modifications || prov.inclusion_modifications || [],
+    provenance: { rules_fired: Array.isArray(prov.rules_fired) ? prov.rules_fired : [], generated_offline: false },
+    fallback_tier: a.fallback_tier || tier
+  };
+}
+
+function localActivityFallback(tier) {
+  return {
+    activity_id: 'ACT-OFFLINE-01',
+    source: 'local_template',
+    targeted_domain: 'physical',
+    age_band_months: '36-48',
+    milestone_targeted: activeNode,
+    adapted_title: lang === 'hi' ? 'गेंद की ओर बढ़ना (ऑफ़लाइन टेम्पलेट)' : 'Reaching for the ball (offline template)',
+    step_by_step_instructions: lang === 'hi'
+      ? ['बच्चे के सामने नरम गेंद रखें और पकड़ने के लिए बढ़ावा दें।', 'गेंद थोड़ा दूर खिसकाएँ।']
+      : ['Place a soft ball within reach and encourage the child to grasp it.', 'Move the ball slightly further away.'],
+    required_materials: ['soft_ball'],
+    safety_guard_applied: true,
+    inclusion_modifications: lang === 'hi' ? ['गैर-मौखिक बच्चों के लिए इशारे स्वीकार करें'] : ['Accept gesture responses for non-verbal children'],
+    provenance: { rules_fired: ['SAFE_CHOKE_01', 'INC_ATTUNE_01'], generated_offline: true },
+    fallback_tier: tier || 'offline_template'
+  };
+}
+
 
 async function loadDssQuestions() {
   if (dssQuestions.length > 0) return;
   try {
     const r = await fetch('/data/dss.json');
     const data = await r.json();
-    dssQuestions = data.items || [];
+    // Child developmental screening ONLY: use Part B milestone red-flags.
+    // Explicitly excludes caregiver pregnancy/birth-history items (Part A dss_01/dss_02 etc).
+    const partB = (data.items || []).filter(it => it.part === 'B');
+    dssQuestions = partB.length ? partB : (data.items || []).filter(it => it.item_id !== 'dss_01' && it.item_id !== 'dss_02');
+    dssPlaceholder = false;
   } catch (err) {
-    console.warn('[DSS loading failed]', err);
+    console.warn('[DSS loading failed — using child-focused placeholder]', err);
+    // Navchetana DSS pending final data — child-development placeholder (no PII, no pregnancy items).
     dssQuestions = [
-      { item_id: 'q1', question: "Do the child's eyes frequently turn red or water?" },
-      { item_id: 'q2', question: "Is there frequent pus or watery discharge from the ears?" },
-      { item_id: 'q3', question: "Does the child have poor balance or jerky movements while walking?" },
-      { item_id: 'q4', question: "Is the child too small or too weak compared to other children of similar age?" },
-      { item_id: 'q5', question: "Does the child have feeding difficulties such as suckling or swallowing?" }
+      { item_id: 'p1', milestone_due: '6 months', question: "Has the child NOT yet supported their own neck by 6 months?" },
+      { item_id: 'p2', milestone_due: '9 months', question: "Has the child NOT yet sat without support by 9 months?" },
+      { item_id: 'p3', milestone_due: '12 months', question: "Does the child NOT yet respond to their own name by 12 months?" },
+      { item_id: 'p4', milestone_due: '18 months', question: "Has the child NOT yet walked without support by 18 months?" },
+      { item_id: 'p5', milestone_due: '24 months', question: "Has the child NOT yet spoken a few words by 24 months?" }
     ];
+    dssPlaceholder = true;
   }
 }
 
@@ -1374,6 +1445,31 @@ function toggleOnline(event) {
   if (event) event.stopPropagation();
   window.DEBUG_OFFLINE_MODE = !window.DEBUG_OFFLINE_MODE;
   render();
+}
+
+// Real Web Speech for NON-PII materials/counts only (Req 5). Online-only; graceful fallbacks; no fake transcript/confidence.
+function startVoiceCapture(){
+  const online = (typeof navigator !== 'undefined' && navigator.onLine) && isOnline();
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const status = document.getElementById('voice-status');
+  const out = document.getElementById('voice-transcript');
+  if (!online){ if(status) status.textContent = lang==='hi'?'आवाज़ के लिए इंटरनेट चाहिए; टैप/मैनुअल इनपुट करें।':'Voice requires internet; use tap/manual input.'; return; }
+  if (!SR){ if(status) status.textContent = lang==='hi'?'इस डिवाइस पर आवाज़ समर्थित नहीं।':'Voice not supported on this device.'; return; }
+  try {
+    voiceRecognition = new SR();
+    voiceRecognition.lang = lang==='hi' ? 'hi-IN' : 'en-IN';
+    voiceRecognition.interimResults = true;
+    voiceRecognition.maxAlternatives = 1;
+    if(status) status.textContent = lang==='hi'?'सुन रहे हैं…':'Listening…';
+    voiceRecognition.onresult = (e) => {
+      let txt = '';
+      for (let i=0;i<e.results.length;i++) txt += e.results[i][0].transcript;
+      if(out){ out.textContent = txt; out.style.color = 'var(--ink)'; }
+    };
+    voiceRecognition.onerror = (e) => { if(status) status.textContent = (lang==='hi'?'त्रुटि: ':'Error: ') + (e.error||''); };
+    voiceRecognition.onend = () => { if(status) status.textContent = lang==='hi'?'समाप्त। दोबारा बोलने के लिए टैप करें।':'Done. Tap to speak again.'; };
+    voiceRecognition.start();
+  } catch(err){ if(status) status.textContent = lang==='hi'?'आवाज़ शुरू नहीं हो सकी।':'Could not start voice.'; }
 }
 
 function openMic(){
@@ -1425,6 +1521,7 @@ window.calculateDssResult = calculateDssResult;
 window.resetDssScreener = resetDssScreener;
 window.simulateSync = simulateSync;
 window.resetProfileIdentity = resetProfileIdentity;
+window.startVoiceCapture = startVoiceCapture;
 window.openMic = openMic;
 window.closeMic = closeMic;
 window.loadECEActivity = loadECEActivity;
