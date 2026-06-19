@@ -113,7 +113,7 @@ describe('BKT Engine - updateMastery', () => {
     // If p is nearly 1: denom ≈ 0
     const nearOneState = makeState({ p_mastery: 0.99 });
 
-    // failure denom = 0.99 * 0 + 0.01 * 1 = 0.01 — still not near zero
+    // failure denom = 0.99 * 0 + 0.01 * 1 = 0.01 - still not near zero
     // To truly hit near-zero, we need p_mastery near 0 with success and p_g=0:
     // success denom = p*(1-p_s) + (1-p)*p_g = 0.01 * 1 + 0.99 * 0 = 0.01
     // Still 0.01. The epsilon is 1e-10, so let's create a scenario:

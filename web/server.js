@@ -18,7 +18,7 @@
  */
 
 import express from 'express';
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { updateBKT, computeTrajectoryFlag } from './bkt_engine.js';
@@ -61,7 +61,7 @@ let serverChildren = [];
 
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Activity bank — loaded once at startup
+// Activity bank - loaded once at startup
 // ─────────────────────────────────────────────────────────────────────────────
 
 let activityBank = [];
@@ -73,23 +73,23 @@ try {
   console.log(`[server] Loaded ${activityBank.length} activities from activity_bank.json`);
 } catch (err) {
   console.error('[server] Failed to load activity_bank.json:', err.message);
-  // Continue with an empty bank — static fallback will handle all requests
+  // Continue with an empty bank - static fallback will handle all requests
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Sub-task 5.6 — cacheKey (djb2 hash)
+// Sub-task 5.6 - cacheKey (djb2 hash)
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * cacheKey — Produce a deterministic cache key for a (activity_id, node_id, age_band) triple.
+ * cacheKey - Produce a deterministic cache key for a (activity_id, node_id, age_band) triple.
  *
  * Uses the djb2 hashing algorithm over the concatenated string.
  * No random or time-based input; identical inputs always produce the same key.
  *
  * @param {string} activity_id
  * @param {string} node_id
- * @param {string} age_band  — e.g. "36-48"
- * @returns {string}  — unsigned 32-bit integer expressed as a hex string
+ * @param {string} age_band  - e.g. "36-48"
+ * @returns {string}  - unsigned 32-bit integer expressed as a hex string
  *
  * Satisfies Req 7.4
  */
@@ -108,7 +108,7 @@ function cacheKey(activity_id, node_id, age_band) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * serverTapMastery — Server-side equivalent of BKTEngine.tapMastery.
+ * serverTapMastery - Server-side equivalent of BKTEngine.tapMastery.
  *
  * Uses the pure updateBKT and computeTrajectoryFlag functions from bkt_engine.js
  * but persists state to an in-memory Map instead of IndexedDB.
@@ -127,7 +127,7 @@ function serverTapMastery(child_id, node_id, got_it) {
   let p_history;
 
   if (!existing) {
-    // Cold start — initialise from P_L0 (Req 1.1)
+    // Cold start - initialise from P_L0 (Req 1.1)
     prior             = DEFAULT_BKT_PARAMS.p_l0;
     observation_count = 0;
     p_history         = [];
@@ -164,7 +164,7 @@ function serverTapMastery(child_id, node_id, got_it) {
 }
 
 /**
- * serverGetRoomAggregate — Server-side equivalent of BKTEngine.getRoomAggregate.
+ * serverGetRoomAggregate - Server-side equivalent of BKTEngine.getRoomAggregate.
  *
  * @param {string} node_id
  * @returns {{ node_id: string, mastered_count: number, total_count: number, avg_p_mastery: number }}
@@ -205,7 +205,7 @@ function serverGetRoomAggregate(node_id) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * selectCandidates — Filter the activity bank by node_id and optionally age_band.
+ * selectCandidates - Filter the activity bank by node_id and optionally age_band.
  *
  * Filters by matching `aadharshila_ref` to `node_id`.  If no activities match
  * the node, the full bank is returned as fallback candidates.  When
@@ -213,10 +213,10 @@ function serverGetRoomAggregate(node_id) {
  * that band are preferred (ranked first), but all matching activities are
  * returned so the reject loop can try them all.
  *
- * @param {object[]} bank             — Full activity bank array
- * @param {string}   node_id          — Curriculum node identifier
- * @param {string}   [age_band_months] — Optional age band string (e.g. "36-48")
- * @returns {object[]}  — Ordered array of activity candidates
+ * @param {object[]} bank             - Full activity bank array
+ * @param {string}   node_id          - Curriculum node identifier
+ * @param {string}   [age_band_months] - Optional age band string (e.g. "36-48")
+ * @returns {object[]}  - Ordered array of activity candidates
  */
 function selectCandidates(bank, node_id, age_band_months) {
   if (!Array.isArray(bank) || bank.length === 0) return [];
@@ -243,12 +243,12 @@ function selectCandidates(bank, node_id, age_band_months) {
 }
 
 /**
- * ageBandToDiffKey — Convert a month-based age band string to a year-based
+ * ageBandToDiffKey - Convert a month-based age band string to a year-based
  * differentiation key used in activity_bank.json.
  *
  * e.g. "36-48" → "3-4",  "24-36" → "2-3",  "48-60" → "4-5"
  *
- * @param {string} band — e.g. "36-48"
+ * @param {string} band - e.g. "36-48"
  * @returns {string|null}
  */
 function ageBandToDiffKey(band) {
@@ -291,12 +291,12 @@ function extractFeatures(context) {
 }
 
 /**
- * selectSafeSubstitute — Pick a substitute activity that has no exclusion_tags
+ * selectSafeSubstitute - Pick a substitute activity that has no exclusion_tags
  * and no choking_hazard, preferring a different domain than the candidate.
  *
- * @param {object[]} bank    — Full activity bank
- * @param {string}   node_id — Curriculum node (used to prefer matching activities)
- * @param {string}   [excludeId] — Activity id to exclude (the one being substituted)
+ * @param {object[]} bank    - Full activity bank
+ * @param {string}   node_id - Curriculum node (used to prefer matching activities)
+ * @param {string}   [excludeId] - Activity id to exclude (the one being substituted)
  * @returns {object|null}
  */
 function selectSafeSubstitute(bank, node_id, excludeId) {
@@ -310,11 +310,11 @@ function selectSafeSubstitute(bank, node_id, excludeId) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Sub-task 5.4 — buildC1
+// Sub-task 5.4 - buildC1
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * deriveBand — Derive the standard age band from an array of child profiles.
+ * deriveBand - Derive the standard age band from an array of child profiles.
  *
  * Computes the average age_months across all profiles and returns the
  * standard band string (e.g. "24-36") that the average falls into.
@@ -322,8 +322,8 @@ function selectSafeSubstitute(bank, node_id, excludeId) {
  *
  * Standard bands: 0-3, 3-6, 6-9, 9-12, 12-18, 18-24, 24-36
  *
- * @param {object[]} childProfiles — Array of ChildProfile objects
- * @returns {string}  — Age band string
+ * @param {object[]} childProfiles - Array of ChildProfile objects
+ * @returns {string}  - Age band string
  */
 function deriveBand(childProfiles) {
   if (!Array.isArray(childProfiles) || childProfiles.length === 0) {
@@ -348,14 +348,14 @@ function deriveBand(childProfiles) {
 }
 
 /**
- * buildInclusionModifications — Look up inclusion adaptations for INC_-prefixed rules.
+ * buildInclusionModifications - Look up inclusion adaptations for INC_-prefixed rules.
  *
  * For each INC_ rule_id in rules_fired, maps it to a candidate.inclusion_adaptations key
  * and returns a InclusionModifications object.
  *
- * @param {string[]} rules_fired           — Array of rule_id strings
- * @param {object}   candidate             — ActivityCandidate
- * @returns {object}  — InclusionModifications or empty object
+ * @param {string[]} rules_fired           - Array of rule_id strings
+ * @param {object}   candidate             - ActivityCandidate
+ * @returns {object}  - InclusionModifications or empty object
  */
 function buildInclusionModifications(rules_fired, candidate) {
   if (!Array.isArray(rules_fired) || rules_fired.length === 0) return {};
@@ -398,14 +398,14 @@ function buildInclusionModifications(rules_fired, candidate) {
 }
 
 /**
- * buildC1 — Assemble a C1ActivityObject from a passing candidate and its validation result.
+ * buildC1 - Assemble a C1ActivityObject from a passing candidate and its validation result.
  *
- * @param {object}   candidate         — ActivityCandidate from the activity bank
- * @param {object}   validationResult  — ValidationResult from GuardrailEngine.validate
- * @param {object[]} childProfiles     — Array of ChildProfile objects
- * @param {string}   nodeId            — Curriculum node id
- * @param {boolean}  offline           — Whether this is generated offline
- * @returns {object}  — C1ActivityObject
+ * @param {object}   candidate         - ActivityCandidate from the activity bank
+ * @param {object}   validationResult  - ValidationResult from GuardrailEngine.validate
+ * @param {object[]} childProfiles     - Array of ChildProfile objects
+ * @param {string}   nodeId            - Curriculum node id
+ * @param {boolean}  offline           - Whether this is generated offline
+ * @returns {object}  - C1ActivityObject
  *
  * Satisfies Req 7.1, 7.2, 7.3, 7.8
  */
@@ -439,7 +439,7 @@ function buildC1(candidate, validationResult, childProfiles, nodeId, offline) {
   const source = 'activity_bank';
 
   // adapted_title: first keyword + domain
-  const adapted_title = `${(candidate.keywords || ['activity'])[0]} — ${candidate.targeted_domain || 'general'}`;
+  const adapted_title = `${(candidate.keywords || ['activity'])[0]} - ${candidate.targeted_domain || 'general'}`;
 
   return {
     activity_id,
@@ -462,18 +462,18 @@ function buildC1(candidate, validationResult, childProfiles, nodeId, offline) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Sub-task 5.5 — Static fallback
+// Sub-task 5.5 - Static fallback
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * buildStaticFallback — Return a hardcoded safe C1 object when all candidates
+ * buildStaticFallback - Return a hardcoded safe C1 object when all candidates
  * are exhausted without a passing result.
  *
  * provenance.fallback_tier = 2, source = "safe_default"
  *
- * @param {string}   nodeId        — Curriculum node
- * @param {object[]} childProfiles — Child profiles (for age_band derivation)
- * @returns {object}  — C1ActivityObject
+ * @param {string}   nodeId        - Curriculum node
+ * @param {object[]} childProfiles - Child profiles (for age_band derivation)
+ * @returns {object}  - C1ActivityObject
  *
  * Satisfies Req 7.7
  */
@@ -486,7 +486,7 @@ function buildStaticFallback(nodeId, childProfiles) {
     targeted_domain:             'socio_emotional',
     age_band_months:             age_band,
     milestone_targeted:          nodeId,
-    adapted_title:               'Free Play — socio_emotional',
+    adapted_title:               'Free Play - socio_emotional',
     step_by_step_instructions: [
       'Allow children to engage in free, child-led play.',
       'Observe and take notes on interactions.',
@@ -510,10 +510,24 @@ function buildStaticFallback(nodeId, childProfiles) {
 
 const app = express();
 app.use(express.json());
+
+// Serve dynamic config.js populated from server environment variables if no physical file exists
+app.get('/config.js', (req, res, next) => {
+  const localConfigPath = join(__dirname, 'config.js');
+  if (existsSync(localConfigPath)) {
+    return next(); // Pass control to express.static middleware
+  }
+  res.setHeader('Content-Type', 'application/javascript');
+  res.send(`window.ENV = {
+  SUPABASE_URL: ${JSON.stringify(process.env.SUPABASE_URL || '')},
+  SUPABASE_KEY: ${JSON.stringify(process.env.SUPABASE_KEY || '')}
+};`);
+});
+
 app.use(express.static(__dirname));
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Sub-task 5.1 — POST /api/mastery/tap
+// Sub-task 5.1 - POST /api/mastery/tap
 // Satisfies Req 8.1, 8.4
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -549,7 +563,7 @@ app.post('/api/mastery/tap', (req, res) => {
 
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Sub-task 5.2 — GET /api/mastery/aggregate/:node_id
+// Sub-task 5.2 - GET /api/mastery/aggregate/:node_id
 // Satisfies Req 8.2
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -566,7 +580,7 @@ app.get('/api/mastery/aggregate/:node_id', (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Sub-task 5.3 — POST /api/activity/next
+// Sub-task 5.3 - POST /api/activity/next
 // Satisfies Req 7.5, 7.6, 8.3, 8.5
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -606,7 +620,7 @@ app.post('/api/activity/next', (req, res) => {
       const result = GuardrailEngine.validate(candidate, child_profiles);
 
       if (result.action === null || result.action === 'flag_modify') {
-        // Passed — assemble and return C1
+        // Passed - assemble and return C1
         const c1 = buildC1(candidate, result, child_profiles, cleanNodeId, false);
         return res.status(200).json(c1);
 
@@ -618,12 +632,12 @@ app.post('/api/activity/next', (req, res) => {
           const c1 = buildC1(substitute, result2, child_profiles, cleanNodeId, false);
           return res.status(200).json(c1);
         }
-        // No substitute found — continue to next candidate
+        // No substitute found - continue to next candidate
       }
       // reject_regenerate: try next candidate
     }
 
-    // Sub-task 5.5 — All candidates exhausted: return static fallback (Req 7.7)
+    // Sub-task 5.5 - All candidates exhausted: return static fallback (Req 7.7)
     const fallback = buildStaticFallback(cleanNodeId, child_profiles);
     return res.status(200).json(fallback);
 

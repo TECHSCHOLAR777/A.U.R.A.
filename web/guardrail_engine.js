@@ -4,10 +4,10 @@
  *
  * Checks every activity candidate against a fixed catalogue of 15 safety
  * and inclusion rules before delivery to the AWW. Returns a structured
- * ValidationResult — never throws under any input.
+ * ValidationResult - never throws under any input.
  *
  * Export surface:
- *   GuardrailEngine  {object}  — public API (validate, getRules)
+ *   GuardrailEngine  {object}  - public API (validate, getRules)
  *
  * Satisfies Req 5.1–5.9, 6.1–6.15, 11.3, 11.9
  */
@@ -17,11 +17,11 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * hasAny — Returns true if `arr` contains at least one of the given `values`.
+ * hasAny - Returns true if `arr` contains at least one of the given `values`.
  * Gracefully handles non-array inputs by treating them as empty.
  *
- * @param {*}        arr    — The array to test (e.g. activity.materials)
- * @param {string[]} values — Values to look for
+ * @param {*}        arr    - The array to test (e.g. activity.materials)
+ * @param {string[]} values - Values to look for
  * @returns {boolean}
  */
 function hasAny(arr, values) {
@@ -30,11 +30,11 @@ function hasAny(arr, values) {
 }
 
 /**
- * anyProfile — Returns true if any profile in the array satisfies the predicate.
+ * anyProfile - Returns true if any profile in the array satisfies the predicate.
  * Gracefully handles non-array inputs.
  *
- * @param {*}        profiles  — Array of ChildProfile objects
- * @param {Function} predicate — (profile) => boolean
+ * @param {*}        profiles  - Array of ChildProfile objects
+ * @param {Function} predicate - (profile) => boolean
  * @returns {boolean}
  */
 function anyProfile(profiles, predicate) {
@@ -43,7 +43,7 @@ function anyProfile(profiles, predicate) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Rule catalogue — 15 rules, Order matches the spec exactly.
+// Rule catalogue - 15 rules, Order matches the spec exactly.
 // Each rule object is frozen individually; the array itself is also frozen.
 // Satisfies Req 5.9, 6.1–6.15
 // ─────────────────────────────────────────────────────────────────────────────
@@ -56,7 +56,7 @@ function anyProfile(profiles, predicate) {
  * @property {string}     rule_id
  * @property {RuleType}   type
  * @property {string}     trigger
- * @property {Function}   condition  — (activity, profiles) => boolean
+ * @property {Function}   condition  - (activity, profiles) => boolean
  * @property {RuleAction} action
  * @property {string}     message
  */
@@ -78,7 +78,7 @@ const _rules = Object.freeze([
       hasAny(activity.materials, ['pebbles', 'beads']) &&
       anyProfile(profiles, p => p.age_months < 36),
     action:  'reject_regenerate',
-    message: 'Activity contains small objects (pebbles/beads) — choking hazard for children under 36 months.',
+    message: 'Activity contains small objects (pebbles/beads) - choking hazard for children under 36 months.',
   }),
 
   /**
@@ -94,7 +94,7 @@ const _rules = Object.freeze([
       activity.choking_hazard === true &&
       anyProfile(profiles, p => p.age_months < 48),
     action:  'reject_regenerate',
-    message: 'Activity flagged as choking hazard — not safe for children under 48 months.',
+    message: 'Activity flagged as choking hazard - not safe for children under 48 months.',
   }),
 
   /**
@@ -110,7 +110,7 @@ const _rules = Object.freeze([
       hasAny(activity.keywords, ['climb', 'climbing', 'jump', 'jumping']) &&
       anyProfile(profiles, p => Array.isArray(p.needs) && p.needs.includes('mobility_impaired')),
     action:  'block_and_substitute',
-    message: 'Activity involves climbing or jumping — substitute required for mobility-impaired children.',
+    message: 'Activity involves climbing or jumping - substitute required for mobility-impaired children.',
   }),
 
   /**
@@ -126,7 +126,7 @@ const _rules = Object.freeze([
       hasAny(activity.keywords, ['water']) &&
       !hasAny(activity.inclusion_tags, ['adult_supervision']),
     action:  'flag_modify',
-    message: 'Activity involves water — adult supervision required.',
+    message: 'Activity involves water - adult supervision required.',
   }),
 
   /**
@@ -142,7 +142,7 @@ const _rules = Object.freeze([
       hasAny(activity.materials, ['scissors', 'cutting_sticks', 'knife']) &&
       anyProfile(profiles, p => p.age_months < 36),
     action:  'reject_regenerate',
-    message: 'Activity involves sharp materials — not safe for children under 36 months.',
+    message: 'Activity involves sharp materials - not safe for children under 36 months.',
   }),
 
   // ── Inclusion rules ────────────────────────────────────────────────────────
@@ -160,7 +160,7 @@ const _rules = Object.freeze([
       hasAny(activity.keywords, ['speak', 'tell', 'say', 'name', 'describe']) &&
       anyProfile(profiles, p => Array.isArray(p.needs) && p.needs.includes('non_verbal')),
     action:  'flag_modify',
-    message: 'Activity requires verbal response — adaptation needed for non-verbal children.',
+    message: 'Activity requires verbal response - adaptation needed for non-verbal children.',
   }),
 
   /**
@@ -176,7 +176,7 @@ const _rules = Object.freeze([
       hasAny(activity.keywords, ['group', 'together', 'share', 'take turns']) &&
       anyProfile(profiles, p => Array.isArray(p.needs) && p.needs.includes('selective_mutism')),
     action:  'flag_modify',
-    message: 'Activity requires group participation — adaptation needed for children with selective mutism.',
+    message: 'Activity requires group participation - adaptation needed for children with selective mutism.',
   }),
 
   /**
@@ -192,7 +192,7 @@ const _rules = Object.freeze([
       hasAny(activity.keywords, ['grip', 'pinch', 'fold', 'tear', 'press', 'roll']) &&
       anyProfile(profiles, p => Array.isArray(p.needs) && p.needs.includes('motor_delay')),
     action:  'flag_modify',
-    message: 'Activity requires fine motor skills — adaptation needed for children with motor delay.',
+    message: 'Activity requires fine motor skills - adaptation needed for children with motor delay.',
   }),
 
   /**
@@ -208,7 +208,7 @@ const _rules = Object.freeze([
       hasAny(activity.keywords, ['walk', 'run', 'hop', 'jump', 'move', 'balance']) &&
       anyProfile(profiles, p => Array.isArray(p.needs) && p.needs.includes('mobility_impaired')),
     action:  'block_and_substitute',
-    message: 'Activity requires locomotion — substitute required for mobility-impaired children.',
+    message: 'Activity requires locomotion - substitute required for mobility-impaired children.',
   }),
 
   /**
@@ -231,7 +231,7 @@ const _rules = Object.freeze([
       );
     },
     action:  'flag_modify',
-    message: 'Activity is purely visual with no tactile or audio cues — adaptation needed for visually impaired children.',
+    message: 'Activity is purely visual with no tactile or audio cues - adaptation needed for visually impaired children.',
   }),
 
   /**
@@ -259,7 +259,7 @@ const _rules = Object.freeze([
       );
     },
     action:  'flag_modify',
-    message: 'Activity instructions are in Hindi — language adaptation may be needed.',
+    message: 'Activity instructions are in Hindi - language adaptation may be needed.',
   }),
 
   /**
@@ -275,14 +275,14 @@ const _rules = Object.freeze([
       hasAny(activity.keywords, ['perform', 'introduce', 'present', 'solo']) &&
       anyProfile(profiles, p => Array.isArray(p.needs) && p.needs.includes('shy')),
     action:  'flag_modify',
-    message: 'Activity requires solo public performance — adaptation needed for shy children.',
+    message: 'Activity requires solo public performance - adaptation needed for shy children.',
   }),
 
   // ── Curriculum rules ───────────────────────────────────────────────────────
 
   /**
    * CURR_SEQ_01
-   * Room prerequisite mastery < 0.50 — only fires when roomAggregate is present.
+   * Room prerequisite mastery < 0.50 - only fires when roomAggregate is present.
    * If activity.roomAggregate is absent or null the condition returns false (pass).
    * Satisfies Req 6.13 and sub-task 4.6
    */
@@ -300,7 +300,7 @@ const _rules = Object.freeze([
       );
     },
     action:  'flag_modify',
-    message: 'Room prerequisite mastery is below 50% — consider reviewing the prerequisite node first.',
+    message: 'Room prerequisite mastery is below 50% - consider reviewing the prerequisite node first.',
   }),
 
   /**
@@ -355,26 +355,26 @@ const _rules = Object.freeze([
       );
     },
     action:  'flag_modify',
-    message: 'Same curriculum domain delivered 3 sessions in a row — consider varying the domain.',
+    message: 'Same curriculum domain delivered 3 sessions in a row - consider varying the domain.',
   }),
 
 ]); // end Object.freeze(_rules)
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Sub-task 4.3 — runRules (internal)
+// Sub-task 4.3 - runRules (internal)
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * runRules — Core rule evaluation loop.
+ * runRules - Core rule evaluation loop.
  *
  * Iterates the frozen rules array in order:
  * - Wraps each condition in try/catch; on error logs the rule_id and skips.
  * - Accumulates flag_modify rule IDs in rules_fired.
  * - Short-circuits on the first reject_regenerate or block_and_substitute.
  *
- * @param {object}   activity       — ActivityCandidate object
- * @param {object[]} child_profiles — Array of ChildProfile objects
- * @param {object[]} rules          — The frozen rules array
+ * @param {object}   activity       - ActivityCandidate object
+ * @param {object[]} child_profiles - Array of ChildProfile objects
+ * @param {object[]} rules          - The frozen rules array
  * @returns {{ passed: boolean, rules_fired: string[], action: string|null, messages: string[] }}
  *
  * Satisfies Req 5.1–5.8
@@ -421,17 +421,17 @@ function runRules(activity, child_profiles, rules) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Sub-task 4.4 — validate (public entry point)
+// Sub-task 4.4 - validate (public entry point)
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * validate — Public entry point for guardrail validation.
+ * validate - Public entry point for guardrail validation.
  *
  * Calls runRules and wraps everything in a top-level try/catch so it can
  * NEVER throw under any input.  Always returns a valid ValidationResult.
  *
- * @param {*} activity  — ActivityCandidate (any value safe — guarded internally)
- * @param {*} profiles  — ChildProfile[] (any value safe — guarded internally)
+ * @param {*} activity  - ActivityCandidate (any value safe - guarded internally)
+ * @param {*} profiles  - ChildProfile[] (any value safe - guarded internally)
  * @returns {{ passed: boolean, rules_fired: string[], action: string|null, messages: string[] }}
  *
  * Satisfies Req 5.4, 5.5
@@ -459,13 +459,13 @@ function validate(activity, profiles) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Sub-task 4.5 — getRules (public)
+// Sub-task 4.5 - getRules (public)
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * getRules — Return the frozen rules array reference.
+ * getRules - Return the frozen rules array reference.
  *
- * @returns {object[]}  — The immutable rules catalogue
+ * @returns {object[]}  - The immutable rules catalogue
  *
  * Satisfies Req 5.9
  */
@@ -474,7 +474,7 @@ function getRules() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Public API — GuardrailEngine export (Sub-task 4.1)
+// Public API - GuardrailEngine export (Sub-task 4.1)
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
@@ -491,7 +491,7 @@ export const GuardrailEngine = Object.freeze({
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Internal function exports (for unit testing only — not part of public API)
+// Internal function exports (for unit testing only - not part of public API)
 // ─────────────────────────────────────────────────────────────────────────────
 
 // These allow tests to exercise runRules and helper logic directly.

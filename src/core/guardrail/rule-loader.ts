@@ -12,7 +12,7 @@ import { RULE_TABLE } from '../rules/index.js';
 
 /**
  * Loads all validated rules from the static rule table.
- * Rules are validated at module initialization time — if any rule
+ * Rules are validated at module initialization time - if any rule
  * is malformed, the import will throw before this function is ever called.
  *
  * @returns An immutable array of validated C2Rule objects.

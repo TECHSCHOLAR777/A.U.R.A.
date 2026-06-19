@@ -1,5 +1,5 @@
 /**
- * DSS Items — Stub Screening Checklist Items
+ * DSS Items - Stub Screening Checklist Items
  * ═══════════════════════════════════════════
  * Placeholder screening items corresponding to the stub thresholds.
  * Red flags are items that, when triggered, contribute to referral decisions.

@@ -2,7 +2,7 @@
  * Guardrail Condition Evaluator
  * ═══════════════════════════════════════════
  * Evaluates the typed condition DSL against an activity + room context.
- * Uses a switch dispatch over the ConditionNode discriminated union —
+ * Uses a switch dispatch over the ConditionNode discriminated union -
  * NO eval(), NO Function(), NO dynamic property access on untrusted keys.
  *
  * Every ConditionNode type has a dedicated evaluation function.
@@ -44,7 +44,7 @@ export interface EvaluationContext {
 
 /**
  * Converts an AgeBandMonths literal to its numeric min/max range.
- * Pure function — no side effects.
+ * Pure function - no side effects.
  */
 export function ageBandToMinMax(band: AgeBandMonths): { min: number; max: number } {
   switch (band) {
@@ -153,7 +153,7 @@ function evaluateDomainCheck(
 
 /**
  * Evaluates a ConditionNode tree against an EvaluationContext.
- * Pure function — no side effects, fully deterministic.
+ * Pure function - no side effects, fully deterministic.
  *
  * @param node - The condition tree root.
  * @param ctx  - The evaluation context (activity + room derived data).

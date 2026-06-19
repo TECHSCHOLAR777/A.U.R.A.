@@ -1,7 +1,7 @@
 {
   "rule_id": "AGE_GROSS_MOTOR_01",
   "type": "age_appropriateness",
-  "description": "Flags socio-emotional activities for newborns 0-3 months — parallel play concepts not yet applicable",
+  "description": "Flags socio-emotional activities for newborns 0-3 months - parallel play concepts not yet applicable",
   "trigger": {
     "age_bands": ["0-3"],
     "domains": ["socio_emotional"]

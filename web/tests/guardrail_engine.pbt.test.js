@@ -11,7 +11,7 @@
  */
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Environment stubs — must happen BEFORE any module imports
+// Environment stubs - must happen BEFORE any module imports
 // ─────────────────────────────────────────────────────────────────────────────
 
 globalThis.fetch = async () => ({ ok: false, status: 404, json: async () => ({}) });
@@ -31,7 +31,7 @@ globalThis.indexedDB = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Imports — after stubs
+// Imports - after stubs
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { describe, it } from 'node:test';
@@ -40,10 +40,10 @@ import { GuardrailEngine, runRules } from '../guardrail_engine.js';
 import { buildC1, cacheKey, buildStaticFallback } from '../server.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Inline PBT helpers — deterministic seeded LCG sampler
+// Inline PBT helpers - deterministic seeded LCG sampler
 // ─────────────────────────────────────────────────────────────────────────────
 
-// LCG random — deterministic, seeded by sample index
+// LCG random - deterministic, seeded by sample index
 function lcgRand(seed) {
   const s = ((seed * 1664525 + 1013904223) & 0xffffffff) >>> 0;
   return s / 0xffffffff;
@@ -86,7 +86,7 @@ function genSafeActivity(seed) {
 function genSafeProfile(seed) {
   return {
     child_id: `C${seed}`,
-    age_months: 36 + (seed % 24),  // 36-59 months — safe range
+    age_months: 36 + (seed % 24),  // 36-59 months - safe range
     needs: [],
     lingua_franca: 'hindi',
   };
@@ -99,17 +99,17 @@ function genSafeProfile(seed) {
 const ALL_RULE_IDS = GuardrailEngine.getRules().map(r => r.rule_id);
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Property-Based Tests — Guardrail Engine
+// Property-Based Tests - Guardrail Engine
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe('Property-Based Tests — Guardrail Engine', () => {
+describe('Property-Based Tests - Guardrail Engine', () => {
 
   // ───────────────────────────────────────────────────────────────────────────
-  // 11.1 — Property 7: Rule Coverage (Req 5.6)
+  // 11.1 - Property 7: Rule Coverage (Req 5.6)
   // Every ID in ValidationResult.rules_fired must exist in GuardrailEngine.getRules()
   // ───────────────────────────────────────────────────────────────────────────
 
-  it('Property 7 — Rule Coverage (Req 5.6)', () => {
+  it('Property 7 - Rule Coverage (Req 5.6)', () => {
     /**Validates: Requirements 5.6 */
     forAll('Rule Coverage', 300, (i) => {
       const activity = genSafeActivity(i);
@@ -129,11 +129,11 @@ describe('Property-Based Tests — Guardrail Engine', () => {
   });
 
   // ───────────────────────────────────────────────────────────────────────────
-  // 11.2 — Property 8: Determinism (Req 5.7)
+  // 11.2 - Property 8: Determinism (Req 5.7)
   // Calling validate twice with identical inputs returns structurally equal results
   // ───────────────────────────────────────────────────────────────────────────
 
-  it('Property 8 — Determinism (Req 5.7)', () => {
+  it('Property 8 - Determinism (Req 5.7)', () => {
     /**Validates: Requirements 5.7 */
     forAll('Determinism', 300, (i) => {
       const activity = genSafeActivity(i);
@@ -154,11 +154,11 @@ describe('Property-Based Tests — Guardrail Engine', () => {
   });
 
   // ───────────────────────────────────────────────────────────────────────────
-  // 11.3 — Property 9: Hard-Stop Short-Circuit (Req 5.2, 5.3)
+  // 11.3 - Property 9: Hard-Stop Short-Circuit (Req 5.2, 5.3)
   // When a reject_regenerate rule fires, passed=false and no rules after it appear
   // ───────────────────────────────────────────────────────────────────────────
 
-  it('Property 9 — Hard-Stop Short-Circuit (Req 5.2, 5.3)', () => {
+  it('Property 9 - Hard-Stop Short-Circuit (Req 5.2, 5.3)', () => {
     /**Validates: Requirements 5.2, 5.3 */
     forAll('Hard-Stop Short-Circuit', 300, (i) => {
       // Always triggers SAFE_CHOKE_01 (first rule, index 0)
@@ -178,11 +178,11 @@ describe('Property-Based Tests — Guardrail Engine', () => {
   });
 
   // ───────────────────────────────────────────────────────────────────────────
-  // 11.4 — Property 10: Flag-Modify Pass-Through (Req 5.4)
+  // 11.4 - Property 10: Flag-Modify Pass-Through (Req 5.4)
   // When only flag_modify rules fire, passed=true
   // ───────────────────────────────────────────────────────────────────────────
 
-  it('Property 10 — Flag-Modify Pass-Through (Req 5.4)', () => {
+  it('Property 10 - Flag-Modify Pass-Through (Req 5.4)', () => {
     /**Validates: Requirements 5.4 */
     forAll('Flag-Modify Pass-Through', 300, (i) => {
       const activity = { ...genSafeActivity(i), keywords: ['name', 'describe'] };
@@ -205,12 +205,12 @@ describe('Property-Based Tests — Guardrail Engine', () => {
   });
 
   // ───────────────────────────────────────────────────────────────────────────
-  // 11.5 — Property 11: C1 Provenance Fidelity (Req 7.1, 7.2, 7.3)
+  // 11.5 - Property 11: C1 Provenance Fidelity (Req 7.1, 7.2, 7.3)
   // c1.provenance.rules_fired equals ValidationResult.rules_fired and
   // c1.safety_guard_applied is true iff rules_fired is non-empty
   // ───────────────────────────────────────────────────────────────────────────
 
-  it('Property 11 — C1 Provenance Fidelity (Req 7.1, 7.2, 7.3)', () => {
+  it('Property 11 - C1 Provenance Fidelity (Req 7.1, 7.2, 7.3)', () => {
     /**Validates: Requirements 7.1, 7.2, 7.3 */
     forAll('C1 Provenance Fidelity', 100, (i) => {
       const activity = genSafeActivity(i);
@@ -233,11 +233,11 @@ describe('Property-Based Tests — Guardrail Engine', () => {
   });
 
   // ───────────────────────────────────────────────────────────────────────────
-  // 11.6 — Property 12: Cache Key Determinism (Req 7.4)
+  // 11.6 - Property 12: Cache Key Determinism (Req 7.4)
   // cacheKey always returns the same string for the same triple
   // ───────────────────────────────────────────────────────────────────────────
 
-  it('Property 12 — Cache Key Determinism (Req 7.4)', () => {
+  it('Property 12 - Cache Key Determinism (Req 7.4)', () => {
     /**Validates: Requirements 7.4 */
     forAll('Cache Key Determinism', 300, (i) => ({
       activity_id: `ACT_${i % 50}`,
@@ -252,11 +252,11 @@ describe('Property-Based Tests — Guardrail Engine', () => {
   });
 
   // ───────────────────────────────────────────────────────────────────────────
-  // 11.7 — Property 16: Chip Count Correctness (Req 10.2)
+  // 11.7 - Property 16: Chip Count Correctness (Req 10.2)
   // Safety count equals SAFE_-prefixed count; inclusion count equals INC_-prefixed count
   // ───────────────────────────────────────────────────────────────────────────
 
-  it('Property 16 — Chip Count Correctness (Req 10.2)', () => {
+  it('Property 16 - Chip Count Correctness (Req 10.2)', () => {
     /**Validates: Requirements 10.2 */
     forAll('Chip Count Correctness', 300, (i) => {
       // Generate a random subset of rule IDs
@@ -273,11 +273,11 @@ describe('Property-Based Tests — Guardrail Engine', () => {
   });
 
   // ───────────────────────────────────────────────────────────────────────────
-  // 11.8 — Property 17: Chip Pill Coverage (Req 10.3)
+  // 11.8 - Property 17: Chip Pill Coverage (Req 10.3)
   // For any non-empty rules_fired, the number of pills equals rules_fired.length
   // ───────────────────────────────────────────────────────────────────────────
 
-  it('Property 17 — Chip Pill Coverage (Req 10.3)', () => {
+  it('Property 17 - Chip Pill Coverage (Req 10.3)', () => {
     /**Validates: Requirements 10.3 */
     forAll('Chip Pill Coverage', 300, (i) => {
       const subset = ALL_RULE_IDS.filter((_, j) => lcgRand(i * 13 + j) > 0.4);

@@ -3,13 +3,13 @@
  * IndexedDB persistence layer for the AURA PWA.
  *
  * Version history:
- *   v1 — pre-existing stores (curriculum DAG, children, sessions, etc.)
- *   v2 — adds the `mastery-records` object store (this feature)
+ *   v1 - pre-existing stores (curriculum DAG, children, sessions, etc.)
+ *   v2 - adds the `mastery-records` object store (this feature)
  *
  * Export surface:
- *   DB_VERSION   {number}  — current schema version constant
- *   openDB()     {Promise<IDBDatabase>}  — open (and upgrade) the database
- *   MasteryStore {object}  — CRUD helpers for the mastery-records store
+ *   DB_VERSION   {number}  - current schema version constant
+ *   openDB()     {Promise<IDBDatabase>}  - open (and upgrade) the database
+ *   MasteryStore {object}  - CRUD helpers for the mastery-records store
  */
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -47,7 +47,7 @@ const REQUIRED_FIELDS = [
 let _dbPromise = null;
 
 // ─────────────────────────────────────────────────────────────────────────────
-// openDB — open and upgrade the database
+// openDB - open and upgrade the database
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
@@ -55,7 +55,7 @@ let _dbPromise = null;
  *
  * The `onupgradeneeded` handler only creates the `mastery-records` store when
  * it does not already exist; it never modifies or removes any pre-existing
- * object stores — satisfies Req 4.4.
+ * object stores - satisfies Req 4.4.
  *
  * @returns {Promise<IDBDatabase>}
  */
@@ -69,26 +69,26 @@ export function openDB() {
     request.onupgradeneeded = (event) => {
       const db = event.target.result;
 
-      // ── Task 1.4: Guard — never touch pre-existing stores ────────────────
+      // ── Task 1.4: Guard - never touch pre-existing stores ────────────────
       // We only create stores that do not already exist.  Any store present
       // before this upgrade remains completely untouched.
 
       // ── Task 1.1: Create mastery-records store (v2 addition) ────────────
-      // Req 4.1 — keyPath = "child_node_key" (composite: child_id + "|" + node_id)
-      // Req 4.2 — three indexes, all non-unique
-      // Req 4.4 — check with `objectStoreNames.contains` before creating
+      // Req 4.1 - keyPath = "child_node_key" (composite: child_id + "|" + node_id)
+      // Req 4.2 - three indexes, all non-unique
+      // Req 4.4 - check with `objectStoreNames.contains` before creating
       if (!db.objectStoreNames.contains(STORE_NAME)) {
         const store = db.createObjectStore(STORE_NAME, {
           keyPath: 'child_node_key',
         });
 
-        // Index: by_child — queries all records for a given child
+        // Index: by_child - queries all records for a given child
         store.createIndex('by_child', 'child_id', { unique: false });
 
-        // Index: by_node — queries all records for a given knowledge node
+        // Index: by_node - queries all records for a given knowledge node
         store.createIndex('by_node', 'node_id', { unique: false });
 
-        // Index: by_flag — queries all records with a given trajectory flag
+        // Index: by_flag - queries all records with a given trajectory flag
         store.createIndex('by_flag', 'trajectory_flag', { unique: false });
       }
 
@@ -104,7 +104,7 @@ export function openDB() {
     };
 
     request.onblocked = () => {
-      console.warn('[aura-api] IDB upgrade blocked — close other tabs.');
+      console.warn('[aura-api] IDB upgrade blocked - close other tabs.');
     };
   });
 
@@ -167,7 +167,7 @@ function promisifyRequest(request) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Task 1.2 + 1.3 — MasteryStore: five public CRUD helpers
+// Task 1.2 + 1.3 - MasteryStore: five public CRUD helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
@@ -200,7 +200,7 @@ export const MasteryStore = {
   /**
    * Retrieve a single MasteryRecord by (child_id, node_id).
    *
-   * Task 1.3 / Req 4.5 — Corrupted-record recovery:
+   * Task 1.3 / Req 4.5 - Corrupted-record recovery:
    * If the stored record is missing a required field or has a non-numeric
    * `p_mastery`, the corrupted record is deleted from the store and
    * `undefined` is returned so the caller can reinitialise from P_L0.
@@ -218,7 +218,7 @@ export const MasteryStore = {
     const record = await promisifyRequest(store.get(key));
 
     if (record === undefined) {
-      // No record stored yet — normal cold-start path.
+      // No record stored yet - normal cold-start path.
       return undefined;
     }
 
@@ -284,7 +284,7 @@ export const MasteryStore = {
 
 
 /* ============================================================================
-   A.U.R.A — FRONTEND INTEGRATION SURFACE   (aura-api.js)
+   A.U.R.A - FRONTEND INTEGRATION SURFACE   (aura-api.js)
    ----------------------------------------------------------------------------
    Every UI action in index.html calls one of these AURA_API functions.
    Server-side functions call /api/* (served by server.js).
@@ -353,7 +353,7 @@ function _getClinicalDiagnosis(z) {
 }
 
 /* ============================================================================
-   AURA_API — The main communication layer between frontend & offline/cloud
+   AURA_API - The main communication layer between frontend & offline/cloud
    ============================================================================ */
 
 const SUPABASE_URL = (typeof window !== 'undefined' && window.ENV) ? window.ENV.SUPABASE_URL : '';
@@ -409,10 +409,15 @@ export const AURA_API = {
     }
     await AURA_DB.queue({ op: 'register_child', childData: child, ts: Date.now() });
     try {
-      return await _apiFetch('/api/children', {
+      const result = await _apiFetch('/api/children', {
         method: 'POST',
         body: JSON.stringify(child)
       });
+      // Immediate POST succeeded - mark queued op as synced to prevent double-counting
+      const pending = await AURA_DB.getPendingSync();
+      const regOp = pending.find(p => p.op === 'register_child' && p.childData && p.childData.id === child.id);
+      if (regOp) await AURA_DB.markSynced(regOp.id);
+      return result;
     } catch (err) {
       console.warn('[registerChild] Immediate server upload failed, queued offline:', err.message);
       return { success: true, syncStatus: 'queued' };
@@ -549,7 +554,7 @@ export const AURA_API = {
 };
 
 /* ============================================================================
-   AURA_DB — local state / offline queue layer (Dexie)
+   AURA_DB - local state / offline queue layer (Dexie)
    ============================================================================ */
 const db = typeof Dexie !== 'undefined' ? new Dexie('AuraOfflineDB') : null;
 if (db) {
@@ -692,7 +697,7 @@ if (typeof window !== 'undefined') {
 }
 
 /* ============================================================================
-   MOCK — fallback data used when server is unavailable / feature not built.
+   MOCK - fallback data used when server is unavailable / feature not built.
    ============================================================================ */
 export const MOCK = {
   delay: (ms) => new Promise(r => setTimeout(r, ms)),
@@ -730,7 +735,7 @@ export const MOCK = {
 };
 
 /* ============================================================================
-   WORKERS — multi-worker dataset for voice/tap login.
+   WORKERS - multi-worker dataset for voice/tap login.
    Each worker gets a DIFFERENT dashboard (profile, children, triage, critical).
    `match` = lowercase tokens (name + centre number, Hindi & English) used to
    match what the worker says into the microphone.

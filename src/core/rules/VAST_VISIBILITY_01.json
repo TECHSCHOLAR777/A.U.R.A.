@@ -1,7 +1,7 @@
 {
   "rule_id": "VAST_VISIBILITY_01",
   "type": "inclusion",
-  "description": "Flags visibility-tagged activities for rooms with sensory sensitivity — ensure visual elements are not overwhelming",
+  "description": "Flags visibility-tagged activities for rooms with sensory sensitivity - ensure visual elements are not overwhelming",
   "trigger": {
     "vast_parameters": ["visibility"]
   },
@@ -20,6 +20,6 @@
     ]
   },
   "action": "flag_modify",
-  "message": "👁️ VAST Visibility: Sensory-sensitive child in room — reduce visual complexity in this visibility activity. Use high-contrast, simple patterns. Avoid flashing or rapid visual changes.",
+  "message": "👁️ VAST Visibility: Sensory-sensitive child in room - reduce visual complexity in this visibility activity. Use high-contrast, simple patterns. Avoid flashing or rapid visual changes.",
   "severity": "warn"
 }

@@ -8,7 +8,7 @@
  * pipeline. Dev 2 owns the retry loop (max 2 regenerations).
  *
  * Execution flow:
- *   1. Validate activity with isC1Activity() — throw if invalid
+ *   1. Validate activity with isC1Activity() - throw if invalid
  *   2. Build EvaluationContext from activity + room
  *   3. For each rule: check trigger match → evaluate condition → collect
  *   4. Determine overall action (most severe wins)
@@ -66,7 +66,7 @@ function matchesTrigger(
 /**
  * Evaluates an activity against a set of guardrail rules in a given room context.
  *
- * Pure function — stateless, idempotent. Same inputs always produce same outputs.
+ * Pure function - stateless, idempotent. Same inputs always produce same outputs.
  *
  * @param activity - The C1Activity to evaluate. Must be valid.
  * @param room     - The room context (age mix, materials, inclusion flags).
@@ -79,7 +79,7 @@ export function evaluate(
   room: RoomContext,
   rules: readonly C2Rule[],
 ): GuardrailResult {
-  // Step 1: Validate activity schema — throw if invalid (programmer error)
+  // Step 1: Validate activity schema - throw if invalid (programmer error)
   if (!isC1Activity(activity)) {
     throw new ValidationError('C1Activity', [
       { field: '(runtime)', message: 'Activity failed schema validation at guardrail boundary', received: activity },
@@ -93,7 +93,7 @@ export function evaluate(
   const firedRules: FiredRuleEntry[] = [];
 
   for (const rule of rules) {
-    // 3a. Check trigger match — skip if no trigger match
+    // 3a. Check trigger match - skip if no trigger match
     if (!matchesTrigger(
       rule,
       activity.age_band_months,

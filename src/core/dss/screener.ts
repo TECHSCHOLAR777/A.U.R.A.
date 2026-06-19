@@ -1,5 +1,5 @@
 /**
- * DSS Screener — Deterministic Developmental Screening
+ * DSS Screener - Deterministic Developmental Screening
  * ═════════════════════════════════════════════════════════
  * Evaluates worker observations against screening thresholds to produce
  * an explainable verdict with fired flags.
@@ -37,7 +37,7 @@ const DOMAIN_WARN_THRESHOLD = 4;
 /**
  * Evaluates developmental screening responses against thresholds and items.
  * Fully deterministic: same inputs always produce the same result.
- * Never throws — unknown items are skipped with a warning.
+ * Never throws - unknown items are skipped with a warning.
  *
  * @param responses  - Worker observations for each screening item.
  * @param thresholds - Cutoff scores for each item (from Dev 4 or stubs).

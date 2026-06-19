@@ -1,5 +1,5 @@
 /**
- * Room Aggregate — Single-Pass Room-Level Mastery Statistics
+ * Room Aggregate - Single-Pass Room-Level Mastery Statistics
  * ═══════════════════════════════════════════════════════════════
  * Aggregates individual child mastery states into a room-level summary.
  * This is what Dev 2 feeds into the bandit context vector for activity
@@ -37,7 +37,7 @@ const DOMAIN_GAP_THRESHOLD = 0.40;
  *   4. Identify domain gaps (avg mastery < 0.40).
  *
  * @param children - Array of all child mastery states in the room.
- *                   Can include multiple milestones per child — this function
+ *                   Can include multiple milestones per child - this function
  *                   aggregates across all of them.
  * @returns RoomAggregate for Dev 2's bandit context vector.
  */

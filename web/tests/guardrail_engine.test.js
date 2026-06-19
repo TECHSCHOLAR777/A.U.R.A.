@@ -10,7 +10,7 @@
  */
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Environment stubs — required BEFORE imports that touch bkt_engine.js (used
+// Environment stubs - required BEFORE imports that touch bkt_engine.js (used
 // transitively by server.js only, not guardrail_engine.js).
 // These stubs are placed here so sub-task 9.6 can import server.js safely.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -81,10 +81,10 @@ const safeProfiles = Object.freeze([
 ]);
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 9.1 — SAFE_CHOKE_01 (Req 6.1)
+// 9.1 - SAFE_CHOKE_01 (Req 6.1)
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe('9.1 SAFE_CHOKE_01 — pebbles + child < 36 months (Req 6.1)', () => {
+describe('9.1 SAFE_CHOKE_01 - pebbles + child < 36 months (Req 6.1)', () => {
   it('fires SAFE_CHOKE_01, action=reject_regenerate, passed=false', () => {
     const activity = { ...safeActivity, materials: ['pebbles'] };
     const profiles = [{ child_id: 'C002', age_months: 30, needs: [] }];
@@ -106,7 +106,7 @@ describe('9.1 SAFE_CHOKE_01 — pebbles + child < 36 months (Req 6.1)', () => {
     assert.equal(result.passed, false);
   });
 
-  it('does NOT fire when child is exactly 36 months (boundary — rule is < 36)', () => {
+  it('does NOT fire when child is exactly 36 months (boundary - rule is < 36)', () => {
     const activity = { ...safeActivity, materials: ['pebbles'] };
     const profiles = [{ child_id: 'C004', age_months: 36, needs: [] }];
 
@@ -132,10 +132,10 @@ describe('9.1 SAFE_CHOKE_01 — pebbles + child < 36 months (Req 6.1)', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 9.2 — SAFE_CHOKE_02 (Req 6.2)
+// 9.2 - SAFE_CHOKE_02 (Req 6.2)
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe('9.2 SAFE_CHOKE_02 — choking_hazard flag + child < 48 months (Req 6.2)', () => {
+describe('9.2 SAFE_CHOKE_02 - choking_hazard flag + child < 48 months (Req 6.2)', () => {
   it('fires SAFE_CHOKE_02, passed=false', () => {
     const activity = { ...safeActivity, choking_hazard: true };
     const profiles = [{ child_id: 'C006', age_months: 44, needs: [] }];
@@ -155,7 +155,7 @@ describe('9.2 SAFE_CHOKE_02 — choking_hazard flag + child < 48 months (Req 6.2
     assert.ok(!result.rules_fired.includes('SAFE_CHOKE_02'));
   });
 
-  it('does NOT fire when child is exactly 48 months (boundary — rule is < 48)', () => {
+  it('does NOT fire when child is exactly 48 months (boundary - rule is < 48)', () => {
     const activity = { ...safeActivity, choking_hazard: true };
     const profiles = [{ child_id: 'C008', age_months: 48, needs: [] }];
 
@@ -169,10 +169,10 @@ describe('9.2 SAFE_CHOKE_02 — choking_hazard flag + child < 48 months (Req 6.2
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 9.3 — INC_ATTUNE_01 (Req 6.6)
+// 9.3 - INC_ATTUNE_01 (Req 6.6)
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe('9.3 INC_ATTUNE_01 — verbal keywords + non_verbal need (Req 6.6)', () => {
+describe('9.3 INC_ATTUNE_01 - verbal keywords + non_verbal need (Req 6.6)', () => {
   it('fires INC_ATTUNE_01, action=flag_modify, passed=true (soft flag)', () => {
     const activity = { ...safeActivity, keywords: ['name', 'describe'] };
     const profiles = [{ child_id: 'C009', age_months: 40, needs: ['non_verbal'] }];
@@ -181,7 +181,7 @@ describe('9.3 INC_ATTUNE_01 — verbal keywords + non_verbal need (Req 6.6)', ()
 
     assert.ok(result.rules_fired.includes('INC_ATTUNE_01'), 'INC_ATTUNE_01 must be in rules_fired');
     assert.equal(result.action, 'flag_modify');
-    // flag_modify is NOT a hard stop — passed must remain true
+    // flag_modify is NOT a hard stop - passed must remain true
     assert.equal(result.passed, true);
   });
 
@@ -206,10 +206,10 @@ describe('9.3 INC_ATTUNE_01 — verbal keywords + non_verbal need (Req 6.6)', ()
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 9.4 — Error resilience (Req 5.8)
+// 9.4 - Error resilience (Req 5.8)
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe('9.4 Error resilience — throwing rule condition (Req 5.8)', () => {
+describe('9.4 Error resilience - throwing rule condition (Req 5.8)', () => {
   it('throwing rule is absent from rules_fired; subsequent rules are still evaluated', () => {
     const throwingRule = {
       rule_id:   'TEST_THROW',
@@ -256,10 +256,10 @@ describe('9.4 Error resilience — throwing rule condition (Req 5.8)', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 9.5 — Clean path (Req 5.5)
+// 9.5 - Clean path (Req 5.5)
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe('9.5 Clean path — no rules fire (Req 5.5)', () => {
+describe('9.5 Clean path - no rules fire (Req 5.5)', () => {
   it('safe activity + safe profiles → rules_fired=[], passed=true, action=null', () => {
     const result = GuardrailEngine.validate(safeActivity, safeProfiles);
 
@@ -277,7 +277,7 @@ describe('9.5 Clean path — no rules fire (Req 5.5)', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 9.6 — Static fallback contract (Req 7.7)
+// 9.6 - Static fallback contract (Req 7.7)
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe('9.6 Static fallback contract (Req 7.7)', () => {
@@ -311,12 +311,12 @@ describe('9.6 Static fallback contract (Req 7.7)', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Additional — INC_MOTOR_02 (Req 6.9)
+// Additional - INC_MOTOR_02 (Req 6.9)
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe('Additional — INC_MOTOR_02 — locomotion + mobility_impaired (Req 6.9)', () => {
+describe('Additional - INC_MOTOR_02 - locomotion + mobility_impaired (Req 6.9)', () => {
   it('fires INC_MOTOR_02, action=block_and_substitute, passed=false', () => {
-    // Use 'walk' — present in INC_MOTOR_02 but NOT in SAFE_FALL_01 (which uses climb/jump).
+    // Use 'walk' - present in INC_MOTOR_02 but NOT in SAFE_FALL_01 (which uses climb/jump).
     // This avoids SAFE_FALL_01 short-circuiting before INC_MOTOR_02 is evaluated.
     const activity = { ...safeActivity, keywords: ['walk'] };
     const profiles = [{ child_id: 'C012', age_months: 42, needs: ['mobility_impaired'] }];
@@ -339,10 +339,10 @@ describe('Additional — INC_MOTOR_02 — locomotion + mobility_impaired (Req 6.
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Additional — CURR_SEQ_01 absent roomAggregate (sub-task 4.6, Req 6.13)
+// Additional - CURR_SEQ_01 absent roomAggregate (sub-task 4.6, Req 6.13)
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe('Additional — CURR_SEQ_01 does not fire when roomAggregate is absent', () => {
+describe('Additional - CURR_SEQ_01 does not fire when roomAggregate is absent', () => {
   it('activity with no roomAggregate property → CURR_SEQ_01 absent from rules_fired', () => {
     // safeActivity has no roomAggregate key at all
     const result = GuardrailEngine.validate(safeActivity, safeProfiles);
@@ -365,16 +365,16 @@ describe('Additional — CURR_SEQ_01 does not fire when roomAggregate is absent'
     const activity = { ...safeActivity, roomAggregate: { avg_p_mastery: 0.30, total_count: 10, mastered_count: 2 } };
     const result = GuardrailEngine.validate(activity, safeProfiles);
     assert.ok(result.rules_fired.includes('CURR_SEQ_01'));
-    // flag_modify — should not hard-stop
+    // flag_modify - should not hard-stop
     assert.equal(result.passed, true);
   });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Additional — getRules() contract (Req 5.9)
+// Additional - getRules() contract (Req 5.9)
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe('Additional — GuardrailEngine.getRules() contract (Req 5.9)', () => {
+describe('Additional - GuardrailEngine.getRules() contract (Req 5.9)', () => {
   it('returns exactly 15 rules', () => {
     const rules = GuardrailEngine.getRules();
     assert.equal(rules.length, 15);
@@ -408,10 +408,10 @@ describe('Additional — GuardrailEngine.getRules() contract (Req 5.9)', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Additional — hasAny and anyProfile helper exports
+// Additional - hasAny and anyProfile helper exports
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe('Additional — hasAny and anyProfile helper functions', () => {
+describe('Additional - hasAny and anyProfile helper functions', () => {
   it('hasAny returns true when array contains a matching value', () => {
     assert.equal(hasAny(['pebbles', 'sand'], ['pebbles']), true);
   });

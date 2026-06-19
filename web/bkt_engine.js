@@ -4,18 +4,18 @@
  *
  * Implements the 4-parameter Hidden Markov Model for per-child, per-node
  * mastery tracking. All reads/writes go exclusively through IndexedDB via
- * the MasteryStore helpers in aura-api.js — no data is ever transmitted to
+ * the MasteryStore helpers in aura-api.js - no data is ever transmitted to
  * a remote server (Req 11.1, 11.2).
  *
  * Export surface:
- *   BKTEngine  {object}  — public API (tapMastery, getMasteryRecord,
+ *   BKTEngine  {object}  - public API (tapMastery, getMasteryRecord,
  *                          getRoomAggregate, getAllChildMastery, resetMastery)
  */
 
 import { MasteryStore, MOCK } from './aura-api.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Constants — Default BKT Parameters (Req 1.6)
+// Constants - Default BKT Parameters (Req 1.6)
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** Default BKT parameters used when no node-specific overrides are present. */
@@ -184,19 +184,19 @@ async function _resolveParams(node_id, child_id) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Sub-task 2.2 — Core BKT update (pure function)
+// Sub-task 2.2 - Core BKT update (pure function)
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * updateBKT — 4-parameter Bayesian Knowledge Tracing update.
+ * updateBKT - 4-parameter Bayesian Knowledge Tracing update.
  *
  * Implements the exact 5-step algorithm from the design pseudocode.
  * This is a pure synchronous function with no I/O side-effects.
  *
- * @param {number}  prior   — P(Learned) before this observation, in (0, 1)
- * @param {boolean} got_it  — true if the child answered correctly
- * @param {{ p_l0:number, p_t:number, p_g:number, p_s:number }} params — BKT parameters
- * @returns {number}  — Updated P(Learned), clamped to [0.001, 0.999]
+ * @param {number}  prior   - P(Learned) before this observation, in (0, 1)
+ * @param {boolean} got_it  - true if the child answered correctly
+ * @param {{ p_l0:number, p_t:number, p_g:number, p_s:number }} params - BKT parameters
+ * @returns {number}  - Updated P(Learned), clamped to [0.001, 0.999]
  *
  * Satisfies Req 1.2, 1.3, 1.4
  */
@@ -232,34 +232,34 @@ function updateBKT(prior, got_it, params) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Sub-task 2.3 — Trajectory flag derivation (pure function)
+// Sub-task 2.3 - Trajectory flag derivation (pure function)
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * computeTrajectoryFlag — Derive the categorical trajectory label from the
+ * computeTrajectoryFlag - Derive the categorical trajectory label from the
  * p_mastery history.
  *
- * @param {number[]} p_history          — Rolling window of PREVIOUS p_mastery values
+ * @param {number[]} p_history          - Rolling window of PREVIOUS p_mastery values
  *                                        (oldest first; does NOT include current)
- * @param {number}   current_p_mastery  — The newly computed p_mastery value
- * @param {number}   [threshold=0.80]   — Mastery threshold
+ * @param {number}   current_p_mastery  - The newly computed p_mastery value
+ * @param {number}   [threshold=0.80]   - Mastery threshold
  * @returns {'mastered'|'rising'|'stalled'|'at_risk'}
  *
  * Satisfies Req 2.1–2.5
  */
 function computeTrajectoryFlag(p_history, current_p_mastery, threshold = MASTERY_THRESHOLD) {
-  // Rule 1 — mastered (Req 2.1): takes absolute precedence.
+  // Rule 1 - mastered (Req 2.1): takes absolute precedence.
   if (current_p_mastery >= threshold) {
     return 'mastered';
   }
 
-  // Rule 2 — insufficient data (Req 2.2): optimistic default.
+  // Rule 2 - insufficient data (Req 2.2): optimistic default.
   if (p_history.length < 3) {
     return 'rising';
   }
 
   // Use the last 3 values from the history for delta computation.
-  const h = p_history.slice(-3); // [h0, h1, h2] — oldest to newest in last-3
+  const h = p_history.slice(-3); // [h0, h1, h2] - oldest to newest in last-3
 
   const deltas = [
     h[1] - h[0],                 // delta between h0 → h1
@@ -267,26 +267,26 @@ function computeTrajectoryFlag(p_history, current_p_mastery, threshold = MASTERY
     current_p_mastery - h[2],    // delta between h2 → current
   ];
 
-  // Rule 3 — at_risk (Req 2.3): all three deltas < -0.01 AND current < 0.50.
+  // Rule 3 - at_risk (Req 2.3): all three deltas < -0.01 AND current < 0.50.
   if (deltas.every(d => d < -0.01) && current_p_mastery < 0.50) {
     return 'at_risk';
   }
 
-  // Rule 4 — stalled (Req 2.4): all three absolute deltas < 0.02.
+  // Rule 4 - stalled (Req 2.4): all three absolute deltas < 0.02.
   if (deltas.every(d => Math.abs(d) < 0.02)) {
     return 'stalled';
   }
 
-  // Rule 5 — rising (Req 2.5): none of the above conditions met.
+  // Rule 5 - rising (Req 2.5): none of the above conditions met.
   return 'rising';
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Sub-task 2.4 — tapMastery
+// Sub-task 2.4 - tapMastery
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * tapMastery — Record one tap observation for a child × node pair.
+ * tapMastery - Record one tap observation for a child × node pair.
  *
  * 1. Validates inputs (Req 11.5).
  * 2. Reads the existing MasteryRecord from IDB, or initialises with P_L0 (Req 1.1).
@@ -296,10 +296,10 @@ function computeTrajectoryFlag(p_history, current_p_mastery, threshold = MASTERY
  * 6. Writes the updated record to IDB and awaits completion before resolving (Req 1.5, 11.1).
  * 7. Returns the updated MasteryRecord.
  *
- * @param {string}  child_id  — Non-empty opaque local identifier for the child
- * @param {string}  node_id   — Non-empty curriculum node identifier (e.g. "FM-3")
- * @param {boolean} got_it    — true = correct response; false = incorrect response
- * @returns {Promise<object>}  — Resolves with the updated MasteryRecord
+ * @param {string}  child_id  - Non-empty opaque local identifier for the child
+ * @param {string}  node_id   - Non-empty curriculum node identifier (e.g. "FM-3")
+ * @param {boolean} got_it    - true = correct response; false = incorrect response
+ * @returns {Promise<object>}  - Resolves with the updated MasteryRecord
  */
 async function tapMastery(child_id, node_id, got_it) {
   // ── Input validation (Req 11.5) ───────────────────────────────────────────
@@ -330,7 +330,7 @@ async function tapMastery(child_id, node_id, got_it) {
   let p_history;
 
   if (!existing) {
-    // Cold start — initialise from the prior (P_L0).
+    // Cold start - initialise from the prior (P_L0).
     prior             = params.p_l0;
     observation_count = 0;
     p_history         = [];
@@ -350,7 +350,7 @@ async function tapMastery(child_id, node_id, got_it) {
   // the history contains the previous values only (per spec instructions).
   const trajectory_flag = computeTrajectoryFlag(p_history, new_p_mastery);
 
-  // ── Update rolling p_history window — append then keep last HISTORY_WINDOW
+  // ── Update rolling p_history window - append then keep last HISTORY_WINDOW
   const updated_p_history = [...p_history, new_p_mastery].slice(-HISTORY_WINDOW);
 
   // ── Assemble the updated MasteryRecord ────────────────────────────────────
@@ -372,18 +372,18 @@ async function tapMastery(child_id, node_id, got_it) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Sub-task 2.5 — getMasteryRecord
+// Sub-task 2.5 - getMasteryRecord
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * getMasteryRecord — Retrieve a single MasteryRecord from IDB.
+ * getMasteryRecord - Retrieve a single MasteryRecord from IDB.
  *
  * Returns null (instead of undefined) when no record exists, for a more
  * ergonomic API for callers.
  *
  * @param {string} child_id
  * @param {string} node_id
- * @returns {Promise<object|null>}  — MasteryRecord, or null if not found
+ * @returns {Promise<object|null>}  - MasteryRecord, or null if not found
  *
  * Satisfies Req 4.3
  */
@@ -393,11 +393,11 @@ async function getMasteryRecord(child_id, node_id) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Sub-task 2.6 — getAllChildMastery
+// Sub-task 2.6 - getAllChildMastery
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * getAllChildMastery — Retrieve all MasteryRecords for a given child.
+ * getAllChildMastery - Retrieve all MasteryRecords for a given child.
  *
  * @param {string} child_id
  * @returns {Promise<object[]>}
@@ -409,11 +409,11 @@ async function getAllChildMastery(child_id) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Sub-task 2.7 — resetMastery
+// Sub-task 2.7 - resetMastery
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * resetMastery — Delete a MasteryRecord from IDB, resetting a child's progress
+ * resetMastery - Delete a MasteryRecord from IDB, resetting a child's progress
  * for a given knowledge node.
  *
  * @param {string} child_id
@@ -427,12 +427,12 @@ async function resetMastery(child_id, node_id) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Task 3 implementation — getRoomAggregate
+// Task 3 implementation - getRoomAggregate
 // (included here per spec guidance to implement in full now)
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * getRoomAggregate — Compute room-level mastery statistics for a knowledge node.
+ * getRoomAggregate - Compute room-level mastery statistics for a knowledge node.
  *
  * Queries all MasteryRecords for the given node, then derives:
  *   - total_count     : total number of records (children tracked for this node)
@@ -484,7 +484,7 @@ async function getRoomAggregate(node_id) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Public API — BKTEngine export (Sub-task 2.1)
+// Public API - BKTEngine export (Sub-task 2.1)
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
@@ -504,7 +504,7 @@ export const BKTEngine = Object.freeze({
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Internal function exports (for unit testing only — not part of public API)
+// Internal function exports (for unit testing only - not part of public API)
 // ─────────────────────────────────────────────────────────────────────────────
 
 // These are exported so tests can exercise the pure algorithmic functions

@@ -1,7 +1,7 @@
 {
   "rule_id": "SAFE_FIRE_01",
   "type": "safety",
-  "description": "Blocks all fire-related materials for children 0-36 months — absolute prohibition",
+  "description": "Blocks all fire-related materials for children 0-36 months - absolute prohibition",
   "trigger": {
     "age_bands": ["0-3", "3-6", "6-9", "9-12", "12-18", "18-24", "24-36"]
   },

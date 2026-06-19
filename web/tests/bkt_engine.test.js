@@ -10,7 +10,7 @@
  */
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Environment setup — must happen BEFORE any module imports that use these APIs
+// Environment setup - must happen BEFORE any module imports that use these APIs
 // ─────────────────────────────────────────────────────────────────────────────
 
 // Stub fetch so the module-level _dagPromise in bkt_engine.js doesn't throw.
@@ -23,7 +23,7 @@ globalThis.fetch = async () => ({
 
 // ── Minimal in-memory IndexedDB shim ────────────────────────────────────────
 // Provides just enough surface to satisfy openDB() and MasteryStore calls
-// without installing fake-indexeddb. openDB() is lazy — it is only called
+// without installing fake-indexeddb. openDB() is lazy - it is only called
 // when an IDB method is actually invoked, so this shim only matters for tests
 // that exercise tapMastery (8.8) where IDB is NOT reached due to early rejection.
 //
@@ -132,7 +132,7 @@ function createMinimalIDB() {
 globalThis.indexedDB = createMinimalIDB();
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Imports — must come AFTER globalThis stubs are set up
+// Imports - must come AFTER globalThis stubs are set up
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { describe, it } from 'node:test';
@@ -174,7 +174,7 @@ function expectedBKT(prior, got_it, params) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Task 8.1 — Cold-start initialisation (Req 1.1)
+// Task 8.1 - Cold-start initialisation (Req 1.1)
 // ─────────────────────────────────────────────────────────────────────────────
 // The cold-start path initialises prior from P_L0 = 0.15 before calling
 // updateBKT.  We test this by calling updateBKT with prior = P_L0 directly,
@@ -200,7 +200,7 @@ describe('8.1 Cold-start initialisation (Req 1.1)', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Task 8.2 — Default params verification (Req 1.6)
+// Task 8.2 - Default params verification (Req 1.6)
 // ─────────────────────────────────────────────────────────────────────────────
 // A node absent from the DAG (fetch returns 404 → empty map) uses the default
 // params.  We verify the arithmetic: prior=0.15, got_it=true, defaults →
@@ -239,7 +239,7 @@ describe('8.2 Default params produce the correct posterior (Req 1.6)', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Task 8.3 — DAG override params produce a different posterior (Req 1.7)
+// Task 8.3 - DAG override params produce a different posterior (Req 1.7)
 // ─────────────────────────────────────────────────────────────────────────────
 // When a node provides custom bkt_params, those values are used instead of
 // the defaults.  We test updateBKT directly with override params and verify
@@ -285,7 +285,7 @@ describe('8.3 DAG override params are applied (Req 1.7)', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Task 8.4 — Trajectory with < 3 observations returns 'rising' (Req 2.2)
+// Task 8.4 - Trajectory with < 3 observations returns 'rising' (Req 2.2)
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe('8.4 Insufficient history (<3) defaults to rising (Req 2.2)', () => {
@@ -311,7 +311,7 @@ describe('8.4 Insufficient history (<3) defaults to rising (Req 2.2)', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Task 8.5 — at_risk trajectory (Req 2.3)
+// Task 8.5 - at_risk trajectory (Req 2.3)
 // ─────────────────────────────────────────────────────────────────────────────
 // Craft a p_history where the last 3 deltas are all < -0.01 AND current < 0.50.
 // history = [0.50, 0.45, 0.40], current = 0.35
@@ -341,7 +341,7 @@ describe('8.5 at_risk trajectory (Req 2.3)', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Task 8.6 — stalled trajectory (Req 2.4)
+// Task 8.6 - stalled trajectory (Req 2.4)
 // ─────────────────────────────────────────────────────────────────────────────
 // Craft a p_history where all last 3 absolute deltas < 0.02 AND current < 0.80.
 // history = [0.40, 0.41, 0.40], current = 0.41
@@ -376,7 +376,7 @@ describe('8.6 stalled trajectory (Req 2.4)', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Task 8.7 — mastered trajectory (Req 2.1)
+// Task 8.7 - mastered trajectory (Req 2.1)
 // ─────────────────────────────────────────────────────────────────────────────
 // Any record where p_mastery >= 0.80 must return 'mastered' regardless of history.
 
@@ -415,7 +415,7 @@ describe('8.7 mastered trajectory takes absolute precedence (Req 2.1)', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Task 8.8 — Input validation rejects Promise without IDB write (Req 11.5)
+// Task 8.8 - Input validation rejects Promise without IDB write (Req 11.5)
 // ─────────────────────────────────────────────────────────────────────────────
 // tapMastery validates child_id and node_id before any IDB access.
 // The Promise rejection must happen before openDB() is ever called.

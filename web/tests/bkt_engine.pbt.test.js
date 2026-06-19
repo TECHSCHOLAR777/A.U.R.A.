@@ -11,12 +11,12 @@
  */
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Environment stubs — must happen BEFORE any module imports
+// Environment stubs - must happen BEFORE any module imports
 // ─────────────────────────────────────────────────────────────────────────────
 
 globalThis.fetch = async () => ({ ok: false, status: 404, json: async () => ({}) });
 
-// Minimal IDB shim — same as bkt_engine.test.js
+// Minimal IDB shim - same as bkt_engine.test.js
 function createMinimalIDB() {
   const stores = {};
   function makeRequest(value) {
@@ -63,7 +63,7 @@ function createMinimalIDB() {
 globalThis.indexedDB = createMinimalIDB();
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Imports — after stubs
+// Imports - after stubs
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { describe, it } from 'node:test';
@@ -71,10 +71,10 @@ import assert from 'node:assert/strict';
 import { updateBKT, computeTrajectoryFlag, BKTEngine } from '../bkt_engine.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Inline PBT helpers — deterministic seeded LCG sampler
+// Inline PBT helpers - deterministic seeded LCG sampler
 // ─────────────────────────────────────────────────────────────────────────────
 
-// LCG random — deterministic, seeded by sample index
+// LCG random - deterministic, seeded by sample index
 function lcgRand(seed) {
   const s = ((seed * 1664525 + 1013904223) & 0xffffffff) >>> 0;
   return s / 0xffffffff;
@@ -96,7 +96,7 @@ function forAll(label, samples, gen, prop) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Aggregate helper (inlined — does not call IDB)
+// Aggregate helper (inlined - does not call IDB)
 // Used by Properties 10.5 and 10.6
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -114,17 +114,17 @@ function aggregate(records) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Property-Based Tests — BKT Engine
+// Property-Based Tests - BKT Engine
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe('Property-Based Tests — BKT Engine', () => {
+describe('Property-Based Tests - BKT Engine', () => {
 
   // ───────────────────────────────────────────────────────────────────────────
-  // 10.1 — BKT Probability Bounds (Req 1.4)
+  // 10.1 - BKT Probability Bounds (Req 1.4)
   // updateBKT output is always in [0.001, 0.999] for any valid prior and params
   // ───────────────────────────────────────────────────────────────────────────
 
-  it('Property 1 — BKT Probability Bounds (Req 1.4)', () => {
+  it('Property 1 - BKT Probability Bounds (Req 1.4)', () => {
     forAll('BKT Bounds', 500, (i) => ({
       prior:  rnd(i * 7,   0.001, 0.999),
       got_it: (i % 2 === 0),
@@ -141,11 +141,11 @@ describe('Property-Based Tests — BKT Engine', () => {
   });
 
   // ───────────────────────────────────────────────────────────────────────────
-  // 10.2 — Positive-Evidence Monotonicity (Req 1.2)
+  // 10.2 - Positive-Evidence Monotonicity (Req 1.2)
   // updateBKT(prior, true, params) > prior for any prior in (0.001, 0.95)
   // ───────────────────────────────────────────────────────────────────────────
 
-  it('Property 2 — Positive-Evidence Monotonicity (Req 1.2)', () => {
+  it('Property 2 - Positive-Evidence Monotonicity (Req 1.2)', () => {
     forAll('Positive Monotonicity', 500, (i) => ({
       prior:  rnd(i * 7,  0.001, 0.95),
       params: {
@@ -161,7 +161,7 @@ describe('Property-Based Tests — BKT Engine', () => {
   });
 
   // ───────────────────────────────────────────────────────────────────────────
-  // 10.3 — Negative-Evidence Monotonicity (Req 1.3)
+  // 10.3 - Negative-Evidence Monotonicity (Req 1.3)
   // updateBKT(prior, false, params) < prior when p_g < 0.5.
   //
   // Req 1.3: "WHEN tapMastery is called with got_it=false and the default BKT
@@ -173,11 +173,11 @@ describe('Property-Based Tests — BKT Engine', () => {
   // mastery when prior is above the crossover point where the Bayesian
   // negative update exceeds the p_t boost. With default params (p_g=0.20,
   // p_s=0.10, p_t=0.20) this crossover is ≈ 0.229. The generator uses
-  // prior ∈ (0.25, 0.95) — the realistic operating range after at least one
-  // prior update — where the property is mathematically guaranteed.
+  // prior ∈ (0.25, 0.95) - the realistic operating range after at least one
+  // prior update - where the property is mathematically guaranteed.
   // ───────────────────────────────────────────────────────────────────────────
 
-  it('Property 3 — Negative-Evidence Monotonicity (Req 1.3)', () => {
+  it('Property 3 - Negative-Evidence Monotonicity (Req 1.3)', () => {
     // Default params from bkt_engine.js constants (Req 1.6)
     const DEFAULT_PARAMS = { p_l0: 0.15, p_t: 0.15, p_g: 0.20, p_s: 0.10 };
 
@@ -192,12 +192,12 @@ describe('Property-Based Tests — BKT Engine', () => {
   });
 
   // ───────────────────────────────────────────────────────────────────────────
-  // 10.4 — Mastery Threshold Consistency (Req 2.1)
+  // 10.4 - Mastery Threshold Consistency (Req 2.1)
   // Forward: p_mastery >= threshold → 'mastered'
   // Reverse: p_mastery < threshold  → not 'mastered'
   // ───────────────────────────────────────────────────────────────────────────
 
-  it('Property 4 — Mastery Threshold Consistency (Req 2.1)', () => {
+  it('Property 4 - Mastery Threshold Consistency (Req 2.1)', () => {
     // Forward: above threshold → mastered
     forAll('Mastery Forward', 500, (i) => ({
       p_mastery: rnd(i * 3, 0.80, 0.999),
@@ -216,11 +216,11 @@ describe('Property-Based Tests — BKT Engine', () => {
   });
 
   // ───────────────────────────────────────────────────────────────────────────
-  // 10.5 — Room Aggregate Count Invariant (Req 3.3)
+  // 10.5 - Room Aggregate Count Invariant (Req 3.3)
   // mastered_count <= total_count for any set of 0–30 records
   // ───────────────────────────────────────────────────────────────────────────
 
-  it('Property 5 — Room Aggregate Count Invariant (Req 3.3)', () => {
+  it('Property 5 - Room Aggregate Count Invariant (Req 3.3)', () => {
     forAll('Aggregate Count', 500, (i) => {
       const n = i % 31;  // 0 to 30 records
       const records = [];
@@ -235,11 +235,11 @@ describe('Property-Based Tests — BKT Engine', () => {
   });
 
   // ───────────────────────────────────────────────────────────────────────────
-  // 10.6 — Room Aggregate Mean Correctness (Req 3.4)
+  // 10.6 - Room Aggregate Mean Correctness (Req 3.4)
   // avg_p_mastery equals the exact arithmetic mean for any non-empty record set
   // ───────────────────────────────────────────────────────────────────────────
 
-  it('Property 6 — Room Aggregate Mean Correctness (Req 3.4)', () => {
+  it('Property 6 - Room Aggregate Mean Correctness (Req 3.4)', () => {
     forAll('Aggregate Mean', 500, (i) => {
       const n = (i % 20) + 1;  // 1 to 20 records
       const records = [];
@@ -256,11 +256,11 @@ describe('Property-Based Tests — BKT Engine', () => {
   });
 
   // ───────────────────────────────────────────────────────────────────────────
-  // 10.7 — Offline Write Guarantee (Req 1.5, 11.1)
+  // 10.7 - Offline Write Guarantee (Req 1.5, 11.1)
   // After tapMastery resolves, getMasteryRecord returns the updated p_mastery
   // ───────────────────────────────────────────────────────────────────────────
 
-  it('Property 13 — Offline Write Guarantee', async () => {
+  it('Property 13 - Offline Write Guarantee', async () => {
     for (let i = 0; i < 20; i++) {
       const child_id = `CHILD_P${i}`;
       const node_id  = `NODE_P${i % 5}`;
@@ -276,11 +276,11 @@ describe('Property-Based Tests — BKT Engine', () => {
   });
 
   // ───────────────────────────────────────────────────────────────────────────
-  // 10.8 — At-Risk Correctness (Req 2.3)
+  // 10.8 - At-Risk Correctness (Req 2.3)
   // For any p_history where last 3 deltas < -0.01 and current < 0.50 → at_risk
   // ───────────────────────────────────────────────────────────────────────────
 
-  it('Property 14 — At-Risk Correctness (Req 2.3)', () => {
+  it('Property 14 - At-Risk Correctness (Req 2.3)', () => {
     forAll('At-Risk', 500, (i) => {
       const current = rnd(i * 7 + 1, 0.001, 0.449);
       const d3 = rnd(i * 3 + 2, 0.011, 0.08);
@@ -296,12 +296,12 @@ describe('Property-Based Tests — BKT Engine', () => {
   });
 
   // ───────────────────────────────────────────────────────────────────────────
-  // 10.9 — Stalled Correctness (Req 2.4)
+  // 10.9 - Stalled Correctness (Req 2.4)
   // For any p_history where all last 3 absolute deltas < 0.02 and current < 0.80
   // → stalled (unless at_risk conditions are also met)
   // ───────────────────────────────────────────────────────────────────────────
 
-  it('Property 15 — Stalled Correctness (Req 2.4)', () => {
+  it('Property 15 - Stalled Correctness (Req 2.4)', () => {
     forAll('Stalled', 500, (i) => {
       const base    = rnd(i * 7 + 1, 0.10, 0.75);
       const tiny = (s) => rnd(s, -0.015, 0.015);

@@ -6,7 +6,7 @@
  * conform to this schema. The guardrail engine stamps provenance metadata
  * after evaluation.
  *
- * This file is a FROZEN CONTRACT — changes require sign-off from all devs.
+ * This file is a FROZEN CONTRACT - changes require sign-off from all devs.
  */
 
 // ─── Literal Union Types ────────────────────────────────────────────────────
@@ -242,7 +242,7 @@ export function validateC1(obj: unknown): C1Activity {
   } else {
     checkStringField(errors, incMod, 'vast_parameter', VALID_VAST_PARAMS);
     if (typeof incMod['vast_parameter'] === 'string' && VALID_VAST_PARAMS.has(incMod['vast_parameter'])) {
-      // Field exists and is valid — prefix in error output
+      // Field exists and is valid - prefix in error output
     }
     // Re-map field names for nested object clarity
     const vpVal = incMod['vast_parameter'];

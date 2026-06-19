@@ -1,8 +1,8 @@
 /**
- * Rule Table — Static Rule Registry
+ * Rule Table - Static Rule Registry
  * ═══════════════════════════════════════════
  * Loads all 15 rule JSON files as static imports (no filesystem access needed
- * at runtime — works in browser/offline context). Each rule is validated
+ * at runtime - works in browser/offline context). Each rule is validated
  * against the C2Rule schema at import time.
  *
  * If ANY rule is malformed, this module throws a startup error listing

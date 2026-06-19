@@ -2,10 +2,10 @@
  * C2 Rule Schema Contract
  * ═══════════════════════════════════════════
  * Defines the typed condition DSL and rule structure used by the guardrail
- * engine. Rules use discriminated unions for conditions — NEVER string
+ * engine. Rules use discriminated unions for conditions - NEVER string
  * expressions or eval(). Every rule is validated at load time.
  *
- * This file is a FROZEN CONTRACT — changes require sign-off from all devs.
+ * This file is a FROZEN CONTRACT - changes require sign-off from all devs.
  */
 
 import type { AgeBandMonths, Domain, VASTParameter, FieldError } from './activity.schema.js';

@@ -1,11 +1,11 @@
 /**
- * BKT Priors — Default Parameters and Milestone Prior Lookup
+ * BKT Priors - Default Parameters and Milestone Prior Lookup
  * ═══════════════════════════════════════════════════════════════
  * Provides the default BKT parameters and a lookup function for
  * milestone-specific priors from Dev 4's curriculum data.
  *
  * If a milestone is not found, returns DEFAULT_BKT_PARAMS and logs
- * a warning. NEVER throws — the engine must work even without Dev 4's data.
+ * a warning. NEVER throws - the engine must work even without Dev 4's data.
  */
 
 import type { BKTParams, MilestonePrior, AgeBandMonths } from '../schema/index.js';

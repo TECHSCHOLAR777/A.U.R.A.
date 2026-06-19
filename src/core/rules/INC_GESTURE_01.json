@@ -1,7 +1,7 @@
 {
   "rule_id": "INC_GESTURE_01",
   "type": "inclusion",
-  "description": "Flags attunement-focused activities when non-verbal child present — ensure gesture-based interaction is emphasized",
+  "description": "Flags attunement-focused activities when non-verbal child present - ensure gesture-based interaction is emphasized",
   "trigger": {
     "vast_parameters": ["attunement"]
   },
@@ -20,6 +20,6 @@
     ]
   },
   "action": "flag_modify",
-  "message": "👐 Inclusion: Non-verbal child + attunement activity — emphasize mirroring gestures, facial expressions, and tactile responsiveness over verbal interaction.",
+  "message": "👐 Inclusion: Non-verbal child + attunement activity - emphasize mirroring gestures, facial expressions, and tactile responsiveness over verbal interaction.",
   "severity": "warn"
 }

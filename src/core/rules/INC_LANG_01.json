@@ -24,6 +24,6 @@
     ]
   },
   "action": "flag_modify",
-  "message": "🗨️ Inclusion: Language concern child in room — add visual cues, picture cards, or simplified verbal prompts. Avoid complex multi-step verbal instructions.",
+  "message": "🗨️ Inclusion: Language concern child in room - add visual cues, picture cards, or simplified verbal prompts. Avoid complex multi-step verbal instructions.",
   "severity": "warn"
 }

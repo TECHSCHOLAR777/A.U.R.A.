@@ -1,5 +1,5 @@
 /**
- * DSS Thresholds — Stub Data
+ * DSS Thresholds - Stub Data
  * ═══════════════════════════════════════════
  * Placeholder thresholds covering at least 10 items across all 6 DSS domains
  * for age bands 0-3 and 3-6. These are placeholders until Dev 4 delivers

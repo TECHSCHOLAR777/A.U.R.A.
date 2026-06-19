@@ -1,8 +1,8 @@
 /**
- * BKT Engine — Bayesian Knowledge Tracing via 4-Parameter HMM
+ * BKT Engine - Bayesian Knowledge Tracing via 4-Parameter HMM
  * ═════════════════════════════════════════════════════════════════
  * Implements the Hidden Markov Model update for child mastery tracking.
- * O(1) per update — no loops, no allocations beyond the return object.
+ * O(1) per update - no loops, no allocations beyond the return object.
  *
  * The engine NEVER throws. On degenerate inputs (NaN, zero denominator),
  * it returns the current state unchanged and logs a warning.

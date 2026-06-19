@@ -1,5 +1,5 @@
 /**
- * BKT State — Initial State Factory and Trajectory Calculation
+ * BKT State - Initial State Factory and Trajectory Calculation
  * ═════════════════════════════════════════════════════════════════
  * Creates initial mastery states for new children/milestones and
  * calculates whether a child is off-trajectory relative to expected

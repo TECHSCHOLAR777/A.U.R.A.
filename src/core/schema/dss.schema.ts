@@ -2,10 +2,10 @@
  * DSS (Developmental Screening System) Schema Contract
  * ═════════════════════════════════════════════════════════
  * Defines the screening domain, items, thresholds, verdicts, and results
- * used by the DSS screener module. Deterministic and explainable — every
+ * used by the DSS screener module. Deterministic and explainable - every
  * flag has a human-readable description for the anganwadi worker.
  *
- * This file is a FROZEN CONTRACT — changes require sign-off from all devs.
+ * This file is a FROZEN CONTRACT - changes require sign-off from all devs.
  */
 
 import type { AgeBandMonths } from './activity.schema.js';
@@ -14,7 +14,7 @@ import type { AgeBandMonths } from './activity.schema.js';
 
 /**
  * The six developmental screening domains.
- * More granular than the activity Domain type — includes vision/hearing.
+ * More granular than the activity Domain type - includes vision/hearing.
  */
 export type DSSDomain =
   | 'motor'
@@ -58,8 +58,8 @@ export interface DSSThreshold {
  * Final verdict from the DSS screening.
  *
  * - "typical":       No significant concerns identified.
- * - "monitor":       One concern or one red flag — schedule follow-up.
- * - "refer_to_deic": Two or more red flags — refer to District Early
+ * - "monitor":       One concern or one red flag - schedule follow-up.
+ * - "refer_to_deic": Two or more red flags - refer to District Early
  *                    Intervention Centre immediately.
  */
 export type DSSVerdict = 'typical' | 'monitor' | 'refer_to_deic';

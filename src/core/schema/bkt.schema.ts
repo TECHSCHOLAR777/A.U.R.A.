@@ -5,7 +5,7 @@
  * the BKT engine. These types flow between the BKT engine and the
  * room-aggregate module that feeds Dev 2's bandit context vector.
  *
- * This file is a FROZEN CONTRACT — changes require sign-off from all devs.
+ * This file is a FROZEN CONTRACT - changes require sign-off from all devs.
  */
 
 import type { AgeBandMonths, Domain } from './activity.schema.js';
@@ -18,7 +18,7 @@ import type { AgeBandMonths, Domain } from './activity.schema.js';
  *
  * - p_mastery is always clamped to [0.01, 0.99] to prevent degenerate states.
  * - off_trajectory is recalculated after every update.
- * - No PII — child_uuid is an opaque identifier.
+ * - No PII - child_uuid is an opaque identifier.
  */
 export interface ChildMasteryState {
   readonly child_uuid: string;

@@ -24,6 +24,6 @@
     ]
   },
   "action": "flag_modify",
-  "message": "🗣️ Inclusion: Non-verbal child in room — language activity needs gesture/visual communication alternatives. Add instruction override with signing or picture-based prompts.",
+  "message": "🗣️ Inclusion: Non-verbal child in room - language activity needs gesture/visual communication alternatives. Add instruction override with signing or picture-based prompts.",
   "severity": "warn"
 }

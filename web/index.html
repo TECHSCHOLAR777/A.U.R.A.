@@ -218,6 +218,7 @@
   .mode-switch span.active::after{content:'';position:absolute;bottom:-12px;left:0;right:0;height:3px;background:var(--forest);border-radius:2px}
 </style>
 <script src="https://unpkg.com/dexie@3/dist/dexie.js"></script>
+<script src="/config.js"></script>
 </head>
 <body>
 <div class="top">
@@ -363,10 +364,40 @@ let dssPlaceholder = false;
 let roomMaterials = ['soft_ball', 'cloth_pieces'];
 let voiceRecognition = null;
 let masteryMap = new Map();
+let dssSelectedChild = null;
+let dssResults = {};
 
 // Online check maps to the inverse of the debug offline mode flag
 function isOnline() {
   return !window.DEBUG_OFFLINE_MODE;
+}
+
+// Client-side age band derivation (mirrors server.js deriveBand)
+function deriveBandClient(childProfiles) {
+  if (!Array.isArray(childProfiles) || childProfiles.length === 0) return '0-3';
+  const ages = childProfiles.map(p => typeof p.age_months === 'number' ? p.age_months : null).filter(a => a !== null);
+  if (ages.length === 0) return '0-3';
+  const avg = ages.reduce((s, a) => s + a, 0) / ages.length;
+  if (avg < 3) return '0-3';
+  if (avg < 6) return '3-6';
+  if (avg < 9) return '6-9';
+  if (avg < 12) return '9-12';
+  if (avg < 18) return '12-18';
+  if (avg < 24) return '18-24';
+  return '24-36';
+}
+
+// Parse DSS milestone_due strings to months (e.g. "6 months" -> 6, "3 years" -> 36)
+function parseMilestoneDueMonths(str) {
+  if (!str) return 0;
+  const lower = str.toLowerCase().trim();
+  let match = lower.match(/(\d+)\s*[-\u2013]\s*(\d+)\s*months?/);
+  if (match) return parseInt(match[2], 10);
+  match = lower.match(/(\d+)\s*months?/);
+  if (match) return parseInt(match[1], 10);
+  match = lower.match(/(\d+)\s*years?/);
+  if (match) return parseInt(match[1], 10) * 12;
+  return 0;
 }
 
 // ── Statusbar rendering dynamically responding to Online simulator ──────────
@@ -550,7 +581,7 @@ const screens={
           <div class="body" style="padding-top:6px">
             <button class="backbtn" style="background:var(--gl);color:var(--green)" onclick="back()">‹ ${lang==='hi'?'वापस':'Back'}</button>
             ${kw(t.voiceKw,'--green')}
-            <div class="sub">${lang==='hi'?'केवल सामग्री और गिनती के लिए — कोई बच्चों के नाम या निजी जानकारी नहीं।':'For materials and counts only — never child names or personal data.'}</div>
+            <div class="sub">${lang==='hi'?'केवल सामग्री और गिनती के लिए - कोई बच्चों के नाम या निजी जानकारी नहीं।':'For materials and counts only - never child names or personal data.'}</div>
             ${panel}
           </div>
         </div>
@@ -646,10 +677,11 @@ const screens={
     // Voice only for non-PII materials/counts; online + Web Speech only (Req 5).
     const voiceOnline = (typeof navigator !== 'undefined' && navigator.onLine) && isOnline();
     const voiceWarningHtml = voiceOnline
-      ? `<button class="btn ghost" style="border-color:var(--green);color:var(--green);margin-bottom:10px;" onclick="go('voice')">${SVG.voice} ${lang === 'hi' ? 'सामग्री / गिनती — आवाज़ (नाम नहीं)' : 'Materials / count — voice (no names)'}</button>`
+      ? `<button class="btn ghost" style="border-color:var(--green);color:var(--green);margin-bottom:10px;" onclick="go('voice')">${SVG.voice} ${lang === 'hi' ? 'सामग्री / गिनती - आवाज़ (नाम नहीं)' : 'Materials / count - voice (no names)'}</button>`
       : `<div style="background:var(--rl);color:var(--red);border-radius:10px;padding:8px;font-size:9.5px;font-weight:700;margin-bottom:10px;text-align:center;">⚠️ ${lang === 'hi' ? 'ऑफ़लाइन: आवाज़ बंद; टैप/मैनुअल इनपुट करें' : 'Voice requires internet; use tap/manual input'}</div>`;
 
-    const kidsGridHtml = activeChildren.map(c => {
+    const presentChildren = activeChildren.filter(c => c.present);
+    const kidsGridHtml = presentChildren.map(c => {
       const record = masteryMap.get(c.childId);
       const flag = record ? record.trajectory_flag : null;
       const initials = c.name[lang].charAt(0).toUpperCase();
@@ -663,9 +695,8 @@ const screens={
       return `
         <div class="avatar-card" 
              style="display:flex;flex-direction:column;align-items:center;padding:10px 6px;border:1.5px solid var(--line);border-radius:var(--r-tile);cursor:pointer;background:#fff;user-select:none;touch-action:none;min-width:64px;"
-             onpointerdown="startBktPress(event, '${c.childId}')"
-             onpointerup="endBktPress(event, '${c.childId}')"
-             onpointerleave="cancelBktPress('${c.childId}')"
+             onclick="bktSingleClick('${c.childId}')"
+             ondblclick="bktDoubleClick('${c.childId}')"
              title="${c.name[lang]} (${label})">
           <div class="avatar-circle" style="width:36px;height:36px;border-radius:50%;background:${color};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;position:relative;margin-bottom:6px;">
             ${initials}
@@ -677,7 +708,7 @@ const screens={
       `;
     }).join('');
 
-    const masteredCount = activeChildren.filter(c => {
+    const masteredCount = presentChildren.filter(c => {
       const record = masteryMap.get(c.childId);
       return record && record.trajectory_flag === 'mastered';
     }).length;
@@ -725,8 +756,6 @@ const screens={
             ${kw(t.eceKw,'--purple')}
             <div class="sub">${t.eceSub}</div>
             
-            ${voiceWarningHtml}
-            
             <button class="btn green" style="margin-bottom:12px" onclick="loadECEActivity()" id="btn-load-activity">
               🎯 ${lang === 'hi' ? 'गतिविधि अनुकूलित करें (Adapt)' : 'Adapt Activity for Room'}
             </button>
@@ -750,11 +779,11 @@ const screens={
             
             <div class="sectionlabel" style="display:flex;justify-content:space-between;align-items:center;margin-top:24px;">
               <span>${lang === 'hi' ? 'बाल दक्षता ट्रैकिंग (BKT)' : 'Child Mastery Grid (BKT)'}</span>
-              <span style="font-size:10px;text-transform:none;color:var(--green);font-weight:700;">${masteredCount} / ${activeChildren.length} ${lang === 'hi' ? 'सफल' : 'Mastered'}</span>
+              <span style="font-size:10px;text-transform:none;color:var(--green);font-weight:700;">${masteredCount} / ${presentChildren.length} ${lang === 'hi' ? 'सफल' : 'Mastered'}</span>
             </div>
             
             <div style="font-size:9.5px;color:var(--muted);margin-bottom:10px;line-height:1.4;">
-              💡 ${lang === 'hi' ? 'टैप: सफलता (हरा), दबाए रखें: ध्यान दें/जोखिम (लाल)' : 'Tap: Mastered (green), Press & hold: Needs attention (red)'}
+              💡 ${lang === 'hi' ? 'एक क्लिक: सफल (हरा), डबल क्लिक: ध्यान दें (लाल)' : 'Click: Mastered (green), Double-click: Needs attention (red)'}
             </div>
             
             <div class="bkt-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:18px;">
@@ -767,7 +796,7 @@ const screens={
                 <span style="font-size:13px;font-weight:700">${lang === 'hi' ? 'इन्क्लूज़न अनुकूलन (उदाहरण)' : 'Inclusion adaptation (example)'}</span>
                 <span style="background:var(--muted);color:#fff;font-size:7.5px;font-weight:600;padding:3px 8px;border-radius:9px">${lang === 'hi' ? 'उदाहरण' : 'Example'}</span>
               </div>
-              <div style="font-size:10px;margin-top:6px;line-height:1.5">${lang === 'hi' ? 'उदाहरण: गैर-मौखिक बच्चे के लिए इशारों से जवाब का रास्ता। (वास्तविक बच्चा नहीं — चित्रण मात्र)' : 'Example: a non-verbal response path (gestures) for an inclusion need. (Illustrative — not a real child.)'}</div>
+              <div style="font-size:10px;margin-top:6px;line-height:1.5">${lang === 'hi' ? 'उदाहरण: गैर-मौखिक बच्चे के लिए इशारों से जवाब का रास्ता। (वास्तविक बच्चा नहीं - चित्रण मात्र)' : 'Example: a non-verbal response path (gestures) for an inclusion need. (Illustrative - not a real child.)'}</div>
             </div>
           </div>
         </div>
@@ -777,35 +806,115 @@ const screens={
   },
   dss() {
     const t = T[lang];
-    const questionsToRender = dssQuestions.slice(0, 8); // child-development milestone red-flags
+    const presentKids = activeChildren.filter(c => c.present);
 
-    const dssHtml = questionsToRender.map((q, idx) => `
-      <div class="form-group" style="background:#fff;border:1px solid var(--line);border-radius:var(--r-tile);padding:14px;margin-bottom:10px;">
-        ${q.milestone_due ? `<span style="display:inline-block;background:var(--pl);color:var(--purple);font-size:8px;font-weight:800;padding:2px 7px;border-radius:8px;margin-bottom:6px;">${lang==='hi'?'मील का पत्थर':'milestone'}: ${q.milestone_due}</span>` : ''}
+    if (!dssSelectedChild) {
+      const childCards = presentKids.length === 0
+        ? `<div style="background:var(--card);border:1px dashed var(--line);border-radius:12px;padding:24px;text-align:center;color:var(--muted);margin-bottom:16px;">
+            <span style="font-size:32px;display:block;margin-bottom:8px;">👧</span>
+            <div style="font-weight:700;font-size:14px;color:var(--ink);">${lang === 'hi' ? 'कोई उपस्थित बच्चा नहीं' : 'No Children Present'}</div>
+            <div style="font-size:11px;margin-top:4px;">${lang === 'hi' ? 'पहले उपस्थिति दर्ज करें।' : 'Complete attendance first.'}</div>
+           </div>`
+        : presentKids.map(c => {
+            const initials = c.name[lang].charAt(0).toUpperCase();
+            const prevResult = dssResults[c.childId];
+            const badge = prevResult
+              ? `<span style="font-size:8px;font-weight:800;padding:2px 6px;border-radius:8px;margin-top:4px;display:inline-block;background:${prevResult.result === 'typical' ? 'var(--gl)' : prevResult.result === 'monitor' ? 'var(--al)' : 'var(--rl)'};color:${prevResult.result === 'typical' ? 'var(--green)' : prevResult.result === 'monitor' ? 'var(--amber)' : 'var(--red)'}">${prevResult.result}</span>`
+              : `<span style="font-size:8px;color:var(--muted);margin-top:4px;">${lang === 'hi' ? 'जांच बाकी' : 'Not screened'}</span>`;
+            return `
+              <div onclick="selectDssChild('${c.childId}')" style="display:flex;flex-direction:column;align-items:center;padding:12px 6px;border:1.5px solid var(--line);border-radius:var(--r-tile);cursor:pointer;background:#fff;min-width:72px;transition:transform .15s;" onmouseenter="this.style.transform='scale(1.04)'" onmouseleave="this.style.transform='scale(1)'">
+                <div style="width:40px;height:40px;border-radius:50%;background:var(--purple);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;margin-bottom:6px;">${initials}</div>
+                <span style="font-size:10.5px;font-weight:700;color:var(--ink);text-align:center;max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${c.name[lang].split(' ')[0]}</span>
+                <span style="font-size:9px;color:var(--muted);">${c.age[lang]}</span>
+                ${badge}
+              </div>
+            `;
+          }).join('');
+
+      return `
+        <div class="screen active">${statusbar(nowClock())}${header()}
+          <div class="scroll">
+            <div class="body" style="padding-top:6px;">
+              <button class="backbtn" style="background:var(--pl);color:var(--purple)" onclick="back()">
+                ‹ ${lang==='hi'?'वापस':'Back'}
+              </button>
+              ${kw(lang === 'hi' ? ["विकास ", "जांच (DSS)"] : ["Developmental ", "Screening (DSS)"], '--purple')}
+              <div class="sub">
+                ${lang === 'hi' ? 'Navchetana बाल विकास जांच। बच्चा चुनें, उम्र के अनुसार मील के पत्थर जांचें।' : 'Navchetana child developmental screening. Select a child to screen age-appropriate milestones.'}
+              </div>
+              
+              <div class="sectionlabel">${lang === 'hi' ? 'बच्चा चुनें' : 'Select a Child to Screen'} (${presentKids.length})</div>
+              <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:18px;">
+                ${childCards}
+              </div>
+            </div>
+          </div>
+          ${nav('dss')}
+        </div>
+      `;
+    }
+
+    const child = dssSelectedChild;
+    const childAgeMonths = child.age_months || 36;
+    const ageFilteredQuestions = dssQuestions.filter(q => {
+      if (q.part === 'A') return true;
+      const milestoneMonths = parseMilestoneDueMonths(q.milestone_due);
+      return milestoneMonths <= childAgeMonths;
+    });
+
+    const questionsToRender = ageFilteredQuestions;
+    const answeredCount = questionsToRender.filter(q => dssAnswers[q.item_id] !== undefined).length;
+    const totalQ = questionsToRender.length;
+
+    const dssHtml = questionsToRender.map((q, idx) => {
+      const qId = q.item_id || 'q' + idx;
+      const isYes = dssAnswers[qId] === true;
+      const isNo = dssAnswers[qId] === false;
+      const isAnswered = dssAnswers[qId] !== undefined;
+      return `
+      <div class="form-group" style="background:#fff;border:1.5px solid ${isAnswered ? (isYes ? 'var(--red)' : 'var(--green)') : 'var(--line)'};border-radius:var(--r-tile);padding:14px;margin-bottom:10px;transition:border-color .2s;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          ${q.part ? `<span style="display:inline-block;background:${q.part === 'A' ? 'var(--navy)' : 'var(--purple)'};color:#fff;font-size:7.5px;font-weight:800;padding:2px 7px;border-radius:8px;">Part ${q.part}</span>` : ''}
+          ${q.milestone_due ? `<span style="display:inline-block;background:var(--pl);color:var(--purple);font-size:8px;font-weight:800;padding:2px 7px;border-radius:8px;">${q.milestone_due}</span>` : ''}
+        </div>
         <div style="font-size:12px;font-weight:700;color:var(--ink);line-height:1.4;">${idx + 1}. ${q.question}</div>
         <div style="display:flex;gap:12px;margin-top:10px;">
-          <button onclick="toggleDssQuestion('${q.item_id || 'q' + idx}', true)" id="btn-${q.item_id || 'q' + idx}-yes" style="flex:1;background:#fff;border:1.5px solid var(--line);border-radius:8px;padding:8px;font-size:12px;font-weight:700;cursor:pointer;color:var(--muted);min-height:36px;">
-            ${lang === 'hi' ? 'हाँ' : 'Yes'}
+          <button onclick="toggleDssQuestion('${qId}', true)" id="btn-${qId}-yes" style="flex:1;background:${isYes ? 'var(--rl)' : '#fff'};border:1.5px solid ${isYes ? 'var(--red)' : 'var(--line)'};border-radius:8px;padding:8px;font-size:12px;font-weight:700;cursor:pointer;color:${isYes ? 'var(--red)' : 'var(--muted)'};min-height:36px;transition:all .2s;">
+            ${isYes ? '⚠ ' : ''}${lang === 'hi' ? 'हाँ (लाल झंडा)' : 'Yes (red flag)'}
           </button>
-          <button onclick="toggleDssQuestion('${q.item_id || 'q' + idx}', false)" id="btn-${q.item_id || 'q' + idx}-no" style="flex:1;background:var(--gl);border:1.5px solid var(--green);border-radius:8px;padding:8px;font-size:12px;font-weight:700;cursor:pointer;color:var(--green);min-height:36px;">
-            ${lang === 'hi' ? 'नहीं' : 'No'}
+          <button onclick="toggleDssQuestion('${qId}', false)" id="btn-${qId}-no" style="flex:1;background:${isNo ? 'var(--gl)' : '#fff'};border:1.5px solid ${isNo ? 'var(--green)' : 'var(--line)'};border-radius:8px;padding:8px;font-size:12px;font-weight:700;cursor:pointer;color:${isNo ? 'var(--green)' : 'var(--muted)'};min-height:36px;transition:all .2s;">
+            ${isNo ? '✓ ' : ''}${lang === 'hi' ? 'नहीं (सामान्य)' : 'No (typical)'}
           </button>
         </div>
       </div>
-    `).join('');
+    `;
+    }).join('');
 
     return `
-      <div class="screen active">${statusbar('9:45')}${header()}
+      <div class="screen active">${statusbar(nowClock())}${header()}
         <div class="scroll">
           <div class="body" style="padding-top:6px;">
-            <button class="backbtn" style="background:var(--pl);color:var(--purple)" onclick="back()">
-              ‹ ${lang==='hi'?'वापस':'Back'}
+            <button class="backbtn" style="background:var(--pl);color:var(--purple)" onclick="clearDssSelection()">
+              ‹ ${lang==='hi'?'बच्चे चुनें':'Select child'}
             </button>
-            ${kw(lang === 'hi' ? ["विकास ", "जाँच (DSS)"] : ["Developmental ", "Screening (DSS)"], '--purple')}
-            <div class="sub">
-              ${lang === 'hi' ? 'Navchetana बाल विकास जाँच (0–3)। उम्र के अनुसार मील के पत्थर। यह जाँच है, चिकित्सा निदान नहीं।' : 'Navchetana child developmental screening (0–3). Age-wise milestones. This is a screening checklist, not a medical diagnosis.'}
+            ${kw(lang === 'hi' ? ["विकास ", "जांच (DSS)"] : ["Developmental ", "Screening (DSS)"], '--purple')}
+            
+            <div style="background:var(--pl);border:2px solid var(--purple);border-radius:12px;padding:12px;margin-bottom:14px;display:flex;align-items:center;gap:12px;">
+              <div style="width:42px;height:42px;border-radius:50%;background:var(--purple);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;flex-shrink:0;">${child.name[lang].charAt(0).toUpperCase()}</div>
+              <div>
+                <div style="font-size:14px;font-weight:800;color:var(--purple);">${child.name[lang]}</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:2px;">${child.age[lang]} (${childAgeMonths} ${lang === 'hi' ? 'महीने' : 'months'})</div>
+              </div>
             </div>
-            ${dssPlaceholder ? `<div style="background:var(--al);border-left:4px solid var(--amber);border-radius:10px;padding:9px;font-size:9.5px;color:var(--amber);font-weight:700;margin-bottom:10px;">${lang==='hi'?'Navchetana DSS — अंतिम डेटा लंबित (प्लेसहोल्डर)':'Navchetana DSS — final data pending (placeholder)'}</div>` : ''}
+
+            <div style="background:var(--card);border-radius:10px;padding:8px 12px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:10.5px;font-weight:700;color:var(--ink);">${lang === 'hi' ? 'प्रगति' : 'Progress'}: ${answeredCount} / ${totalQ}</span>
+              <div style="flex:1;margin-left:12px;height:6px;background:var(--line);border-radius:3px;overflow:hidden;"><div style="height:100%;width:${totalQ > 0 ? Math.round((answeredCount / totalQ) * 100) : 0}%;background:var(--purple);border-radius:3px;transition:width .3s;"></div></div>
+            </div>
+
+            ${dssPlaceholder ? `<div style="background:var(--al);border-left:4px solid var(--amber);border-radius:10px;padding:9px;font-size:9.5px;color:var(--amber);font-weight:700;margin-bottom:10px;">${lang==='hi'?'Navchetana DSS - अंतिम डेटा लंबित':'Navchetana DSS - final data pending'}</div>` : ''}
+
+            <div class="sectionlabel">${lang === 'hi' ? 'स्क्रीनिंग प्रश्न' : 'Screening Questions'} (${totalQ})</div>
 
             <div id="dss-questions-panel">
               ${dssHtml}
@@ -823,26 +932,22 @@ const screens={
   },
   audit(){
     const t=T[lang];
-    // State-driven day review (no invented backend data; Hot Meals removed).
     const totalCount = activeChildren.length;
     const presentCount = activeChildren.filter(c => c.present).length;
     const absentCount = totalCount - presentCount;
     const masteredCount = activeChildren.filter(c => { const r = masteryMap.get(c.childId); return r && r.trajectory_flag === 'mastered'; }).length;
-    // DSS status (deterministic from current answers)
     const dssAnswered = Object.keys(dssAnswers).length;
     const dssRed = Object.values(dssAnswers).filter(v => v === true).length;
+    const onlineNow = (typeof navigator !== 'undefined' && navigator.onLine) && isOnline();
     const dssLabel = dssAnswered === 0
       ? (lang==='hi' ? 'DSS: अभी नहीं की गई' : 'DSS: not run yet')
       : (lang==='hi' ? `DSS: ${dssRed} लाल झंडे · ${dssRed===0?'सामान्य':dssRed===1?'निगरानी':'रेफर'}` : `DSS: ${dssRed} red flag(s) · ${dssRed===0?'typical':dssRed===1?'monitor':'refer'}`);
-    // Activity / play outcome
     const actLabel = currentActivity
       ? ((lang==='hi' ? `गतिविधि: ${currentActivity.adapted_title}` : `Activity: ${currentActivity.adapted_title}`) + ` (${currentActivity.fallback_tier || currentActivity.source})`)
       : (lang==='hi' ? 'गतिविधि: अभी अनुकूलित नहीं' : 'Activity: not adapted yet');
-    // Sync / backend status (no fake send)
-    const onlineNow = (typeof navigator !== 'undefined' && navigator.onLine) && isOnline();
     const syncLabel = lang==='hi'
-      ? `सिंक: ${syncQueueSize} कतार में · ${onlineNow?'ऑनलाइन':'ऑफ़लाइन'} (बैकएंड सिंक आवश्यक)`
-      : `Sync: ${syncQueueSize} queued · ${onlineNow?'online':'offline'} (backend sync required)`;
+      ? `सिंक: ${syncQueueSize} कतार में · ${onlineNow?'ऑनलाइन':'ऑफ़लाइन'}`
+      : `Sync: ${syncQueueSize} queued · ${onlineNow?'online':'offline'}`;
     const auditRows = [
       [lang==='hi' ? `हाज़िरी: ${presentCount} उपस्थित, ${absentCount} अनुपस्थित` : `Attendance: ${presentCount} present, ${absentCount} absent`, 1],
       [lang==='hi' ? `दक्षता: ${totalCount} में से ${masteredCount} ने सीखा` : `Mastery: ${masteredCount} of ${totalCount} mastered`, 1],
@@ -918,16 +1023,6 @@ const screens={
               👥 ${lang === 'hi' ? 'बच्चों की सूची प्रबंधित करें' : 'Manage Children Roster'}
             </button>
 
-            <div class="sectionlabel">${lang === 'hi' ? 'रिपोर्ट और उपकरण' : 'Reports & Tools'}</div>
-            <button class="btn ghost" style="border-color:var(--navy);color:var(--navy)" onclick="generateDayReportPDF()">
-              ${SVG.clip} ${lang === 'hi' ? 'दिन की रिपोर्ट (PDF)' : 'Day report (PDF)'}
-            </button>
-
-            <div style="font-size:9px;color:var(--amber);font-weight:700;margin:6px 2px 12px;">${lang === 'hi' ? 'एक्सपोर्ट तैयार – बैकएंड/एक्सपोर्ट सेवा ज़रूरी' : 'Export ready – backend/export service required'}</div>
-            <button class="btn ghost" style="border-color:var(--green);color:var(--green)" onclick="openHeadcountModel()">
-              ${SVG.cam} ${lang === 'hi' ? 'फ़ोटो से गिनती (YOLO)' : 'Photo headcount (YOLO)'}
-            </button>
-            <div style="font-size:9px;color:var(--amber);font-weight:700;margin:6px 2px 0;">${lang === 'hi' ? 'मॉडल इंटीग्रेशन ज़रूरी' : 'Model integration required'}</div>
 
             <button class="btn red" style="margin-top:24px;background:#fff;border:1.5px solid var(--red);color:var(--red);" onclick="resetProfileIdentity()">
               ⚠️ ${lang === 'hi' ? 'प्रोफ़ाइल हटाएं (Reset)' : 'Reset Profile Identity'}
@@ -1031,9 +1126,7 @@ const screens={
   }
 };
 
-/* Backend-ready integration points. These call real services when available
-   and surface an honest "backend/model required" state otherwise — no fake
-   output, no hardcoded secrets, no faked success. */
+/* Backend-ready integration points. */
 async function generateDayReportPDF(){
   try{
     const res = await fetch('/api/report/day', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({worker:activeWorker?activeWorker.id:null,centre:activeCentre||null})});
@@ -1133,7 +1226,6 @@ async function initIdentity() {
       T.hi.greet = `सुप्रभात, ${storedIdentity.worker.name}।`;
       T.en.greet = `Good morning, ${storedIdentity.worker.name}.`;
     }
-    // Fetch children list dynamically
     try {
       const kids = await AURA_API.getChildren(activeCentre);
       activeChildren = kids.map(c => ({
@@ -1152,10 +1244,8 @@ async function initIdentity() {
       }));
 
       
-      // Load BKT status badges
       await loadMasteryMap();
       
-      // Load Sync Queue Size
       syncQueueSize = (await AURA_DB.getPendingSync()).length;
     } catch(e) {
       console.error('Kids roster initialization failed:', e);
@@ -1176,36 +1266,22 @@ async function loadMasteryMap() {
   }
 }
 
-let bktTimer = null;
-let bktLongPressTriggered = false;
+let bktClickTimer = null;
 
-function startBktPress(event, childId) {
-  if (event) event.preventDefault();
-  bktLongPressTriggered = false;
-  bktTimer = setTimeout(() => {
-    bktLongPressTriggered = true;
-    updateBktStatus(childId, false);
-  }, 500);
-}
-
-function endBktPress(event, childId) {
-  if (event) event.preventDefault();
-  if (bktTimer) {
-    clearTimeout(bktTimer);
-    bktTimer = null;
-  }
-  if (!bktLongPressTriggered) {
+function bktSingleClick(childId) {
+  if (bktClickTimer) clearTimeout(bktClickTimer);
+  bktClickTimer = setTimeout(() => {
     updateBktStatus(childId, true);
-  }
-  bktLongPressTriggered = false;
+    bktClickTimer = null;
+  }, 300);
 }
 
-function cancelBktPress(childId) {
-  if (bktTimer) {
-    clearTimeout(bktTimer);
-    bktTimer = null;
+function bktDoubleClick(childId) {
+  if (bktClickTimer) {
+    clearTimeout(bktClickTimer);
+    bktClickTimer = null;
   }
-  bktLongPressTriggered = false;
+  updateBktStatus(childId, false);
 }
 
 async function updateBktStatus(childId, isCorrect) {
@@ -1213,7 +1289,6 @@ async function updateBktStatus(childId, isCorrect) {
     const record = await BKTEngine.tapMastery(childId, activeNode, isCorrect);
     masteryMap.set(childId, record);
     
-    // Sync size indicator
     syncQueueSize = (await AURA_DB.getPendingSync()).length;
     
     const nameStr = getChildName(childId);
@@ -1258,6 +1333,25 @@ function toggleGuardrailPanel(event) {
   }
 }
 
+function selectDssChild(childId) {
+  const child = activeChildren.find(c => c.childId === childId);
+  if (!child) return;
+  dssSelectedChild = {
+    childId: child.childId,
+    name: child.name,
+    age: child.age,
+    age_months: child.age_months || 36
+  };
+  dssAnswers = {};
+  render();
+}
+
+function clearDssSelection() {
+  dssSelectedChild = null;
+  dssAnswers = {};
+  render();
+}
+
 function toggleDssQuestion(qId, val) {
   dssAnswers[qId] = val;
   const yesBtn = document.getElementById(`btn-${qId}-yes`);
@@ -1289,51 +1383,75 @@ function calculateDssResult() {
   const resultDiv = document.getElementById('dss-result-panel');
   if (!resultDiv) return;
 
-  // Red flags fired (deterministic) — list the actual milestone items answered "yes".
+  const resultType = redFlagsCount === 0 ? 'typical' : (redFlagsCount === 1 ? 'monitor' : 'refer');
+
+  if (dssSelectedChild) {
+    dssResults[dssSelectedChild.childId] = {
+      result: resultType,
+      redFlags: redFlagsCount,
+      timestamp: new Date().toISOString()
+    };
+  }
+
   const firedFlags = dssQuestions.filter(q => dssAnswers[q.item_id] === true);
+  const childBanner = dssSelectedChild ? `
+    <div style="background:var(--pl);border-radius:10px;padding:10px;margin-bottom:12px;display:flex;align-items:center;gap:10px;">
+      <div style="width:36px;height:36px;border-radius:50%;background:var(--purple);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;">${dssSelectedChild.name[lang].charAt(0).toUpperCase()}</div>
+      <div>
+        <div style="font-size:13px;font-weight:800;color:var(--purple);">${dssSelectedChild.name[lang]}</div>
+        <div style="font-size:10px;color:var(--muted);">${dssSelectedChild.age[lang]}</div>
+      </div>
+    </div>
+  ` : '';
+
   const firedHtml = firedFlags.length ? `
     <div style="background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px;margin-top:12px;text-align:left;">
       <div style="font-size:9px;font-weight:800;color:var(--muted);text-transform:uppercase;margin-bottom:6px;">${lang==='hi'?'लागू लाल झंडे':'Red flags fired'} (${firedFlags.length})</div>
-      ${firedFlags.map(q => `<div style="font-size:10.5px;color:var(--red);line-height:1.4;margin-bottom:4px;">• ${q.milestone_due ? '['+q.milestone_due+'] ' : ''}${q.question}</div>`).join('')}
+      ${firedFlags.map(q => `<div style="font-size:10.5px;color:var(--red);line-height:1.4;margin-bottom:4px;">- ${q.milestone_due ? '['+q.milestone_due+'] ' : ''}${q.question}</div>`).join('')}
     </div>` : '';
 
-  let resultHtml = '';
+  let resultHtml = childBanner;
   if (redFlagsCount === 0) {
-    resultHtml = `
+    resultHtml += `
       <div style="background:var(--gl);border:2px solid var(--green);border-radius:12px;padding:16px;text-align:center;">
         <span style="font-size:32px;display:block;margin-bottom:8px;">✅</span>
         <div style="font-size:16px;font-weight:800;color:var(--green);">${lang === 'hi' ? 'सामान्य विकास (Typical)' : 'Typical Development'}</div>
         <div style="font-size:11.5px;color:var(--green);margin-top:6px;line-height:1.4;">
-          ${lang === 'hi' ? 'कोई लाल झंडा (Red flag) नहीं मिला। विकास सामान्य है। नियमित अंतराल पर दोबारा जांच करें।' : '0 Red Flags detected. Child is tracking normally. Re-evaluate during regular screening cycle.'}
+          ${lang === 'hi' ? 'कोई लाल झंडा नहीं मिला। विकास सामान्य है। नियमित अंतराल पर दोबारा जांच करें।' : '0 Red Flags detected. Child is tracking normally. Re-evaluate during regular screening cycle.'}
         </div>
       </div>
     `;
   } else if (redFlagsCount === 1) {
-    resultHtml = `
+    resultHtml += `
       <div style="background:var(--al);border:2px solid var(--amber);border-radius:12px;padding:16px;text-align:center;">
         <span style="font-size:32px;display:block;margin-bottom:8px;">⚠️</span>
         <div style="font-size:16px;font-weight:800;color:var(--amber);">${lang === 'hi' ? 'निगरानी रखें (Monitor)' : 'Monitor Closely'}</div>
         <div style="font-size:11.5px;color:var(--amber);margin-top:6px;line-height:1.4;">
-          ${lang === 'hi' ? '1 लाल झंडा मिला। बच्चे की बारीकी से निगरानी करें। 2 सप्ताह बाद दोबारा स्क्रीन टेस्ट लें।' : '1 Red Flag detected. Developmental deviation observed. Please monitor closely and re-evaluate in 2 weeks.'}
+          ${lang === 'hi' ? '1 लाल झंडा मिला। बच्चे की बारीकी से निगरानी करें। 2 सप्ताह बाद दोबारा स्क्रीन करें।' : '1 Red Flag detected. Developmental deviation observed. Monitor closely and re-evaluate in 2 weeks.'}
         </div>
       </div>
     `;
   } else {
-    resultHtml = `
+    resultHtml += `
       <div style="background:var(--rl);border:2px solid var(--red);border-radius:12px;padding:16px;text-align:center;">
         <span style="font-size:32px;display:block;margin-bottom:8px;">🚨</span>
         <div style="font-size:16px;font-weight:800;color:var(--red);">${lang === 'hi' ? 'रेफरल आवश्यक (Refer to DEIC)' : 'RBSK / DEIC Referral Required'}</div>
         <div style="font-size:11.5px;color:var(--red);margin-top:6px;line-height:1.4;">
-          ${lang === 'hi' ? `${redFlagsCount} लाल झंडे मिले। आकलन के लिए बच्चे को RBSK / जिला प्रारंभिक हस्तक्षेप केंद्र (DEIC) रेफर करें।` : `${redFlagsCount} red flag(s) detected. Developmental concern observed. Refer the child to RBSK / District Early Intervention Centre (DEIC) for assessment.`}
+          ${lang === 'hi' ? `${redFlagsCount} लाल झंडे मिले। बच्चे को RBSK / DEIC रेफर करें।` : `${redFlagsCount} red flag(s) detected. Refer the child to RBSK / DEIC for assessment.`}
         </div>
       </div>
     `;
   }
 
   resultHtml += firedHtml + `
-    <button class="btn ghost" style="margin-top:14px;border-color:var(--purple);color:var(--purple);" onclick="resetDssScreener()">
-      ${lang === 'hi' ? 'दोबारा जाँच करें' : 'Run Screener Again'}
-    </button>
+    <div style="display:flex;gap:10px;margin-top:14px;">
+      <button class="btn ghost" style="flex:1;border-color:var(--purple);color:var(--purple);" onclick="resetDssScreener()">
+        ${lang === 'hi' ? 'दोबारा जांच करें' : 'Screen Again'}
+      </button>
+      <button class="btn primary" style="flex:1;" onclick="clearDssSelection()">
+        ${lang === 'hi' ? 'दूसरा बच्चा चुनें' : 'Screen Another Child'}
+      </button>
+    </div>
   `;
 
   document.getElementById('dss-questions-panel').style.display = 'none';
@@ -1370,7 +1488,6 @@ async function loadECEActivity() {
   const btn = document.getElementById('btn-load-activity');
   if (btn) { btn.disabled = true; btn.textContent = lang==='hi' ? '⏳ अनुकूलन जारी...' : '⏳ Adapting...'; }
 
-  // Live room context from state (Req 3): present children, mastery, materials, inclusion.
   const present = activeChildren.filter(c => c.present);
   const masteredCount = present.filter(c => { const r = masteryMap.get(c.childId); return r && r.trajectory_flag === 'mastered'; }).length;
   const roomContext = {
@@ -1382,17 +1499,14 @@ async function loadECEActivity() {
   };
   const childProfiles = present.map(c => ({ child_id: c.childId, age_months: c.age_months || 36, needs: c.needs || [] }));
 
-  const payload = { node_id: activeNode, age_band_months: '36-48', child_profiles: childProfiles, context: roomContext };
+  const derivedBand = deriveBandClient(childProfiles);
+  const payload = { node_id: activeNode, age_band_months: derivedBand, child_profiles: childProfiles, context: roomContext };
 
   const online = (typeof navigator !== 'undefined' && navigator.onLine) && isOnline();
 
-  // OFFLINE: local template/retrieval fallback ONLY -- never call any cloud LLM (Req 2).
   if (!online) { currentActivity = localActivityFallback('offline_template'); render(); return; }
 
   try {
-    // ONLINE. SECURITY: any LLM (Groq) API key lives ONLY on the server proxy, never in the browser.
-    // Tier 1: backend Groq LLM proxy. BACKEND WORK REQUIRED: implement POST /api/llm/activity
-    // (server-side Groq call using process.env.GROQ_API_KEY). Until then this 404s and we fall back.
     let resp = await fetch('/api/llm/activity', {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
     }).catch(() => null);
@@ -1402,7 +1516,6 @@ async function loadECEActivity() {
       render(); return;
     }
 
-    // Tier 2: deterministic retrieval + guardrail engine (existing backend).
     resp = await fetch('/api/activity/next', {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
     });
@@ -1410,7 +1523,6 @@ async function loadECEActivity() {
     currentActivity = normalizeActivity(await resp.json(), 'retrieval_engine', 'retrieval_engine');
     render();
   } catch (err) {
-    // Tier 3: local template fallback (no fake success).
     console.warn('[Activity online path failed -> local template]', err);
     currentActivity = localActivityFallback('offline_template');
     render();
@@ -1463,12 +1575,11 @@ async function loadDssQuestions() {
     const data = await r.json();
     // Child developmental screening ONLY: use Part B milestone red-flags.
     // Explicitly excludes caregiver pregnancy/birth-history items (Part A dss_01/dss_02 etc).
-    const partB = (data.items || []).filter(it => it.part === 'B');
-    dssQuestions = partB.length ? partB : (data.items || []).filter(it => it.item_id !== 'dss_01' && it.item_id !== 'dss_02');
+    dssQuestions = data.items || [];
     dssPlaceholder = false;
   } catch (err) {
-    console.warn('[DSS loading failed — using child-focused placeholder]', err);
-    // Navchetana DSS pending final data — child-development placeholder (no PII, no pregnancy items).
+    console.warn('[DSS loading failed - using child-focused placeholder]', err);
+    // Navchetana DSS pending final data - child-development placeholder (no PII, no pregnancy items).
     dssQuestions = [
       { item_id: 'p1', milestone_due: '6 months', question: "Has the child NOT yet supported their own neck by 6 months?" },
       { item_id: 'p2', milestone_due: '9 months', question: "Has the child NOT yet sat without support by 9 months?" },
@@ -1633,9 +1744,10 @@ window.setAuthMode = setAuthMode;
 window.handleAuthSubmit = handleAuthSubmit;
 window.toggleOnline = toggleOnline;
 window.toggleAttendance = toggleAttendance;
-window.startBktPress = startBktPress;
-window.endBktPress = endBktPress;
-window.cancelBktPress = cancelBktPress;
+window.bktSingleClick = bktSingleClick;
+window.bktDoubleClick = bktDoubleClick;
+window.selectDssChild = selectDssChild;
+window.clearDssSelection = clearDssSelection;
 window.toggleGuardrailPanel = toggleGuardrailPanel;
 window.toggleDssQuestion = toggleDssQuestion;
 window.calculateDssResult = calculateDssResult;

@@ -1,7 +1,7 @@
 {
   "rule_id": "AGE_FINE_MOTOR_01",
   "type": "age_appropriateness",
-  "description": "Flags fine motor activities for infants under 6 months — fine motor skills not yet developmentally appropriate",
+  "description": "Flags fine motor activities for infants under 6 months - fine motor skills not yet developmentally appropriate",
   "trigger": {
     "age_bands": ["0-3", "3-6"],
     "domains": ["motor_physical"]
