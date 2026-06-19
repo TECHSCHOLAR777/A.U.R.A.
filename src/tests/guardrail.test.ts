@@ -230,12 +230,12 @@ describe('Guardrail Engine', () => {
   describe('DSS interaction rules', () => {
     it('DSS_MOTOR_FLAG_01 fires for motor concern + motor domain', () => {
       const activity = makeCleanActivity({
-        targeted_domain: 'motor',
+        targeted_domain: 'motor_physical',
         age_band_months: '6-9',
       });
       const room = makeRoom({
         age_mix: [{ band: '6-9', count: 4 }],
-        inclusion_flags: ['motor_concern'],
+        inclusion_flags: ['motor_delay'],
       });
 
       const result = evaluate(activity, room, [...RULE_TABLE]);
@@ -254,7 +254,7 @@ describe('Guardrail Engine', () => {
       });
       const room = makeRoom({
         age_mix: [{ band: '6-9', count: 4 }],
-        inclusion_flags: ['language_concern'],
+        inclusion_flags: ['selective_mutism'],
       });
 
       const result = evaluate(activity, room, [...RULE_TABLE]);

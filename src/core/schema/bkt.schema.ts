@@ -30,6 +30,7 @@ export interface ChildMasteryState {
   readonly last_updated_session: string;
   readonly off_trajectory: boolean;
   readonly trajectory_lag_sessions: number;
+  readonly p_history?: readonly number[];
 }
 
 // ─── BKT HMM Parameters ────────────────────────────────────────────────────

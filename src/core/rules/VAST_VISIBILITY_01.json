@@ -14,7 +14,7 @@
       },
       {
         "type": "flag_check",
-        "flag": "sensory_sensitivity",
+        "flag": "visual_impaired",
         "present": true
       }
     ]

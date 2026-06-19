@@ -54,6 +54,7 @@ export function createInitialMasteryState(
     last_updated_session: today!, // Non-null: ISO string always has 'T'
     off_trajectory: false,
     trajectory_lag_sessions: 0,
+    p_history: [],
   };
 }
 
@@ -82,6 +83,42 @@ export function calculateTrajectoryFlag(state: ChildMasteryState): {
   const pT = DEFAULT_BKT_PARAMS.p_t;
   const pL0 = DEFAULT_BKT_PARAMS.p_l0;
   const n = state.observation_count;
+
+  if (state.p_history) {
+    const pHistory = state.p_history;
+    const currentPMastery = state.p_mastery;
+    const threshold = 0.80; // Mastery threshold
+
+    if (currentPMastery >= threshold) {
+      return { off_trajectory: false, trajectory_lag_sessions: 0 };
+    }
+
+    if (pHistory.length < 3) {
+      return { off_trajectory: false, trajectory_lag_sessions: 0 };
+    }
+
+    const h = pHistory.slice(-3);
+    const deltas = [
+      h[1] - h[0],
+      h[2] - h[1],
+      currentPMastery - h[2],
+    ];
+
+    const atRisk = deltas.every(d => d < -0.01) && currentPMastery < 0.50;
+    const stalled = deltas.every(d => Math.abs(d) < 0.02);
+
+    if (atRisk || stalled) {
+      const expected = Math.min(0.99, pL0 + n * pT * (1 - pL0));
+      const deficit = expected - currentPMastery;
+      const lagSessions = pT > 0 && deficit > 0 ? Math.floor(deficit / pT) : 0;
+      return {
+        off_trajectory: true,
+        trajectory_lag_sessions: lagSessions,
+      };
+    }
+
+    return { off_trajectory: false, trajectory_lag_sessions: 0 };
+  }
 
   // Expected mastery progression
   const expected = Math.min(0.99, pL0 + n * pT * (1 - pL0));

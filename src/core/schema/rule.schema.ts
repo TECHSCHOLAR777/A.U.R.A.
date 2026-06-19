@@ -38,7 +38,7 @@ export interface AgeCheckCondition {
 
 export interface FlagCheckCondition {
   readonly type: 'flag_check';
-  readonly flag: 'non_verbal' | 'motor_concern' | 'language_concern' | 'sensory_sensitivity';
+  readonly flag: 'mobility_impaired' | 'non_verbal' | 'selective_mutism' | 'motor_delay' | 'visual_impaired' | 'shy';
   readonly present: boolean;
 }
 
@@ -98,13 +98,13 @@ const VALID_MATERIAL_OPS: ReadonlySet<string> = new Set(['in', 'not_in']);
 const VALID_AGE_OPS: ReadonlySet<string> = new Set(['lt', 'lte', 'gt', 'gte', 'eq']);
 const VALID_AGE_FIELDS: ReadonlySet<string> = new Set(['min_age_months', 'max_age_months']);
 const VALID_FLAGS: ReadonlySet<string> = new Set([
-  'non_verbal', 'motor_concern', 'language_concern', 'sensory_sensitivity',
+  'mobility_impaired', 'non_verbal', 'selective_mutism', 'motor_delay', 'visual_impaired', 'shy',
 ]);
 const VALID_VAST_PARAMS: ReadonlySet<string> = new Set([
   'visibility', 'attunement', 'safety', 'togetherness', 'none',
 ]);
 const VALID_DOMAINS: ReadonlySet<string> = new Set([
-  'cognitive', 'language', 'motor', 'socio_emotional',
+  'cognitive', 'language', 'motor_physical', 'socio_emotional', 'creative',
 ]);
 const VALID_AGE_BANDS: ReadonlySet<string> = new Set([
   '0-3', '3-6', '6-9', '9-12', '12-18', '18-24', '24-36',

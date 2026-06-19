@@ -23,8 +23,9 @@ export type AgeBandMonths =
 export type Domain =
   | 'cognitive'
   | 'language'
-  | 'motor'
-  | 'socio_emotional';
+  | 'motor_physical'
+  | 'socio_emotional'
+  | 'creative';
 
 export type ActivitySource =
   | 'cloud_llm'
@@ -106,7 +107,7 @@ const VALID_AGE_BANDS: ReadonlySet<string> = new Set<AgeBandMonths>([
 ]);
 
 const VALID_DOMAINS: ReadonlySet<string> = new Set<Domain>([
-  'cognitive', 'language', 'motor', 'socio_emotional',
+  'cognitive', 'language', 'motor_physical', 'socio_emotional', 'creative',
 ]);
 
 const VALID_SOURCES: ReadonlySet<string> = new Set<ActivitySource>([

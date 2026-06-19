@@ -20,10 +20,12 @@ import type {
 // ─── Context Types ──────────────────────────────────────────────────────────
 
 export type InclusionFlag =
+  | 'mobility_impaired'
   | 'non_verbal'
-  | 'motor_concern'
-  | 'language_concern'
-  | 'sensory_sensitivity';
+  | 'selective_mutism'
+  | 'motor_delay'
+  | 'visual_impaired'
+  | 'shy';
 
 export interface RoomContext {
   readonly age_mix: ReadonlyArray<{ readonly band: AgeBandMonths; readonly count: number }>;
@@ -125,11 +127,11 @@ function evaluateAgeCheck(
 }
 
 function evaluateFlagCheck(
-  flag: 'non_verbal' | 'motor_concern' | 'language_concern' | 'sensory_sensitivity',
+  flag: 'mobility_impaired' | 'non_verbal' | 'selective_mutism' | 'motor_delay' | 'visual_impaired' | 'shy',
   present: boolean,
   ctx: EvaluationContext,
 ): boolean {
-  const hasFlag = ctx.room.inclusion_flags.includes(flag);
+  const hasFlag = (ctx.room.inclusion_flags as string[]).includes(flag);
   return hasFlag === present;
 }
 

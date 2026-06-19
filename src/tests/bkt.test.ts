@@ -175,7 +175,7 @@ describe('BKT Priors', () => {
 
 describe('BKT State', () => {
   it('createInitialMasteryState sets correct initial values', () => {
-    const state = createInitialMasteryState('child-uuid', 'ms-001', '0-3', 'motor', 0.25);
+    const state = createInitialMasteryState('child-uuid', 'ms-001', '0-3', 'motor_physical', 0.25);
 
     expect(state.child_uuid).toBe('child-uuid');
     expect(state.milestone_id).toBe('ms-001');
@@ -185,19 +185,49 @@ describe('BKT State', () => {
   });
 
   it('clamps initial p_l0 to [0.01, 0.99]', () => {
-    const low = createInitialMasteryState('c', 'm', '0-3', 'motor', -5);
-    const high = createInitialMasteryState('c', 'm', '0-3', 'motor', 500);
+    const low = createInitialMasteryState('c', 'm', '0-3', 'motor_physical', -5);
+    const high = createInitialMasteryState('c', 'm', '0-3', 'motor_physical', 500);
 
     expect(low.p_mastery).toBeGreaterThanOrEqual(0.01);
     expect(high.p_mastery).toBeLessThanOrEqual(0.99);
+  });
+
+  it('trajectory check with p_history: at_risk (deltas < -0.01 and current < 0.50)', () => {
+    const state = makeState({
+      p_mastery: 0.20,
+      p_history: [0.35, 0.30, 0.25], // deltas: -0.05, -0.05, -0.05
+      observation_count: 5,
+    });
+    const result = calculateTrajectoryFlag(state);
+    expect(result.off_trajectory).toBe(true);
+  });
+
+  it('trajectory check with p_history: stalled (absolute deltas < 0.02 and current < 0.80)', () => {
+    const state = makeState({
+      p_mastery: 0.60,
+      p_history: [0.60, 0.60, 0.60], // deltas: 0, 0, 0
+      observation_count: 5,
+    });
+    const result = calculateTrajectoryFlag(state);
+    expect(result.off_trajectory).toBe(true);
+  });
+
+  it('trajectory check with p_history: mastered (current >= 0.80)', () => {
+    const state = makeState({
+      p_mastery: 0.85,
+      p_history: [0.60, 0.60, 0.60], // even if flat, it is mastered
+      observation_count: 5,
+    });
+    const result = calculateTrajectoryFlag(state);
+    expect(result.off_trajectory).toBe(false);
   });
 });
 
 describe('Room Aggregate', () => {
   it('computes correct aggregate for a mixed room', () => {
     const children: ChildMasteryState[] = [
-      makeState({ child_uuid: 'c1', age_band: '0-3', domain: 'motor', p_mastery: 0.30 }),
-      makeState({ child_uuid: 'c2', age_band: '0-3', domain: 'motor', p_mastery: 0.20 }),
+      makeState({ child_uuid: 'c1', age_band: '0-3', domain: 'motor_physical', p_mastery: 0.30 }),
+      makeState({ child_uuid: 'c2', age_band: '0-3', domain: 'motor_physical', p_mastery: 0.20 }),
       makeState({ child_uuid: 'c3', age_band: '3-6', domain: 'language', p_mastery: 0.50 }),
       makeState({ child_uuid: 'c4', age_band: '3-6', domain: 'language', p_mastery: 0.60 }),
       makeState({ child_uuid: 'c5', age_band: '0-3', domain: 'cognitive', p_mastery: 0.10, off_trajectory: true }),
@@ -221,14 +251,14 @@ describe('Room Aggregate', () => {
 
   it('identifies domain gaps below 0.40 threshold', () => {
     const children: ChildMasteryState[] = [
-      makeState({ child_uuid: 'c1', domain: 'motor', p_mastery: 0.20 }),
-      makeState({ child_uuid: 'c2', domain: 'motor', p_mastery: 0.15 }),
+      makeState({ child_uuid: 'c1', domain: 'motor_physical', p_mastery: 0.20 }),
+      makeState({ child_uuid: 'c2', domain: 'motor_physical', p_mastery: 0.15 }),
       makeState({ child_uuid: 'c3', domain: 'language', p_mastery: 0.80 }),
     ];
 
     const agg = getRoomAggregate(children);
 
-    expect(agg.domain_gaps).toContain('motor');
+    expect(agg.domain_gaps).toContain('motor_physical');
     expect(agg.domain_gaps).not.toContain('language');
   });
 });

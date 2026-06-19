@@ -109,6 +109,8 @@ export function updateMastery(
   // Non-null assertion justified: ISO string always has 'T' separator
   const sessionDate = today!;
 
+  const currentHistory = current.p_history || [];
+
   // Recalculate trajectory with the new mastery
   const updatedStatePartial: ChildMasteryState = {
     child_uuid: current.child_uuid,
@@ -120,13 +122,16 @@ export function updateMastery(
     last_updated_session: sessionDate,
     off_trajectory: current.off_trajectory, // placeholder
     trajectory_lag_sessions: current.trajectory_lag_sessions, // placeholder
+    p_history: currentHistory,
   };
 
   const trajectory = calculateTrajectoryFlag(updatedStatePartial);
+  const updatedHistory = [...currentHistory, pNew].slice(-5);
 
   return {
     ...updatedStatePartial,
     off_trajectory: trajectory.off_trajectory,
     trajectory_lag_sessions: trajectory.trajectory_lag_sessions,
+    p_history: updatedHistory,
   };
 }

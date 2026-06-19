@@ -10,7 +10,7 @@
     "conditions": [
       {
         "type": "flag_check",
-        "flag": "language_concern",
+        "flag": "selective_mutism",
         "present": true
       },
       {

@@ -19,7 +19,7 @@ const ALL_AGE_BANDS: readonly AgeBandMonths[] = [
 ];
 
 const ALL_DOMAINS: readonly Domain[] = [
-  'cognitive', 'language', 'motor', 'socio_emotional',
+  'cognitive', 'language', 'motor_physical', 'socio_emotional', 'creative',
 ];
 
 /** Domain is considered a "gap" if average mastery falls below this. */

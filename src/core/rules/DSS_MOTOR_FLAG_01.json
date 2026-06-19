@@ -3,19 +3,19 @@
   "type": "dss_interaction",
   "description": "Flags motor activities when DSS motor concern is active — simplify motor demands and provide physical support",
   "trigger": {
-    "domains": ["motor"]
+    "domains": ["motor_physical"]
   },
   "condition": {
     "type": "compound_and",
     "conditions": [
       {
         "type": "flag_check",
-        "flag": "motor_concern",
+        "flag": "motor_delay",
         "present": true
       },
       {
         "type": "domain_check",
-        "domain": "motor"
+        "domain": "motor_physical"
       }
     ]
   },

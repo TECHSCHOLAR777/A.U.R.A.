@@ -22,7 +22,7 @@
           },
           {
             "type": "flag_check",
-            "flag": "motor_concern",
+            "flag": "motor_delay",
             "present": true
           }
         ]
