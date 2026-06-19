@@ -90,3 +90,6 @@ coverage
 .node_repl_history
 *.tgz
 .yarn-integrity
+
+# Build Plan Documentation
+AURA_Granular_Build_Plan.md
