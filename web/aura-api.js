@@ -383,6 +383,10 @@ export const AURA_API = {
   getChildren: async (centreId) => {
     try {
       const kids = await _apiFetch(`/api/children?centre=${encodeURIComponent(centreId)}`);
+      if (String(centreId || '').startsWith('AWC_DEMO') && Array.isArray(kids) && kids.length === 0) {
+        const cached = await AURA_DB.get('children');
+        if (Array.isArray(cached) && cached.length > 0) return cached;
+      }
       await AURA_DB.set('children', kids);
       return kids;
     } catch (err) {

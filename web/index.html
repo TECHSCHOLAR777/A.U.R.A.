@@ -602,6 +602,12 @@ const screens={
           <input type="password" id="auth-pin" maxlength="4" placeholder="••••" inputmode="numeric">
         </div>
         <button class="btn green" style="margin-top:18px" onclick="handleAuthSubmit('signup')">${t.btnSignUp} ${SVG.refer}</button>
+        <button class="btn ghost" style="margin-top:14px;border-color:var(--amber);color:var(--amber);" onclick="seedDemoData()">
+          ${lang === 'hi' ? 'Demo data seed करें' : 'Seed 10-day demo data'}
+        </button>
+        <div style="font-size:10px;color:var(--muted);text-align:center;line-height:1.45;margin-top:8px;">
+          ${lang === 'hi' ? 'Testing only: 15 बच्चों और 10 दिनों का local demo data.' : 'Testing only: adds 15 children and 10 days of local history.'}
+        </div>
       `;
     }
 
@@ -2084,6 +2090,169 @@ async function submitChildRegistration() {
 }
 
 
+const DEMO_CHILDREN = [
+  ['demo-child-01', 'Aarav', 'आरव', 25, []],
+  ['demo-child-02', 'Meera', 'मीरा', 28, ['non_verbal']],
+  ['demo-child-03', 'Kabir', 'कबीर', 31, []],
+  ['demo-child-04', 'Anaya', 'अनाया', 34, ['hearing_impairment']],
+  ['demo-child-05', 'Rohan', 'रोहन', 27, []],
+  ['demo-child-06', 'Sana', 'सना', 36, []],
+  ['demo-child-07', 'Vivaan', 'विवान', 39, ['mobility_impaired']],
+  ['demo-child-08', 'Tara', 'तारा', 42, []],
+  ['demo-child-09', 'Ishaan', 'ईशान', 45, []],
+  ['demo-child-10', 'Nisha', 'निशा', 48, ['visual_impairment']],
+  ['demo-child-11', 'Dev', 'देव', 30, []],
+  ['demo-child-12', 'Pihu', 'पीहू', 33, []],
+  ['demo-child-13', 'Arjun', 'अर्जुन', 37, []],
+  ['demo-child-14', 'Zoya', 'ज़ोया', 41, ['sensory_sensitive']],
+  ['demo-child-15', 'Kunal', 'कुणाल', 44, []]
+];
+
+const DEMO_DOMAIN_NODES = [
+  ['cognitive', 'CG-1'],
+  ['language', 'LA-1'],
+  ['motor_physical', 'FM-3'],
+  ['socio_emotional', 'SE-3'],
+  ['creative', 'CR-1']
+];
+
+function demoSeries(childIndex, domain) {
+  const needsSupport = childIndex < 5;
+  const steady = childIndex >= 5 && childIndex < 10;
+  if (needsSupport && (domain === 'motor_physical' || domain === 'language')) {
+    return [0.50, 0.48, 0.46, 0.44, 0.43, 0.42, 0.40, 0.39, 0.38, 0.37];
+  }
+  if (steady) return [0.43, 0.46, 0.49, 0.52, 0.55, 0.58, 0.61, 0.64, 0.67, 0.70];
+  return [0.56, 0.60, 0.64, 0.68, 0.72, 0.76, 0.80, 0.84, 0.87, 0.90];
+}
+
+function trajectoryFromSeries(series) {
+  const last = series[series.length - 1] || 0.4;
+  if (last >= 0.8) return 'mastered';
+  const tail = series.slice(-4);
+  const deltas = tail.slice(1).map((value, idx) => value - tail[idx]);
+  if (deltas.length >= 3 && deltas.every(delta => delta < -0.01) && last < 0.5) return 'at_risk';
+  if (deltas.length >= 3 && deltas.every(delta => Math.abs(delta) < 0.02) && last < 0.8) return 'stalled';
+  return 'rising';
+}
+
+async function seedDemoData() {
+  const ok = confirm(lang === 'hi'
+    ? 'Testing demo data seed करें? यह demo worker, 15 demo children और 10 days local history set करेगा.'
+    : 'Seed testing demo data? This sets a demo worker, 15 demo children, and 10 days of local history.');
+  if (!ok) return;
+
+  const centreId = 'AWC_DEMO_10DAY';
+  const children = DEMO_CHILDREN.map(([id, name, nameHi, ageMonths, needs]) => ({
+    id,
+    name,
+    nameHi,
+    age: `${ageMonths} months`,
+    age_months: ageMonths,
+    needs
+  }));
+
+  await AURA_DB.setupIdentity({ name: 'Demo AWW', id: 'AWW_DEMO_01' }, '1234', centreId, lang);
+  await AURA_DB.set('children', children);
+
+  const now = Date.now();
+  for (let childIndex = 0; childIndex < children.length; childIndex++) {
+    const child = children[childIndex];
+    for (const [domain, nodeId] of DEMO_DOMAIN_NODES) {
+      const series = demoSeries(childIndex, domain);
+      for (let day = 0; day < series.length; day++) {
+        await AURA_DB.addBktHistory({
+          child_id: child.id,
+          node_id: nodeId,
+          domain,
+          p_mastery: series[day],
+          trajectory_flag: trajectoryFromSeries(series.slice(0, day + 1)),
+          observation_count: day + 1,
+          timestamp: new Date(now - ((10 - day) * 86400000)).toISOString(),
+          demo_seed: true
+        });
+      }
+      await MasteryStore.put({
+        child_node_key: `${child.id}|${nodeId}`,
+        child_id: child.id,
+        node_id: nodeId,
+        p_mastery: series[series.length - 1],
+        last_updated: new Date(now - 86400000).toISOString(),
+        trajectory_flag: trajectoryFromSeries(series),
+        observation_count: series.length,
+        p_history: series.slice(-5),
+        demo_seed: true
+      });
+    }
+  }
+
+  for (const child of children.slice(10, 13)) {
+    const candidate = {
+      child_node_key: `${child.id}|FM-3`,
+      child_id: child.id,
+      node_id: 'FM-3',
+      p_mastery: 0.86,
+      last_updated: new Date(now - 3600000).toISOString(),
+      trajectory_flag: 'mastered',
+      observation_count: 11,
+      p_history: [0.72, 0.76, 0.80, 0.83, 0.86],
+      demo_seed: true
+    };
+    await AURA_DB.upsertPendingPromotion({
+      id: `${child.id}|FM-3|demo`,
+      child_id: child.id,
+      node_id: 'FM-3',
+      domain: 'motor_physical',
+      threshold: 0.8,
+      previous_record: null,
+      candidate_record: candidate,
+      p_mastery: candidate.p_mastery,
+      trajectory_flag: candidate.trajectory_flag,
+      created_at: new Date(now - 1800000).toISOString(),
+      demo_seed: true
+    });
+  }
+
+  dssResults = {
+    'demo-child-01': { result: 'monitor', redFlags: 1, timestamp: new Date(now - 2 * 86400000).toISOString() },
+    'demo-child-02': { result: 'refer', redFlags: 2, timestamp: new Date(now - 3 * 86400000).toISOString() },
+    'demo-child-06': { result: 'typical', redFlags: 0, timestamp: new Date(now - 4 * 86400000).toISOString() }
+  };
+  dssAnswers = {};
+  dssSelectedChild = null;
+  activeNode = 'FM-3';
+  currentActivity = null;
+  recoveryCohort = null;
+  roomMaterials = [];
+  await saveDailyState({
+    attendance_confirmed: false,
+    activity_ready: false,
+    activity_started: false,
+    activity_completed: false,
+    observations_recorded: true,
+    reflection_checked: false,
+    dss_completed: true,
+    day_closed: false
+  });
+  await AURA_DB.set('demoSeededAt', new Date().toISOString());
+  activeWorker = { name: 'Demo AWW', id: 'AWW_DEMO_01' };
+  activeCentre = centreId;
+  activeChildren = children.map(child => ({
+    childId: child.id,
+    name: { en: child.name, hi: child.nameHi || child.name },
+    age: { en: child.age, hi: `${child.age_months} महीने` },
+    age_months: child.age_months,
+    needs: child.needs,
+    present: true
+  }));
+  window.activeChildren = activeChildren;
+  syncQueueSize = (await AURA_DB.getPendingSync()).length;
+  await refreshPendingPromotions();
+  await loadMasteryMap();
+  showBktToast(lang === 'hi' ? 'Demo data ready. PIN: 1234' : 'Demo data ready. PIN: 1234');
+  jump('shell');
+}
+
 function toggleOnline(event) {
   if (event) event.stopPropagation();
   window.DEBUG_OFFLINE_MODE = !window.DEBUG_OFFLINE_MODE;
@@ -2250,6 +2419,7 @@ window.navTap = navTap;
 window.back = back;
 window.setAuthMode = setAuthMode;
 window.handleAuthSubmit = handleAuthSubmit;
+window.seedDemoData = seedDemoData;
 window.toggleOnline = toggleOnline;
 window.toggleAttendance = toggleAttendance;
 window.bktSingleClick = bktSingleClick;
