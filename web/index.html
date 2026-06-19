@@ -366,6 +366,7 @@ let voiceRecognition = null;
 let masteryMap = new Map();
 let dssSelectedChild = null;
 let dssResults = {};
+let activityBankCache = null;
 
 // Online check maps to the inverse of the debug offline mode flag
 function isOnline() {
@@ -402,6 +403,7 @@ function parseMilestoneDueMonths(str) {
 
 // ── Statusbar rendering dynamically responding to Online simulator ──────────
 function nowClock(){const d=new Date();let h=d.getHours();const m=String(d.getMinutes()).padStart(2,'0');const ap=h<12?'AM':'PM';const h12=h%12||12;return `${h12}:${m} ${ap}`;}
+function nowLabel(){return lang==='hi' ? `अभी ${nowClock()}` : `Now, ${nowClock()}`;}
 function statusbar(time){
   const online = isOnline();
   const networkLabel = online 
@@ -412,7 +414,7 @@ function statusbar(time){
     <span style="width:6px;height:6px;border-radius:50%;background:${online ? '#6fd29b' : '#ff4d4d'};display:inline-block;animation:${online ? 'pulse 2s infinite' : 'none'}"></span>
     ${networkLabel}
   </button>`;
-  return `<div class="statusbar" style="padding: 0 16px;"><span>${time}</span><span class="r">${SVG.globe} ${indicatorHtml}</span></div>`;
+  return `<div class="statusbar" style="padding: 0 16px;"><span class="js-device-time">${time}</span><span class="r">${SVG.globe} ${indicatorHtml}</span></div>`;
 }
 
 function header(){
@@ -532,7 +534,7 @@ const screens={
     const t = T[lang];
     const slots = t.slots.map(s => `<div class="slot ${s[2] === 'att' ? 'now' : ''}" onclick="go('${s[2]}')"><div class="dot">${SVG[navic[s[2]]]}</div><div class="meta"><div class="a">${s[0]}</div><div class="b">${s[1]}</div></div>${s[2] === 'att' ? `<span class="nowtag">${t.nowtag}</span>` : `<span class="stt">${s[4] ? t.doneShort : t.pendShort}</span>`}</div>`).join('');
     return `
-      <div class="screen active">${statusbar('8:04')}${header()}
+      <div class="screen active">${statusbar(nowClock())}${header()}
         <div class="scroll">
           <div class="body">
             <div class="greet">${lang==='hi' ? 'सुप्रभात' : 'Good morning'}, ${activeWorker ? activeWorker.name : (lang==='hi' ? 'कार्यकर्ता' : 'Worker')}<small>${new Date().toLocaleDateString(lang==='hi'?'hi-IN':'en-IN',{weekday:'long',day:'numeric',month:'long'})}</small></div>
@@ -544,7 +546,7 @@ const screens={
               </div>
             ` : ''}
             <div class="nowcard">
-              <div class="nclock">${SVG.clock} ${t.nowClock}</div>
+              <div class="nclock">${SVG.clock} ${nowLabel()}</div>
               <div class="nlabel">${t.nowLabel}</div>
               <h2>${t.nowTask}</h2>
               <div class="ntask">${t.nowSub}</div>
@@ -696,7 +698,6 @@ const screens={
         <div class="avatar-card" 
              style="display:flex;flex-direction:column;align-items:center;padding:10px 6px;border:1.5px solid var(--line);border-radius:var(--r-tile);cursor:pointer;background:#fff;user-select:none;touch-action:none;min-width:64px;"
              onclick="bktSingleClick('${c.childId}')"
-             ondblclick="bktDoubleClick('${c.childId}')"
              title="${c.name[lang]} (${label})">
           <div class="avatar-circle" style="width:36px;height:36px;border-radius:50%;background:${color};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;position:relative;margin-bottom:6px;">
             ${initials}
@@ -750,7 +751,7 @@ const screens={
     ` : '';
 
     return `
-      <div class="screen active">${statusbar('9:30')}${header()}
+      <div class="screen active">${statusbar(nowClock())}${header()}
         <div class="scroll">
           <div class="body">
             ${kw(t.eceKw,'--purple')}
@@ -956,7 +957,7 @@ const screens={
       [syncLabel, syncQueueSize===0 ? 1 : 0]
     ];
     const items=auditRows.map(i=>`<div class="item" style="border-left-color:var(${i[1]?'--green':'--red'})"><span class="b" style="background:var(${i[1]?'--green':'--red'})">${i[1]?'✓':'!'}</span><span class="x">${i[0]}</span></div>`).join('');
-    return `<div class="screen active">${statusbar('2:30')}${header()}<div class="scroll"><div class="body" style="padding-top:6px"><button class="backbtn" style="background:var(--pl);color:var(--navy)" onclick="back()">‹ ${lang==='hi'?'वापस':'Back'}</button>${kw(t.auditKw,'--navy')}<div style="background:var(--al);border-left:6px solid var(--amber);border-radius:12px;padding:13px;margin:6px 0 14px"><div style="font-size:12px;font-weight:700;color:var(--amber)">${t.auditYes}</div><div style="font-size:9.5px;color:var(--amber);margin-top:4px">${t.auditYesD}</div></div><div class="sectionlabel">${t.auditWhat}</div>${items}<div style="background:var(--gl);border-radius:10px;padding:11px;margin-top:4px;font-size:9.5px;color:var(--green);line-height:1.5">${t.auditSafe}</div><button class="btn primary" style="margin-top:14px" onclick="alert('${lang==='hi' ? 'दिन बंद किया गया। सारा काम स्थानीय स्तर पर सुरक्षित है।' : 'Day review closed. All actions saved locally on device.'}');jump('shell')">${t.auditApprove}</button></div></div>${nav('home')}</div>`;
+    return `<div class="screen active">${statusbar(nowClock())}${header()}<div class="scroll"><div class="body" style="padding-top:6px"><button class="backbtn" style="background:var(--pl);color:var(--navy)" onclick="back()">‹ ${lang==='hi'?'वापस':'Back'}</button>${kw(t.auditKw,'--navy')}<div style="background:var(--al);border-left:6px solid var(--amber);border-radius:12px;padding:13px;margin:6px 0 14px"><div style="font-size:12px;font-weight:700;color:var(--amber)">${t.auditYes}</div><div style="font-size:9.5px;color:var(--amber);margin-top:4px">${t.auditYesD}</div></div><div class="sectionlabel">${t.auditWhat}</div>${items}<div style="background:var(--gl);border-radius:10px;padding:11px;margin-top:4px;font-size:9.5px;color:var(--green);line-height:1.5">${t.auditSafe}</div><button class="btn primary" style="margin-top:14px" onclick="alert('${lang==='hi' ? 'दिन बंद किया गया। सारा काम स्थानीय स्तर पर सुरक्षित है।' : 'Day review closed. All actions saved locally on device.'}');jump('shell')">${t.auditApprove}</button></div></div>${nav('home')}</div>`;
   },
   more() {
     const t = T[lang];
@@ -995,7 +996,7 @@ const screens={
       `;
 
     return `
-      <div class="screen active">${statusbar('2:45')}${header()}
+      <div class="screen active">${statusbar(nowClock())}${header()}
         <div class="scroll">
           <div class="body" style="padding-top:6px;">
             ${kw(lang === 'hi' ? ["और ", "सुविधाएँ"] : ["More ", "Settings & Queue"], '--navy')}
@@ -1266,27 +1267,32 @@ async function loadMasteryMap() {
   }
 }
 
-let bktClickTimer = null;
-
 function bktSingleClick(childId) {
-  if (bktClickTimer) clearTimeout(bktClickTimer);
-  bktClickTimer = setTimeout(() => {
-    updateBktStatus(childId, true);
-    bktClickTimer = null;
-  }, 300);
+  const existing = masteryMap.get(childId);
+  updateBktStatus(childId, !(existing && existing.trajectory_flag === 'mastered'));
 }
 
 function bktDoubleClick(childId) {
-  if (bktClickTimer) {
-    clearTimeout(bktClickTimer);
-    bktClickTimer = null;
-  }
   updateBktStatus(childId, false);
 }
 
 async function updateBktStatus(childId, isCorrect) {
   try {
-    const record = await BKTEngine.tapMastery(childId, activeNode, isCorrect);
+    const existing = masteryMap.get(childId);
+    const observationCount = existing && typeof existing.observation_count === 'number'
+      ? existing.observation_count + 1
+      : 1;
+    const record = {
+      child_node_key: `${childId}|${activeNode}`,
+      child_id: childId,
+      node_id: activeNode,
+      p_mastery: isCorrect ? 0.85 : 0.25,
+      last_updated: new Date().toISOString(),
+      trajectory_flag: isCorrect ? 'mastered' : 'at_risk',
+      observation_count: observationCount,
+      p_history: [...((existing && Array.isArray(existing.p_history)) ? existing.p_history : []), isCorrect ? 0.85 : 0.25].slice(-5)
+    };
+    await MasteryStore.put(record);
     masteryMap.set(childId, record);
     
     syncQueueSize = (await AURA_DB.getPendingSync()).length;
@@ -1504,7 +1510,7 @@ async function loadECEActivity() {
 
   const online = (typeof navigator !== 'undefined' && navigator.onLine) && isOnline();
 
-  if (!online) { currentActivity = localActivityFallback('offline_template'); render(); return; }
+  if (!online) { currentActivity = await localActivityFromBank(payload, 'offline_template'); render(); return; }
 
   try {
     let resp = await fetch('/api/llm/activity', {
@@ -1524,7 +1530,7 @@ async function loadECEActivity() {
     render();
   } catch (err) {
     console.warn('[Activity online path failed -> local template]', err);
-    currentActivity = localActivityFallback('offline_template');
+    currentActivity = await localActivityFromBank(payload, 'offline_template');
     render();
   }
 }
@@ -1532,6 +1538,7 @@ async function loadECEActivity() {
 function normalizeActivity(a, sourceDefault, tier) {
   a = a || {};
   const prov = a.provenance || {};
+  const inclusionMods = normalizeInclusionMods(a.inclusion_modifications || prov.inclusion_modifications);
   return {
     activity_id: a.activity_id || a.id || 'ACT-UNKNOWN',
     source: a.source || sourceDefault,
@@ -1542,10 +1549,78 @@ function normalizeActivity(a, sourceDefault, tier) {
     step_by_step_instructions: Array.isArray(a.step_by_step_instructions) ? a.step_by_step_instructions : (Array.isArray(a.steps) ? a.steps : []),
     required_materials: a.required_materials || a.materials || [],
     safety_guard_applied: a.safety_guard_applied != null ? a.safety_guard_applied : true,
-    inclusion_modifications: a.inclusion_modifications || prov.inclusion_modifications || [],
-    provenance: { rules_fired: Array.isArray(prov.rules_fired) ? prov.rules_fired : [], generated_offline: false },
+    inclusion_modifications: inclusionMods,
+    provenance: { rules_fired: Array.isArray(prov.rules_fired) ? prov.rules_fired : [], generated_offline: !!prov.generated_offline },
     fallback_tier: a.fallback_tier || tier
   };
+}
+
+function normalizeInclusionMods(mods) {
+  if (!mods) return [];
+  if (Array.isArray(mods)) return mods.filter(Boolean).map(String);
+  if (typeof mods === 'string') return mods ? [mods] : [];
+  if (typeof mods === 'object') {
+    return Object.values(mods).filter(v => typeof v === 'string' && v.trim()).map(v => v.trim());
+  }
+  return [];
+}
+
+async function getActivityBank() {
+  if (activityBankCache) return activityBankCache;
+  const resp = await fetch('/data/activity_bank.json');
+  if (!resp.ok) throw new Error('activity bank unavailable');
+  const data = await resp.json();
+  activityBankCache = Array.isArray(data) ? data : [];
+  return activityBankCache;
+}
+
+function scoreLocalActivity(activity, payload) {
+  let score = 0;
+  const context = payload.context || {};
+  if (activity.age_band_months === payload.age_band_months) score += 5;
+  if (activity.milestone_targeted && String(activity.milestone_targeted).toLowerCase().includes(String(payload.node_id).toLowerCase())) score += 2;
+  const materials = Array.isArray(activity.required_materials) ? activity.required_materials : [];
+  const wantedMaterials = Array.isArray(context.materials) ? context.materials : [];
+  score += wantedMaterials.filter(m => materials.includes(m)).length;
+  if (context.needs_attention_count > 0 && activity.targeted_domain !== 'cognitive') score += 1;
+  return score;
+}
+
+function adaptLocalActivity(activity, payload, tier) {
+  const normalized = normalizeActivity(activity, 'local_template', tier);
+  const rules = [];
+  const profiles = payload.child_profiles || [];
+  const hasInclusionNeed = profiles.some(c => Array.isArray(c.needs) && c.needs.length > 0);
+  const hasUnderTwo = profiles.some(c => Number(c.age_months || 0) < 24);
+  if (hasInclusionNeed) rules.push('INC_ATTUNE_01');
+  if (hasUnderTwo && normalized.required_materials.some(m => /bead|pebble|stone|seed/i.test(String(m)))) rules.push('SAFE_CHOKE_01');
+  normalized.source = 'local_template';
+  normalized.age_band_months = payload.age_band_months || normalized.age_band_months;
+  normalized.provenance = {
+    ...normalized.provenance,
+    generated_offline: true,
+    rules_fired: Array.from(new Set([...(normalized.provenance.rules_fired || []), ...rules]))
+  };
+  normalized.fallback_tier = tier || 'local_template';
+  if (hasInclusionNeed && normalized.inclusion_modifications.length === 0) {
+    normalized.inclusion_modifications = ['Accept gesture responses and give extra wait time for children who need a non-verbal path.'];
+  }
+  return normalized;
+}
+
+async function localActivityFromBank(payload, tier) {
+  try {
+    const bank = await getActivityBank();
+    const candidates = bank
+      .filter(a => a && Array.isArray(a.step_by_step_instructions))
+      .sort((a, b) => scoreLocalActivity(b, payload) - scoreLocalActivity(a, payload));
+    const choice = candidates[0];
+    if (!choice) return localActivityFallback(tier);
+    return adaptLocalActivity(choice, payload, tier);
+  } catch (err) {
+    console.warn('[Local activity bank unavailable -> safe fallback]', err);
+    return localActivityFallback(tier);
+  }
 }
 
 function localActivityFallback(tier) {
@@ -1734,6 +1809,10 @@ function render(){
   document.querySelector('.phone').className='phone '+(lang==='hi'?'hindi':'');
 }
 
+function refreshDeviceTimes() {
+  document.querySelectorAll('.js-device-time').forEach(el => { el.textContent = nowClock(); });
+}
+
 // ── Attach module functions to window for onclick/inline integration ────────
 window.setLang = setLang;
 window.go = go;
@@ -1769,6 +1848,11 @@ window.submitChildRegistration = submitChildRegistration;
   await initIdentity();
   await loadDssQuestions();
   render();
+  setInterval(() => {
+    refreshDeviceTimes();
+    const nclock = document.querySelector('.nowcard .nclock');
+    if (nclock) nclock.innerHTML = `${SVG.clock} ${nowLabel()}`;
+  }, 30000);
 })();
 </script>
 </body>
