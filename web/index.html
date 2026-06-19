@@ -857,7 +857,7 @@ const screens={
     const child = dssSelectedChild;
     const childAgeMonths = child.age_months || 36;
     const ageFilteredQuestions = dssQuestions.filter(q => {
-      if (q.part === 'A') return true;
+      if (q.part === 'A') return false; // Exclude caregiver pregnancy/birth history complications from child screen
       const milestoneMonths = parseMilestoneDueMonths(q.milestone_due);
       return milestoneMonths <= childAgeMonths;
     });
