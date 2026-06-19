@@ -333,6 +333,49 @@ let pendingPromotions = [];
 let recoveryCohort = null;
 let recoveryInsights = {};
 const ACTIVITY_CACHE_PREFIX = 'activity-cache::';
+const DAILY_STATE_KEY = 'dailyWorkflow';
+let dailyState = {
+  attendance_confirmed: false,
+  activity_ready: false,
+  activity_started: false,
+  activity_completed: false,
+  observations_recorded: false,
+  reflection_checked: false,
+  dss_completed: false,
+  day_closed: false
+};
+
+async function loadDailyState() {
+  const saved = await AURA_DB.get(DAILY_STATE_KEY);
+  if (saved && typeof saved === 'object') dailyState = { ...dailyState, ...saved };
+}
+
+async function saveDailyState(patch = {}) {
+  dailyState = { ...dailyState, ...patch };
+  await AURA_DB.set(DAILY_STATE_KEY, dailyState);
+}
+
+function workflowStep(label, done, active, blocked) {
+  const bg = done ? 'var(--gl)' : active ? 'var(--pl)' : blocked ? 'var(--rl)' : 'var(--card)';
+  const color = done ? 'var(--green)' : active ? 'var(--purple)' : blocked ? 'var(--red)' : 'var(--muted)';
+  const mark = done ? '✓' : active ? '•' : blocked ? '!' : '○';
+  return `<div style="min-width:86px;background:${bg};color:${color};border:1px solid ${color};border-radius:10px;padding:7px 8px;font-size:9px;font-weight:800;display:flex;align-items:center;gap:5px;white-space:nowrap;"><span>${mark}</span>${label}</div>`;
+}
+
+function workflowStrip(activeStep) {
+  const labels = lang === 'hi'
+    ? { att:'हाज़िरी', act:'गतिविधि', obs:'अवलोकन', ref:'समीक्षा', dss:'DSS', day:'दिन बंद' }
+    : { att:'Attendance', act:'Activity', obs:'Observe', ref:'Reflect', dss:'DSS', day:'Review' };
+  const steps = [
+    workflowStep(labels.att, dailyState.attendance_confirmed, activeStep === 'att', false),
+    workflowStep(labels.act, dailyState.activity_completed, activeStep === 'act', !dailyState.attendance_confirmed),
+    workflowStep(labels.obs, dailyState.observations_recorded, activeStep === 'obs', !dailyState.activity_completed),
+    workflowStep(labels.ref, dailyState.reflection_checked, activeStep === 'ref', pendingPromotions.length > 0),
+    workflowStep(labels.dss, dailyState.dss_completed, activeStep === 'dss', false),
+    workflowStep(labels.day, dailyState.day_closed, activeStep === 'day', false)
+  ];
+  return `<div style="display:flex;gap:6px;overflow-x:auto;padding:10px 0 4px;margin-bottom:8px;">${steps.join('')}</div>`;
+}
 
 // Online check maps to the inverse of the debug offline mode flag
 function isOnline() {
@@ -419,6 +462,33 @@ function getInsightChip(childId) {
     ? (insight.state === 'on_track' ? `रिकवरी ${insight.label}` : insight.state === 'increase_dosage' ? 'और सहारा दें' : 'और डेटा चाहिए')
     : (insight.state === 'on_track' ? `Recovery ${insight.label}` : insight.state === 'increase_dosage' ? 'Increase support' : 'Needs data');
   return `<div style="margin-top:4px;font-size:8px;font-weight:700;display:inline-block;padding:3px 7px;border-radius:8px;background:${palette.bg};color:${palette.color};">${label}</div>`;
+}
+
+function recoveryForecastPanel(presentChildren) {
+  const rows = (presentChildren || []).map((child) => {
+    const insight = recoveryInsights[child.childId] || { state: 'needs_data', points: 0 };
+    const color = insight.state === 'on_track' ? 'var(--green)' : insight.state === 'increase_dosage' ? 'var(--red)' : 'var(--amber)';
+    const text = insight.state === 'on_track'
+      ? `On track${insight.label ? `: ${insight.label}` : ''}`
+      : insight.state === 'increase_dosage'
+        ? 'Increase support'
+        : `${insight.points || 0} / 3 observations`;
+    return `<div style="display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid var(--line);padding:7px 0;font-size:10px;"><strong>${child.name[lang].split(' ')[0]}</strong><span style="color:${color};font-weight:800;">${text}</span></div>`;
+  }).join('');
+  return `
+    <div class="vcard" style="background:#fff;border-left-color:var(--navy);margin-bottom:16px;">
+      <div style="font-size:13px;font-weight:800;color:var(--navy);">Recovery forecast</div>
+      <div style="font-size:10px;color:var(--muted);line-height:1.5;margin-top:5px;">Forecast needs at least 3 observations per child/domain.</div>
+      <div style="margin-top:8px;">${rows || `<div style="font-size:10px;color:var(--muted);">No present children.</div>`}</div>
+    </div>
+  `;
+}
+
+function recoveryReasonText(presentChildren) {
+  if (recoveryCohort && recoveryCohort.is_split) return 'Duo path active';
+  if (recoveryCohort && recoveryCohort.suppression_reason) return recoveryCohort.suppression_reason.replace(/_/g, ' ');
+  if ((presentChildren || []).length < 3) return 'Need at least 3 present children for cohort split';
+  return 'Collect more observations before cohort split';
 }
 
 // Parse DSS milestone_due strings to months (e.g. "6 months" -> 6, "3 years" -> 36)
@@ -571,6 +641,7 @@ const screens={
         <div class="scroll">
           <div class="body">
             <div class="greet">${lang==='hi' ? 'सुप्रभात' : 'Good morning'}, ${activeWorker ? activeWorker.name : (lang==='hi' ? 'कार्यकर्ता' : 'Worker')}<small>${new Date().toLocaleDateString(lang==='hi'?'hi-IN':'en-IN',{weekday:'long',day:'numeric',month:'long'})}</small></div>
+            ${workflowStrip('att')}
             ${activeChildren.length === 0 ? `
               <div class="alert" style="background:var(--rl);border:1px solid var(--red);border-left:4px solid var(--red);border-radius:11px;padding:14px;margin-top:16px;cursor:pointer;" onclick="go('children_manager')">
                 <span class="ai" style="color:var(--red);">${SVG.warn}</span>
@@ -655,6 +726,9 @@ const screens={
     const attendanceSummary = lang === 'hi'
       ? `${totalCount} में से ${presentCount} उपस्थित (${pctVal}%)`
       : `${presentCount} of ${totalCount} present (${pctVal}%)`;
+    const confirmedHtml = dailyState.attendance_confirmed
+      ? `<div style="background:var(--gl);border:1px solid var(--green);border-radius:10px;padding:9px 11px;margin:8px 0 12px;font-size:10.5px;font-weight:800;color:var(--green);">${lang==='hi'?'Attendance confirmed. Change marks only if needed, then confirm again.':'Attendance is confirmed. Change marks only if needed, then confirm again.'}</div>`
+      : `<div style="background:var(--al);border:1px solid var(--amber);border-radius:10px;padding:9px 11px;margin:8px 0 12px;font-size:10.5px;font-weight:800;color:var(--amber);">${lang==='hi'?'All children start present. Tap only absent children, then confirm attendance.':'All children start as present. Tap only absent children, then confirm attendance.'}</div>`;
 
     const allPresentHero = presentCount === totalCount
       ? `<div class="hero" style="background:var(--green);margin-top:6px">
@@ -674,7 +748,9 @@ const screens={
             <button class="backbtn" style="background:var(--gl);color:var(--green)" onclick="back()">
               ‹ ${lang==='hi'?'वापस':'Back'}
             </button>
+            ${workflowStrip('att')}
             ${kw(t.attKw,'--green')}
+            ${confirmedHtml}
             
             ${allPresentHero}
             
@@ -688,6 +764,7 @@ const screens={
             
             <div class="sectionlabel">${lang==='hi' ? 'दैनिक उपस्थिति रजिस्टर' : 'Daily Attendance Register'}</div>
             ${kids}
+            <button class="btn green" style="margin-top:12px;" onclick="submitAttendanceRoster()">${lang==='hi'?'Confirm attendance':'Confirm attendance'}</button>
             
             <div class="hero" style="background:var(--forest);margin-top:16px">
               <p style="opacity:.85">${t.sumLine}</p>
@@ -704,6 +781,15 @@ const screens={
   ece(){
     const t = T[lang];
     const online = isOnline();
+    const attendanceGateHtml = !dailyState.attendance_confirmed
+      ? `<div style="background:var(--rl);border:1px solid var(--red);border-radius:10px;padding:10px;margin-bottom:12px;font-size:11px;font-weight:800;color:var(--red);">${lang==='hi'?'Confirm attendance before starting the activity.':'Confirm attendance before starting the activity.'}</div>`
+      : '';
+    const activityActionHtml = currentActivity ? `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+        <button class="btn ghost" style="border-color:var(--green);color:var(--green);" onclick="startActivitySession()">${dailyState.activity_started ? 'Activity started' : 'Start activity'}</button>
+        <button class="btn green" onclick="completeActivitySession()">${dailyState.activity_completed ? 'Activity done' : 'Mark activity done'}</button>
+      </div>
+    ` : '';
     
     const sourceLabel = online 
       ? (lang === 'hi' ? 'स्रोत: ऑनलाइन अनुकूलन (बैकएंड)' : 'Source: Online adaptation (backend)')
@@ -746,6 +832,10 @@ const screens={
           ${isBeta ? `<span style="margin-top:4px;font-size:8px;font-weight:700;padding:2px 6px;border-radius:8px;background:var(--pl);color:var(--purple);">${lang === 'hi' ? 'बीटा' : 'Beta'}</span>` : ''}
           ${hasPendingPromotion ? `<span style="margin-top:4px;font-size:8px;font-weight:700;padding:2px 6px;border-radius:8px;background:var(--al);color:var(--amber);">${lang === 'hi' ? 'समीक्षा' : 'Review'}</span>` : ''}
           ${getInsightChip(c.childId)}
+          <div style="display:flex;gap:4px;margin-top:7px;width:100%;">
+            <button style="flex:1;border:1px solid var(--green);background:var(--gl);color:var(--green);border-radius:7px;font-size:8px;font-weight:800;padding:5px 2px;" onclick="event.stopPropagation();recordObservation('${c.childId}', true)">Got it</button>
+            <button style="flex:1;border:1px solid var(--red);background:var(--rl);color:var(--red);border-radius:7px;font-size:8px;font-weight:800;padding:5px 2px;" onclick="event.stopPropagation();recordObservation('${c.childId}', false)">Support</button>
+          </div>
         </div>
       `;
     }).join('');
@@ -836,11 +926,14 @@ const screens={
           <div class="body">
             ${kw(t.eceKw,'--purple')}
             <div class="sub">${t.eceSub}</div>
+            ${workflowStrip(dailyState.activity_completed ? 'obs' : 'act')}
+            ${attendanceGateHtml}
             
             <button class="btn green" style="margin-bottom:12px" onclick="loadECEActivity()" id="btn-load-activity">
               🎯 ${lang === 'hi' ? 'गतिविधि अनुकूलित करें (Adapt)' : 'Adapt Activity for Room'}
             </button>
 
+            ${activityActionHtml}
             <div class="vcard" style="border-left-color:var(--purple);background:#fff;position:relative;">
               <div style="position:absolute;top:10px;right:12px;font-size:8px;font-weight:800;color:#fff;background:var(--purple);padding:3px 8px;border-radius:8px;">
                 ${sourceLabel}
@@ -890,6 +983,9 @@ const screens={
               </div>
             </div>
             
+            ${recoveryForecastPanel(presentChildren)}
+            <button class="btn outline" style="margin-bottom:12px;" onclick="openReflectionModal()">${pendingPromotions.length ? `Session review (${pendingPromotions.length})` : 'Reflection check'}</button>
+            <div style="background:var(--al);border:1px solid var(--amber);border-radius:10px;padding:9px 11px;margin-bottom:12px;font-size:10px;font-weight:800;color:var(--amber);">${recoveryReasonText(presentChildren)}</div>
             <div class="sectionlabel">${t.eceFocus}</div>
             <div class="vcard" style="background:var(--al);border-left-color:var(--amber)">
               <div style="display:flex;justify-content:space-between;align-items:center">
@@ -1052,15 +1148,16 @@ const screens={
       ? `समीक्षा: ${pendingPromotions.length} लंबित`
       : `Review: ${pendingPromotions.length} pending`;
     const auditRows = [
-      [lang==='hi' ? `हाज़िरी: ${presentCount} उपस्थित, ${absentCount} अनुपस्थित` : `Attendance: ${presentCount} present, ${absentCount} absent`, 1],
-      [lang==='hi' ? `दक्षता: ${totalCount} में से ${masteredCount} ने सीखा` : `Mastery: ${masteredCount} of ${totalCount} mastered`, 1],
+      [`Attendance confirmed: ${presentCount} present, ${absentCount} absent`, dailyState.attendance_confirmed ? 1 : 0],
+      [`Activity completed: ${currentActivity ? currentActivity.adapted_title : 'not adapted'}`, dailyState.activity_completed ? 1 : 0],
+      [`Observations recorded: ${masteredCount} of ${totalCount} mastered`, dailyState.observations_recorded ? 1 : 0],
+      [`Reflection checked: ${pendingPromotions.length} pending`, dailyState.reflection_checked && pendingPromotions.length === 0 ? 1 : 0],
+      [`DSS completed: ${dssAnswered} answers`, dailyState.dss_completed ? 1 : 0],
       [dssLabel, dssAnswered===0 ? 0 : (dssRed===0 ? 1 : 0)],
-      [actLabel, currentActivity ? 1 : 0],
-      [reflectionLabel, pendingPromotions.length === 0 ? 1 : 0],
       [syncLabel, syncQueueSize===0 ? 1 : 0]
     ];
     const items=auditRows.map(i=>`<div class="item" style="border-left-color:var(${i[1]?'--green':'--red'})"><span class="b" style="background:var(${i[1]?'--green':'--red'})">${i[1]?'✓':'!'}</span><span class="x">${i[0]}</span></div>`).join('');
-    return `<div class="screen active">${statusbar(nowClock())}${header()}<div class="scroll"><div class="body" style="padding-top:6px"><button class="backbtn" style="background:var(--pl);color:var(--navy)" onclick="back()">‹ ${lang==='hi'?'वापस':'Back'}</button>${kw(t.auditKw,'--navy')}<div style="background:var(--al);border-left:6px solid var(--amber);border-radius:12px;padding:13px;margin:6px 0 14px"><div style="font-size:12px;font-weight:700;color:var(--amber)">${t.auditYes}</div><div style="font-size:9.5px;color:var(--amber);margin-top:4px">${t.auditYesD}</div></div><div class="sectionlabel">${t.auditWhat}</div>${items}<div style="background:var(--gl);border-radius:10px;padding:11px;margin-top:4px;font-size:9.5px;color:var(--green);line-height:1.5">${t.auditSafe}</div><button class="btn primary" style="margin-top:14px" onclick="alert('${lang==='hi' ? 'दिन बंद किया गया। सारा काम स्थानीय स्तर पर सुरक्षित है।' : 'Day review closed. All actions saved locally on device.'}');jump('shell')">${t.auditApprove}</button></div></div>${nav('home')}</div>`;
+    return `<div class="screen active">${statusbar(nowClock())}${header()}<div class="scroll"><div class="body" style="padding-top:6px"><button class="backbtn" style="background:var(--pl);color:var(--navy)" onclick="back()">‹ ${lang==='hi'?'वापस':'Back'}</button>${workflowStrip('day')}${kw(t.auditKw,'--navy')}<div style="background:var(--al);border-left:6px solid var(--amber);border-radius:12px;padding:13px;margin:6px 0 14px"><div style="font-size:12px;font-weight:700;color:var(--amber)">${t.auditYes}</div><div style="font-size:9.5px;color:var(--amber);margin-top:4px">${t.auditYesD}</div></div><div class="sectionlabel">${t.auditWhat}</div>${items}<div style="background:var(--gl);border-radius:10px;padding:11px;margin-top:4px;font-size:9.5px;color:var(--green);line-height:1.5">${t.auditSafe}</div><button class="btn primary" style="margin-top:14px" onclick="closeDayReview()">${t.auditApprove}</button></div></div>${nav('home')}</div>`;
   },
   more() {
     const t = T[lang];
@@ -1373,12 +1470,24 @@ async function loadMasteryMap() {
 }
 
 function bktSingleClick(childId) {
+  if (!dailyState.activity_completed) {
+    showBktToast(lang==='hi' ? 'Complete the activity before recording observations' : 'Complete the activity before recording observations');
+    return;
+  }
   const existing = masteryMap.get(childId);
   updateBktStatus(childId, !(existing && existing.trajectory_flag === 'mastered'));
 }
 
 function bktDoubleClick(childId) {
-  updateBktStatus(childId, false);
+  recordObservation(childId, false);
+}
+
+function recordObservation(childId, gotIt) {
+  if (!dailyState.activity_completed) {
+    showBktToast(lang==='hi' ? 'Complete the activity before recording observations' : 'Complete the activity before recording observations');
+    return;
+  }
+  updateBktStatus(childId, gotIt);
 }
 
 async function updateBktStatus(childId, isCorrect) {
@@ -1389,6 +1498,7 @@ async function updateBktStatus(childId, isCorrect) {
     }
     await refreshPendingPromotions();
     await buildRecoveryInsights(activeChildren.filter(c => c.present));
+    await saveDailyState({ observations_recorded: true, reflection_checked: pendingPromotions.length === 0 });
     
     syncQueueSize = (await AURA_DB.getPendingSync()).length;
     
@@ -1497,6 +1607,7 @@ function calculateDssResult() {
       redFlags: redFlagsCount,
       timestamp: new Date().toISOString()
     };
+    saveDailyState({ dss_completed: true });
   }
 
   const firedFlags = dssQuestions.filter(q => dssAnswers[q.item_id] === true);
@@ -1574,6 +1685,7 @@ function toggleAttendance(childId) {
   const child = activeChildren.find(c => c.childId === childId);
   if (child) {
     child.present = !child.present;
+    saveDailyState({ attendance_confirmed: false, activity_started: false, activity_completed: false, observations_recorded: false });
     render();
   }
 }
@@ -1584,13 +1696,18 @@ async function submitAttendanceRoster() {
   
   await AURA_API.submitAttendance({ centreId: activeCentre, present, absent, photoCount: 0 });
   syncQueueSize = (await AURA_DB.getPendingSync()).length;
+  await saveDailyState({ attendance_confirmed: true });
   
   showBktToast(lang==='hi' ? 'उपस्थिति दर्ज ✓' : 'Attendance submitted ✓');
-  go('audit');
+  jump('ece');
 }
 
 
 async function loadECEActivity() {
+  if (!dailyState.attendance_confirmed) {
+    showBktToast(lang==='hi' ? 'Confirm attendance before adapting activity' : 'Confirm attendance before adapting activity');
+    return;
+  }
   const btn = document.getElementById('btn-load-activity');
   if (btn) { btn.disabled = true; btn.textContent = lang==='hi' ? '⏳ अनुकूलन जारी...' : '⏳ Adapting...'; }
 
@@ -1622,6 +1739,7 @@ async function loadECEActivity() {
     window.currentActivity = currentActivity;
     rememberDomain(currentActivity.targeted_domain);
     await buildRecoveryInsights(present);
+    await saveDailyState({ activity_ready: true, activity_started: false, activity_completed: false, observations_recorded: false, reflection_checked: pendingPromotions.length === 0 });
     render();
   } catch (err) {
     console.warn('[Activity retrieval failed -> offline fallback]', err);
@@ -1633,9 +1751,42 @@ async function loadECEActivity() {
     window.currentActivity = currentActivity;
     rememberDomain(currentActivity.targeted_domain);
     await buildRecoveryInsights(present);
+    await saveDailyState({ activity_ready: true, activity_started: false, activity_completed: false, observations_recorded: false, reflection_checked: pendingPromotions.length === 0 });
     render();
   }
   if (btn) { btn.disabled = false; btn.textContent = lang === 'hi' ? '🎯 गतिविधि अनुकूलित करें (Adapt)' : '🎯 Adapt Activity for Room'; }
+}
+
+async function startActivitySession() {
+  if (!currentActivity) {
+    showBktToast(lang==='hi' ? 'Adapt activity first' : 'Adapt activity first');
+    return;
+  }
+  if (!dailyState.attendance_confirmed) {
+    showBktToast(lang==='hi' ? 'Confirm attendance first' : 'Confirm attendance first');
+    return;
+  }
+  await saveDailyState({ activity_started: true });
+  render();
+}
+
+async function completeActivitySession() {
+  if (!currentActivity) {
+    showBktToast(lang==='hi' ? 'Adapt activity first' : 'Adapt activity first');
+    return;
+  }
+  if (!dailyState.activity_started) {
+    await saveDailyState({ activity_started: true });
+  }
+  await saveDailyState({ activity_completed: true });
+  showBktToast(lang==='hi' ? 'Activity marked done. Record observations now.' : 'Activity marked done. Record observations now.');
+  render();
+}
+
+async function closeDayReview() {
+  await saveDailyState({ day_closed: true });
+  showBktToast(lang==='hi' ? 'Day review closed. Saved locally.' : 'Day review closed. Saved locally.');
+  jump('shell');
 }
 
 function normalizeActivity(a, sourceDefault, tier) {
@@ -2026,6 +2177,9 @@ function renderReflectionModal() {
 
 async function openReflectionModal() {
   await refreshPendingPromotions();
+  if (pendingPromotions.length === 0) {
+    await saveDailyState({ reflection_checked: true });
+  }
   renderReflectionModal();
   document.getElementById('reflectionmodal').classList.add('show');
 }
@@ -2051,6 +2205,7 @@ async function confirmPendingPromotions() {
   await AURA_DB.resolvePendingPromotions(rejectedIds, 'rejected');
   await refreshPendingPromotions();
   await buildRecoveryInsights(activeChildren.filter(c => c.present));
+  await saveDailyState({ reflection_checked: true });
   closeReflectionModal();
   showBktToast(lang === 'hi'
     ? `पुष्टि: ${confirmedIds.length}, रोके गए: ${rejectedIds.length}`
@@ -2099,6 +2254,7 @@ window.toggleOnline = toggleOnline;
 window.toggleAttendance = toggleAttendance;
 window.bktSingleClick = bktSingleClick;
 window.bktDoubleClick = bktDoubleClick;
+window.recordObservation = recordObservation;
 window.selectDssChild = selectDssChild;
 window.clearDssSelection = clearDssSelection;
 window.toggleGuardrailPanel = toggleGuardrailPanel;
@@ -2114,6 +2270,9 @@ window.openReflectionModal = openReflectionModal;
 window.closeReflectionModal = closeReflectionModal;
 window.confirmPendingPromotions = confirmPendingPromotions;
 window.loadECEActivity = loadECEActivity;
+window.startActivitySession = startActivitySession;
+window.completeActivitySession = completeActivitySession;
+window.closeDayReview = closeDayReview;
 window.submitAttendanceRoster = submitAttendanceRoster;
 window.generateDayReportPDF = generateDayReportPDF;
 window.openHeadcountModel = openHeadcountModel;
@@ -2129,6 +2288,7 @@ window.submitChildRegistration = submitChildRegistration;
       console.warn('[SW registration failed]', err);
     }
   }
+  await loadDailyState();
   await initIdentity();
   await loadDssQuestions();
   render();

@@ -8,8 +8,9 @@
   "scripts": {
     "build": "tsc",
     "start": "node web/server.js",
-    "test": "vitest run",
-    "test:watch": "vitest",
+    "smoke:test": "node scripts/smoke-test.mjs",
+    "test": "vitest run src/tests --environment node",
+    "test:watch": "vitest src/tests --environment node",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {

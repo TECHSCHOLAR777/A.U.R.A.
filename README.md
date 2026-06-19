@@ -1,6 +1,6 @@
 # A.U.R.A.
 
-Anganwadi Unified Resource Assistant is an offline-first Progressive Web App for Anganwadi workers. It combines a mobile-friendly daily workflow with local decision support for early childhood activities, developmental screening, mastery tracking, and recovery guidance.
+Anganwadi Unified Resource Assistant is an offline-first Progressive Web App for Anganwadi workers. It runs on low-cost mobile devices, digitizes Navchetana-based developmental screening, tracks child milestone progress, and adapts daily ECCE activities to the children and room context available in the moment.
 
 Live deployment: [https://a-u-r-a-s7jf.onrender.com/](https://a-u-r-a-s7jf.onrender.com/)
 

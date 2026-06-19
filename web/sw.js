@@ -1,4 +1,4 @@
-const CACHE_NAME = 'aura-shell-v1';
+const CACHE_NAME = 'aura-shell-v2';
 const APP_ASSETS = [
   '/',
   '/index.html',
@@ -6,9 +6,11 @@ const APP_ASSETS = [
   '/data/activity_bank.json',
   '/data/dss.json',
   '/data/milestone_priors.json',
+  '/data/remediation_templates.json',
   '/bkt_engine.js',
   '/bandit_engine.js',
   '/guardrail_engine.js',
+  '/recovery_engine.js',
   '/aura-api.js',
   '/config.js'
 ];
