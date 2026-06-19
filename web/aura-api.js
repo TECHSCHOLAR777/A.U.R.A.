@@ -363,18 +363,9 @@ let cachedAWC = null;
 
 export const AURA_API = {
 
-  transcribeVoice: async (audioBlob, targetLang = 'hi') => {
-    try {
-      const { transcribeAudioBlob } = await import('./ml_pipeline/whisper_engine.js');
-      const res = await transcribeAudioBlob(audioBlob, targetLang);
-      if (res.success) {
-        return { text: res.text, confidence: 0.94 };
-      }
-      throw new Error(res.message);
-    } catch (err) {
-      console.warn('[transcribeVoice] error:', err.message);
-      return { text: '', confidence: 0.0 };
-    }
+  transcribeVoice: async (_audioBlob, _targetLang = 'hi') => {
+    // Web Speech API only. Whisper pipeline not in use.
+    return { text: '', confidence: 0.0 };
   },
 
   /* ── [NOT BUILT] language + dialect detection ────────────────────────────*/
@@ -701,21 +692,21 @@ if (typeof window !== 'undefined') {
    ============================================================================ */
 export const MOCK = {
   delay: (ms) => new Promise(r => setTimeout(r, ms)),
-  workerProfile: { id: 'AWW_KH_04', name: 'Meera Devi', centre: 'AWC 04', block: 'Khunti, Jharkhand', childCount: 26, av: 'म' },
+  workerProfile: { id: 'AWW_KH_04', name: 'Worker', centre: 'AWC 04', block: 'Khunti, Jharkhand', childCount: 26, av: 'W' },
   children: [
-    { id: 'JH-001', name: 'Rahul Munda', age: '6 yrs', nameHi: 'राहुल मुंडा', status: 'normal' },
-    { id: 'JH-002', name: 'Priya Soren', age: '5 yrs', nameHi: 'प्रिया सोरेन', status: 'normal' },
-    { id: 'JH-003', name: 'Suresh Oraon', age: '4 yrs', nameHi: 'सुरेश उरांव', status: 'critical' },
-    { id: 'JH-004', name: 'Anita Toppo', age: '4 yrs', nameHi: 'अनिता टोप्पो', status: 'pending' },
-    { id: 'JH-005', name: 'Kavita Hansda', age: '3 yrs', nameHi: 'कविता हांसदा', status: 'vaccine' }
+    { id: 'JH-001', name: 'Child A', age: '6 yrs', nameHi: 'बच्चा A', status: 'normal' },
+    { id: 'JH-002', name: 'Child B', age: '5 yrs', nameHi: 'बच्चा B', status: 'normal' },
+    { id: 'JH-003', name: 'Child C', age: '4 yrs', nameHi: 'बच्चा C', status: 'critical' },
+    { id: 'JH-004', name: 'Child D', age: '4 yrs', nameHi: 'बच्चा D', status: 'pending' },
+    { id: 'JH-005', name: 'Child E', age: '3 yrs', nameHi: 'बच्चा E', status: 'vaccine' }
   ],
   sarrResult: [
-    { name: 'Attendance', nameHi: 'हाज़िरी', value: 'Rahul: absent', valueHi: 'राहुल: नहीं आया', confidence: 0.97, tier: 1 },
-    { name: 'Ration', nameHi: 'राशन', value: 'Priya: double ration', valueHi: 'प्रिया: दुगना राशन', confidence: 0.91, tier: 2 },
-    { name: 'Health', nameHi: 'सेहत', value: 'Meera: weigh pending', valueHi: 'मीरा: वज़न नापना बाकी', confidence: 0.85, tier: 3 }
+    { name: 'Attendance', nameHi: 'हाज़िरी', value: 'Child A: absent', valueHi: 'बच्चा A: नहीं आया', confidence: 0.97, tier: 1 },
+    { name: 'Ration', nameHi: 'राशन', value: 'Child B: double ration', valueHi: 'बच्चा B: दुगना राशन', confidence: 0.91, tier: 2 },
+    { name: 'Health', nameHi: 'सेहत', value: 'Child C: weigh pending', valueHi: 'बच्चा C: वज़न नापना बाकी', confidence: 0.85, tier: 3 }
   ],
   healthRisk: {
-    name: 'Suresh Oraon', nameHi: 'सुरेश उरांव',
+    name: 'Child C', nameHi: 'बच्चा C',
     age: 'Boy, age 4 years', ageHi: 'लड़का, उम्र 4 साल',
     zscore: -3.5, category: 'SAM', riskLevel: 'critical',
     earlyWarning: 'Weight falling 3 months. Attendance under half. Could worsen in 6 weeks.',
@@ -725,121 +716,17 @@ export const MOCK = {
   eceActivity: {
     name: 'Game: Freeze the Music', nameHi: 'खेल: गाना रुको',
     duration: '20 min', ageRange: 'Age 3-5', ageRangeHi: 'उम्र 3-5 साल',
-    desc: 'Children sit in a circle. When music stops, everyone freezes. Then take turns by name.',
-    descHi: 'बच्चे गोल घेरे में बैठें। गाना रुके तो सब रुक जाएं। फिर नाम लेकर अगली बारी।',
+    desc: 'Children sit in a circle. When music stops, everyone freezes. Then take turns.',
+    descHi: 'बच्चे गोल घेरे में बैठें। गाना रुके तो सब रुक जाएं। बारी-बारी से।',
     focusChildren: [
-      { name: 'Suresh Oraon', nameHi: 'सुरेश उरांव', flag: 'Low weight alert', flagHi: 'कम वज़न', note: 'Give Suresh a seated role.', noteHi: 'सुरेश को बैठे-बैठे काम दो।' },
-      { name: 'Anita Toppo', nameHi: 'अनिता टोप्पो', flag: 'Shy', flagHi: 'शर्मीली है', note: 'Let Anita hold the music card.', noteHi: 'अनिता को गाने का कार्ड थमाओ।' }
+      { name: 'Child A', nameHi: 'बच्चा A', flag: 'Low weight alert', flagHi: 'कम वज़न', note: 'Give child A a seated role.', noteHi: 'बच्चे A को बैठे-बैठे काम दो।' },
+      { name: 'Child B', nameHi: 'बच्चा B', flag: 'Shy', flagHi: 'शर्मीला/शर्मीली है', note: 'Let child B hold the music card.', noteHi: 'बच्चे B को गाने का कार्ड थमाओ।' }
     ]
   }
 };
-
-/* ============================================================================
-   WORKERS - multi-worker dataset for voice/tap login.
-   Each worker gets a DIFFERENT dashboard (profile, children, triage, critical).
-   `match` = lowercase tokens (name + centre number, Hindi & English) used to
-   match what the worker says into the microphone.
-   Helper L(obj) in index.html resolves { en, hi } by current language.
-   ============================================================================ */
-export const WORKERS = [
-  {
-    id: 'AWW_KH_04', av: { en: 'M', hi: 'म' },
-    name: { en: 'Meera Devi', hi: 'मीरा देवी' },
-    centre: 'AWC 04', block: { en: 'Khunti, Jharkhand', hi: 'खूंटी, झारखंड' },
-    childCount: 26,
-    match: ['meera', 'मीरा', '04', 'char', 'chaar', 'चार', 'میرا', 'char', 'मीरा देवी', 'मीरादेवी', 'मिर', 'चार'],
-    critical: {
-      childId: 'JH-003',
-      name: { en: 'Suresh Oraon', hi: 'सुरेश उरांव' },
-      age: { en: 'Boy, age 4 years', hi: 'बच्चा, उम्र 4 साल' },
-      zscore: -3.5, category: 'SAM',
-      warning: {
-        en: 'Weight falling 3 months. Attendance under half. Could worsen in 6 weeks.',
-        hi: 'वज़न 3 महीने से घट रहा। हाज़िरी आधी से कम। 6 हफ़्ते में बिगड़ सकती है।'
-      },
-      vitals: { weight: '10.1 kg', height: '95.5 cm', arm: '10.8 cm', attendance: '5/20' }
-    },
-    triage: [
-      { childId: 'JH-003', tier: 'critical', name: { en: 'Suresh Oraon', hi: 'सुरेश उरांव' }, age: { en: '4 yrs', hi: '4 साल' }, ds: { en: 'Weight dropping 3 months. Measure today.', hi: 'वज़न 3 महीने से घट रहा। आज नापो।' }, tag: { en: 'Very weak', hi: 'बहुत कमज़ोर' } },
-      { childId: 'JH-004', tier: 'critical', name: { en: 'Anita Toppo', hi: 'अनीता टोप्पो' }, age: { en: '3 yrs', hi: '3 साल' }, ds: { en: 'Mild decline detected. Watch closely.', hi: 'हल्की गिरावट। ध्यान दो।' }, tag: { en: 'Weak', hi: 'कमज़ोर' } },
-      { childId: 'JH-001', tier: 'pending', name: { en: 'Rahul Munda', hi: 'राहुल मुंडा' }, age: { en: '6 yrs', hi: '6 साल' }, ds: { en: 'Absent 5 days. Back today.', hi: '5 दिन नहीं आया। आज लौटा।' }, tag: { en: 'Back today', hi: 'आज लौटा' } },
-      { childId: 'JH-002', tier: 'remaining', name: { en: 'Priya Soren', hi: 'प्रिया सोरेन' }, age: { en: '5 yrs', hi: '5 साल' }, ds: { en: 'Vitamin A vaccine due today.', hi: 'विटामिन A का टीका आज बाकी।' }, tag: null }
-    ]
-  },
-  {
-    id: 'AWW_MU_12', av: { en: 'S', hi: 'सु' },
-    name: { en: 'Sunita Kumari', hi: 'सुनीता कुमारी' },
-    centre: 'AWC 12', block: { en: 'Murhu, Jharkhand', hi: 'मुरहू, झारखंड' },
-    childCount: 31,
-    match: ['sunita', 'सुनीता', '12', 'barah', 'बारह', 'سنیتا', 'सुनिता', 'सनिता', 'सनीता', 'बारह'],
-    critical: {
-      name: { en: 'Anil Munda', hi: 'अनिल मुंडा' },
-      age: { en: 'Boy, age 2 years 8 months', hi: 'बच्चा, उम्र 2 साल 8 महीने' },
-      zscore: -3.0, category: 'SAM',
-      warning: {
-        en: 'Diarrhoea twice this month. Weight stalled. Needs a home visit.',
-        hi: 'इस महीने दो बार दस्त। वज़न रुका हुआ। घर जाकर देखो।'
-      },
-      vitals: { weight: '8.4 kg', height: '84 cm', arm: '11.1 cm', attendance: '15/22' }
-    },
-    triage: [
-      { tier: 'critical', name: { en: 'Anil Munda', hi: 'अनिल मुंडा' }, age: { en: '2 yrs', hi: '2 साल' }, ds: { en: 'Diarrhoea twice. Home visit needed.', hi: 'दो बार दस्त। घर जाकर देखो।' }, tag: { en: 'Very weak', hi: 'बहुत कमज़ोर' } },
-      { tier: 'pending', name: { en: 'Geeta Oraon', hi: 'गीता उरांव' }, age: { en: '4 yrs', hi: '4 साल' }, ds: { en: 'No info for 4 days.', hi: '4 दिन से कुछ दर्ज नहीं।' }, tag: null },
-      { tier: 'pending', name: { en: 'Mahesh Munda', hi: 'महेश मुंडा' }, age: { en: '3 yrs', hi: '3 साल' }, ds: { en: 'Missed weighing twice.', hi: 'दो बार वज़न नहीं हुआ।' }, tag: null },
-      { tier: 'remaining', name: { en: 'Pooja Devi', hi: 'पूजा देवी' }, age: { en: '5 yrs', hi: '5 साल' }, ds: { en: 'Deworming pill due.', hi: 'पेट के कीड़े की दवा बाकी।' }, tag: null }
-    ]
-  },
-  {
-    id: 'AWW_KA_07', av: { en: 'P', hi: 'फू' },
-    name: { en: 'Phoolmani Devi', hi: 'फूलमणि देवी' },
-    centre: 'AWC 07', block: { en: 'Karra, Jharkhand', hi: 'कर्रा, झारखंड' },
-    childCount: 19,
-    match: ['phoolmani', 'phulmani', 'फूलमणि', '07', 'saat', 'सात', 'پھولمنی', 'फूलमनी', 'फुलमनी', 'फूलनी', 'सात'],
-    critical: {
-      name: { en: 'Lakshmi Oraon', hi: 'लक्ष्मी उरांव' },
-      age: { en: 'Girl, age 4 years 1 month', hi: 'बच्ची, उम्र 4 साल 1 महीना' },
-      zscore: -2.6, category: 'MAM',
-      warning: {
-        en: 'Slipped from normal to weak this month. Watch closely.',
-        hi: 'इस महीने ठीक से कमज़ोर हुई। ध्यान से देखो।'
-      },
-      vitals: { weight: '12.1 kg', height: '98 cm', arm: '12.4 cm', attendance: '18/22' }
-    },
-    triage: [
-      { tier: 'critical', name: { en: 'Lakshmi Oraon', hi: 'लक्ष्मी उरांव' }, age: { en: '4 yrs', hi: '4 साल' }, ds: { en: 'Slipped to weak this month. Watch.', hi: 'इस महीने कमज़ोर हुई। ध्यान दो।' }, tag: { en: 'Weak', hi: 'कमज़ोर' } },
-      { tier: 'pending', name: { en: 'Sanjay Munda', hi: 'संजय मुंडा' }, age: { en: '3 yrs', hi: '3 साल' }, ds: { en: 'No info for 3 days.', hi: '3 दिन से कुछ दर्ज नहीं।' }, tag: null },
-      { tier: 'remaining', name: { en: 'Kiran Devi', hi: 'किरण देवी' }, age: { en: '2 yrs', hi: '2 साल' }, ds: { en: 'Vitamin A vaccine due.', hi: 'विटामिन A का टीका बाकी।' }, tag: null }
-    ]
-  },
-  {
-    id: 'AWW_TO_21', av: { en: 'R', hi: 'रे' },
-    name: { en: 'Rekha Devi', hi: 'रेखा देवी' },
-    centre: 'AWC 21', block: { en: 'Torpa, Jharkhand', hi: 'तोरपा, झारखंड' },
-    childCount: 24,
-    match: ['rekha', 'रेखा', '21', 'ikkis', 'इक्कीस', 'ریکھا', 'रीखा', 'रेका', 'इक्कीस'],
-    critical: {
-      name: { en: 'Budhan Singh', hi: 'बुधन सिंह' },
-      age: { en: 'Boy, age 3 years 5 months', hi: 'बच्चा, उम्र 3 साल 5 महीने' },
-      zscore: -3.4, category: 'SAM',
-      warning: {
-        en: 'Lowest weight in centre. Family migrating soon. Refer now.',
-        hi: 'केंद्र में सबसे कम वज़न। परिवार जल्द जाने वाला। अभी रेफर करो।'
-      },
-      vitals: { weight: '9.0 kg', height: '92 cm', arm: '10.5 cm', attendance: '9/22' }
-    },
-    triage: [
-      { tier: 'critical', name: { en: 'Budhan Singh', hi: 'बुधन सिंह' }, age: { en: '3 yrs', hi: '3 साल' }, ds: { en: 'Lowest weight. Family migrating. Refer.', hi: 'सबसे कम वज़न। परिवार जा रहा। रेफर करो।' }, tag: { en: 'Very weak', hi: 'बहुत कमज़ोर' } },
-      { tier: 'critical', name: { en: 'Sita Kumari', hi: 'सीता कुमारी' }, age: { en: '2 yrs', hi: '2 साल' }, ds: { en: 'Arm thin. Weigh today.', hi: 'बाँह पतली। आज वज़न नापो।' }, tag: { en: 'Weak', hi: 'कमज़ोर' } },
-      { tier: 'pending', name: { en: 'Vikash Munda', hi: 'विकाश मुंडा' }, age: { en: '4 yrs', hi: '4 साल' }, ds: { en: 'Absent 6 days.', hi: '6 दिन नहीं आया।' }, tag: { en: 'Absent', hi: 'गैरहाज़िर' } },
-      { tier: 'remaining', name: { en: 'Anjali Devi', hi: 'अंजली देवी' }, age: { en: '5 yrs', hi: '5 साल' }, ds: { en: 'Deworming pill due.', hi: 'पेट के कीड़े की दवा बाकी।' }, tag: null }
-    ]
-  }
-];
-
 
 if (typeof window !== 'undefined') {
   window.AURA_API = AURA_API;
   window.AURA_DB = AURA_DB;
   window.MOCK = MOCK;
-  window.WORKERS = WORKERS;
 }

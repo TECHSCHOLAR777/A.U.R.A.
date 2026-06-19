@@ -256,7 +256,6 @@ const navic={att:'clock',ece:'book',audit:'grid'};
 
 const T={
  hi:{
-  govA:"भारत सरकार",govB:"महिला एवं बाल विकास मंत्रालय",govC:"समेकित बाल विकास सेवा (ICDS)",
   pill:"हिं | A",nav:["घर","जाँच","खेल","और"],
   splashTag:"आँगनवाड़ी का दिन, एक जगह। बिना इंटरनेट के भी चलता है।",
   splashStart:"साइनअप/लॉगिन",splashChip:"ऑफ़लाइन तैयार",splashFine:"आपका डेटा इसी फ़ोन में सुरक्षित रहता है।",
@@ -265,44 +264,24 @@ const T={
   labelName:"कार्यकर्ता का नाम",labelId:"कार्यकर्ता आईडी",labelCentre:"आँगनवाड़ी केंद्र",labelPin:"4-अंकीय पिन",
   btnSignUp:"प्रोफ़ाइल बनाएं और लॉगिन करें",btnLogin:"डैशबोर्ड में प्रवेश करें",
   msgErrorPin:"गलत आईडी या पिन। कृपया पुनः प्रयास करें।",msgSuccess:"प्रोफ़ाइल सफलतापूर्वक पंजीकृत!",
-  greet:"सुप्रभात, मीरा।",date:"सोमवार, 15 जून।",
-  nowClock:"अभी 8:04 बजे",nowLabel:"अभी का काम",nowTask:"सुबह की हाज़िरी",nowSub:"और नाश्ता देना",start:"हाज़िरी शुरू करें",
-  alert:"3 बच्चे ज़रूरी: तुरंत देखें",day:"दिन का नक्शा",nowtag:"अभी",doneShort:"हो गया",pendShort:"बाकी",
+  nowLabel:"अभी का काम",nowTask:"सुबह की हाज़िरी",nowSub:"और नाश्ता देना",start:"हाज़िरी शुरू करें",
+  day:"दिन का नक्शा",nowtag:"अभी",doneShort:"हो गया",pendShort:"बाकी",
   slots:[["हाज़िरी और नाश्ता","8 से 9 बजे","att",1,0],["खेल और जाँच","9 से 12 बजे","ece",0,0],["दिन की जाँच","2 बजे बाद","audit",0,0]],
-  triageKw:["आज किसे ","देखना है"],
-  blocks:[{n:"01",t:"तुरंत देखें",s:"बहुत कमज़ोर बच्चे",c:"--red",bg:"--rl",kids:[{nm:"मीरा शर्मा",ag:"3 साल",ds:"वज़न 3 हफ़्ते से घट रहा है। आज नाप लें।",tag:"बहुत कमज़ोर"},{nm:"रवि दास",ag:"2 साल",ds:"बाँह बहुत पतली (10.8 सेमी)। अस्पताल भेजें।",tag:"बहुत कमज़ोर"}]},{n:"02",t:"बाकी है",s:"2 दिन से जानकारी नहीं",c:"--amber",bg:"--al",kids:[{nm:"अनिता कुमारी",ag:"4 साल",ds:"3 दिन से कुछ दर्ज नहीं हुआ।",tag:null},{nm:"राहुल मुर्मू",ag:"2 साल",ds:"5 दिन नहीं आया। आज लौटा।",tag:"आज लौटा"}]},{n:"03",t:"बाकी काम",s:"टीका, राशन",c:"--green",bg:"--gl",kids:[{nm:"सुरेश यादव",ag:"3 साल",ds:"विटामिन A का टीका बाकी। आज दें।",tag:null}]}],
   voiceKw:["बस ","बोल दें"],voiceSub:"एक बार बोलें, हर रजिस्टर में अपने आप दर्ज हो जाएगा।",
-  voiceQ:"12 उपस्थित, 8 गेंदें, 5 दरी, 2 क्रेयॉन डिब्बे",
-  filling:"अपने आप भर रहा है",sure:"कितना पक्का है",
-  regs:[["हाज़िरी गिनती","आज 12 उपस्थित",1],["सामग्री रजिस्टर","8 गेंदें · 5 दरी",1],["आपूर्ति","2 क्रेयॉन डिब्बे",0]],
-  tiers:[["पक्का (अपने आप दर्ज)","94% से ऊपर","--green",1],["एक बार देख लें","75% से 94%","--amber",0],["खुद भरें","75% से नीचे","--red",0]],
-  attKw:["आज ","सब आए हैं"],allHere:"सभी 42 बच्चे आए हैं",allCount:"केंद्र के सभी बच्चे उपस्थित",allTime:"8:04 बजे दर्ज",
-  camLine:"फ़ोटो से गिनती मिलाएँ",camMatch:"कैमरा खोलने के लिए टैप करें",absent:"अनुपस्थित चुनें",absTag:" · टैप करके अनुपस्थित करें",
-  attKids:[["राहुल मुर्मू","2 साल"],["अनिता कुमारी","4 साल"]],addVoice:"बोलकर जोड़ें",
-  sumLine:"आज की हाज़िरी",pct:"42 में से 40 उपस्थित (95%)",send:"जाँचें और भेजें",
-  mealKw:["गरम ","खाना"],mealSub:"आज का खाना और कितने बच्चों को मिला, यहाँ दर्ज करें।",
-  mealToday:"आज का खाना",mealFood:"दाल, चावल और सब्ज़ी",mealPer:"हर बच्चे को एक कटोरी",
-  mealFed:"अब तक खिलाया",mealOf:"में से 40",mealVoice:"बोलकर गिनती दर्ज करें",
-  mealStock:"राशन कम है",mealStockS:"दाल 2 दिन की बची है। ब्लॉक को बताएँ।",
-  hName:"रवि दास",hAge:"2 साल 4 महीने · केंद्र 04",hDanger:"ख़तरे का निशान",
-  hSignal:"तुरंत ध्यान दें",hSignalD:"बाँह की माप 10.8 सेमी है, जो बहुत कम है। आज ही अस्पताल रेफर करें।",
-  hVitals:[["वज़न","8.1 किग्रा","उम्र से कम",1],["बाँह (MUAC)","10.8 सेमी","लाल घेरा",1],["लंबाई","82 सेमी","थोड़ी कम",1],["पिछली जाँच","3 हफ़्ते पहले","",0]],
-  hScore:"पोषण स्थिति",hVeryWeak:"बहुत कमज़ोर (SAM)",hWeigh:"वज़न दर्ज करें",hRefer:"अस्पताल रेफर करें",
+  attKw:["आज ","सब आए हैं"],allCount:"केंद्र के सभी बच्चे उपस्थित",
+  camLine:"फ़ोटो से गिनती मिलाएँ",camMatch:"कैमरा खोलने के लिए टैप करें",
+  sumLine:"आज की हाज़िरी",
   eceKw:["आज का ","खेल"],eceSub:"आज के कमरे के बच्चों के लिए गतिविधि।",
   eceGame:"गेंद की ओर बढ़ना",eceAge:"6 से 9 माह · शारीरिक विकास",eceDesc:"बच्चे के सामने नरम गेंद रखें और पकड़ने के लिए बढ़ावा दें। फिर गेंद थोड़ा दूर खिसकाएँ।",
   ecePick:"गतिविधि बैंक से चुना गया",eceScreen:"विकास जाँच (DSS) करें",
   eceFocus:"ख़ास ध्यान वाले बच्चे",
-  eceFlags:[["आरती (3 साल)","अभी बोलना कम","ध्यान दें, इशारों से जवाब लेने वाली गतिविधि दें।","--amber"],["कबीर (2 साल)","ठीक चल रहा","अगली गतिविधि के लिए तैयार।","--green"]],
-  eceNote:"नोट",eceNoteV:"यह गतिविधि कमरे की उम्र और सामान के अनुसार बदली जा सकती है।",
   auditKw:["दिन की ","जाँच"],auditYes:"भेजने से पहले एक बार देख लें",auditYesD:"नीचे आज का सारा काम है। सही लगे तो भेज दें।",
   auditWhat:"आज क्या हुआ",
-  auditItems:[["हाज़िरी: 40 उपस्थित, 2 अनुपस्थित",1],["गरम खाना: 40 बच्चों को मिला",1],["खेल और जाँच: 1 बच्चे की DSS बाकी",0]],
   auditSafe:"सारा डेटा इसी फ़ोन में सुरक्षित है। इंटरनेट आने पर अपने आप भेजा जाएगा।",auditApprove:"पक्का करें और दिन बंद करें",
   micL:"सुन रहे हैं...",micS:"साफ़ बोलें। केवल गिनती या सामान बोलें (नाम नहीं)।",micC:"बंद करें",
   notif:"सूचनाएँ"
  },
  en:{
-  govA:"Government of India",govB:"Ministry of Women and Child Development",govC:"Integrated Child Development Services (ICDS)",
   pill:"EN | अ",nav:["Home","Screening","Play","More"],
   splashTag:"The whole Anganwadi day in one place. Works without internet.",
   splashStart:"SignUp/Login",splashChip:"Offline ready",splashFine:"Your data stays safe on this phone.",
@@ -311,38 +290,19 @@ const T={
   labelName:"Worker Name",labelId:"Worker ID",labelCentre:"Anganwadi Centre",labelPin:"4-Digit PIN",
   btnSignUp:"Create Profile & Login",btnLogin:"Enter Dashboard",
   msgErrorPin:"Incorrect Worker ID or PIN. Please try again.",msgSuccess:"Profile registered successfully!",
-  greet:"Good morning, Meera.",date:"Monday, 15 June.",
-  nowClock:"Now, 8:04 AM",nowLabel:"Right now",nowTask:"Morning attendance",nowSub:"and serving breakfast",start:"Start attendance",
-  alert:"3 children need attention now",day:"Today's plan",nowtag:"now",doneShort:"done",pendShort:"left",
+  nowLabel:"Right now",nowTask:"Morning attendance",nowSub:"and serving breakfast",start:"Start attendance",
+  day:"Today's plan",nowtag:"now",doneShort:"done",pendShort:"left",
   slots:[["Attendance and breakfast","8 to 9 AM","att",1,0],["Play and screening","9 to 12","ece",0,0],["Day review","After 2","audit",0,0]],
-  triageKw:["Who needs ","attention today"],
-  blocks:[{n:"01",t:"See now",s:"Very weak children",c:"--red",bg:"--rl",kids:[{nm:"Meera Sharma",ag:"3 years",ds:"Weight falling for 3 weeks. Weigh today.",tag:"Very weak"},{nm:"Ravi Das",ag:"2 years",ds:"Arm very thin (10.8 cm). Refer to hospital.",tag:"Very weak"}]},{n:"02",t:"Pending",s:"No update for 2 days",c:"--amber",bg:"--al",kids:[{nm:"Anita Kumari",ag:"4 years",ds:"Nothing recorded for 3 days.",tag:null},{nm:"Rahul Murmu",ag:"2 years",ds:"Absent 5 days. Returned today.",tag:"Back today"}]},{n:"03",t:"Remaining",s:"Vaccine, ration",c:"--green",bg:"--gl",kids:[{nm:"Suresh Yadav",ag:"3 years",ds:"Vitamin A dose pending. Give today.",tag:null}]}],
   voiceKw:["Just ","say it"],voiceSub:"Speak once. It records into every register on its own.",
-  voiceQ:"12 present, 8 balls, 5 floor mats, 2 crayon boxes",
-  filling:"Filling on its own",sure:"How sure",
-  regs:[["Headcount","12 present today",1],["Materials register","8 balls · 5 mats",1],["Supplies","2 crayon boxes",0]],
-  tiers:[["Confirmed (auto saved)","Above 94%","--green",1],["Please check once","75% to 94%","--amber",0],["Enter yourself","Below 75%","--red",0]],
-  attKw:["Everyone ","is here today"],allHere:"All 42 children present",allCount:"Every child in the centre is here",allTime:"Recorded at 8:04 AM",
-  camLine:"Match the count with a photo",camMatch:"Tap to open the camera",absent:"Mark absent",absTag:" · tap to mark absent",
-  attKids:[["Rahul Murmu","2 years"],["Anita Kumari","4 years"]],addVoice:"Add by voice",
-  sumLine:"Today's attendance",pct:"40 of 42 present (95%)",send:"Check and send",
-  mealKw:["Hot ","meal"],mealSub:"Record today's meal and how many children were served.",
-  mealToday:"Today's meal",mealFood:"Dal, rice and vegetables",mealPer:"One bowl per child",
-  mealFed:"Served so far",mealOf:"of 40",mealVoice:"Record count by voice",
-  mealStock:"Ration is low",mealStockS:"Dal will last 2 days. Inform the block.",
-  hName:"Ravi Das",hAge:"2 years 4 months · Centre 04",hDanger:"Danger sign",
-  hSignal:"Needs attention now",hSignalD:"Arm measure is 10.8 cm, which is very low. Refer to hospital today.",
-  hVitals:[["Weight","8.1 kg","Low for age",1],["Arm (MUAC)","10.8 cm","Red zone",1],["Height","82 cm","Slightly low",1],["Last check","3 weeks ago","",0]],
-  hScore:"Nutrition status",hVeryWeak:"Very weak (SAM)",hWeigh:"Record weight",hRefer:"Refer to hospital",
+  attKw:["Everyone ","is here today"],allCount:"Every child in the centre is here",
+  camLine:"Match the count with a photo",camMatch:"Tap to open the camera",
+  sumLine:"Today's attendance",
   eceKw:["Today's ","activity"],eceSub:"A Navchetana activity for the children in the room today.",
   eceGame:"Reaching for the ball",eceAge:"6 to 9 months · Physical",eceDesc:"Place a soft ball within reach and encourage the child to grasp it. Then move the ball a little farther.",
   ecePick:"Chosen from the Navchetana activity bank",eceScreen:"Run development check (DSS)",
   eceFocus:"Children to watch",
-  eceFlags:[["Aarti (3 years)","Speaking little","Watch closely. Give an activity that accepts gesture replies.","--amber"],["Kabir (2 years)","On track","Ready for the next activity.","--green"]],
-  eceNote:"Note",eceNoteV:"This activity can change to fit the room's ages and materials.",
   auditKw:["Day ","review"],auditYes:"Check once before sending",auditYesD:"Below is everything from today. Send if it looks right.",
   auditWhat:"What happened today",
-  auditItems:[["Attendance: 40 present, 2 absent",1],["Hot meal: served to 40 children",1],["Play and screening: 1 child's DSS pending",0]],
   auditSafe:"All data is safe on this phone. It will send on its own when internet returns.",auditApprove:"Confirm and close the day",
   micL:"Listening...",micS:"Speak clearly. Say a count or a material only (no names).",micC:"Close",
   notif:"Notifications"
@@ -371,6 +331,15 @@ let activityBankCache = null;
 // Online check maps to the inverse of the debug offline mode flag
 function isOnline() {
   return !window.DEBUG_OFFLINE_MODE;
+}
+
+// Map age band to Navchetana curriculum node for activity retrieval
+function deriveNodeFromBand(band) {
+  const map = {
+    '0-3':'SE-1','3-6':'GM-1','6-9':'FM-1','9-12':'LA-1',
+    '12-18':'GM-3','18-24':'SE-3','24-36':'FM-3'
+  };
+  return map[band] || 'FM-3';
 }
 
 // Client-side age band derivation (mirrors server.js deriveBand)
@@ -723,6 +692,23 @@ const screens={
 
     const rulesMap = new Map(GuardrailEngine.getRules().map(r => [r.rule_id, r]));
 
+    const inclHtml = (() => {
+      const _im = currentActivity ? currentActivity.inclusion_modifications : null;
+      if (!_im) return '';
+      let _imText = '';
+      if (!Array.isArray(_im) && typeof _im === 'object' && _im.instruction_override) {
+        _imText = _im.instruction_override;
+      } else if (Array.isArray(_im) && _im.length) {
+        _imText = _im.join('<br>');
+      }
+      if (!_imText) return '';
+      return `<div style="margin-top:8px;font-size:9.5px;color:var(--navy);line-height:1.4;"><strong style="font-size:8px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:2px;">${lang==='hi'?'समावेश संशोधन':'Inclusion modifications'}</strong>${_imText}</div>`;
+    })();
+
+    const offlineNoteHtml = (currentActivity && currentActivity.provenance && currentActivity.provenance.generated_offline && firedRules.length === 0)
+      ? `<div style="margin-top:10px;font-size:9px;color:var(--amber);font-weight:600;">⚠ ${lang==='hi'?'ऑफ़लाइन टेम्पलेट — गार्डरेल मूल्यांकन नहीं हुआ':'Offline template — guardrail not evaluated'}</div>`
+      : '';
+
     const guardrailHtml = firedRules.length > 0 ? `
       <div class="guardrail-wrapper" style="margin-top:12px;">
         <div onclick="toggleGuardrailPanel(event)" style="background:var(--gl);border:1px solid var(--green);border-radius:20px;padding:8px 12px;font-size:11.5px;font-weight:700;color:var(--green);cursor:pointer;display:inline-flex;align-items:center;gap:6px;user-select:none;">
@@ -769,9 +755,8 @@ const screens={
               <div style="font-size:9.5px;color:var(--muted);margin-top:4px">${currentActivity ? (currentActivity.age_band_months + ' months · ' + currentActivity.targeted_domain) : t.eceAge}</div>
               <div style="font-size:10.5px;line-height:1.55;margin-top:8px">${currentActivity ? currentActivity.step_by_step_instructions.join('<br>') : t.eceDesc}</div>
               <div style="font-size:8px;color:var(--muted);margin-top:8px">${currentActivity ? ('milestone: ' + currentActivity.milestone_targeted) : t.ecePick}</div>
-              ${currentActivity && currentActivity.inclusion_modifications && currentActivity.inclusion_modifications.length ? `<div style="margin-top:8px;font-size:9.5px;color:var(--navy);line-height:1.4;"><strong style="font-size:8px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:2px;">${lang==='hi'?'समावेश संशोधन':'Inclusion modifications'}</strong>${currentActivity.inclusion_modifications.map(m => '• ' + m).join('<br>')}</div>` : ''}
-
-              ${guardrailHtml}
+              ${inclHtml}
+              ${guardrailHtml}${offlineNoteHtml}
             </div>
             
             <button class="btn ghost" style="border-color:var(--purple);color:var(--purple);margin-top:6px;" onclick="go('dss')">
@@ -961,9 +946,9 @@ const screens={
   },
   more() {
     const t = T[lang];
-    let workerName = activeWorker ? activeWorker.name : 'Mira Devi';
-    let centreName = activeCentre || 'AWC Centre 04';
-    let workerId = activeWorker ? activeWorker.id : 'AWW_KH_04';
+    let workerName = activeWorker ? activeWorker.name : (lang==='hi' ? '— लॉगिन नहीं हुआ —' : '— not signed in —');
+    let centreName = activeCentre || '—';
+    let workerId = activeWorker ? activeWorker.id : '—';
 
     const syncStatusHtml = syncQueueSize > 0
       ? `
@@ -990,7 +975,7 @@ const screens={
           <span style="font-size:24px;display:block;margin-bottom:6px;">✅</span>
           <div style="font-size:14px;font-weight:800;color:var(--green);">${lang === 'hi' ? 'सभी डेटा सिंक है' : 'Data Fully Synchronized'}</div>
           <div style="font-size:11px;color:var(--green);margin-top:4px;">
-            ${lang === 'hi' ? 'कतार में कोई डेटा लंबित नहीं है।' : 'Sync queue is empty. Database matches cloud.'}
+            ${lang === 'hi' ? 'स्थानीय डेटा सुरक्षित। क्लाउड सिंक के लिए बैकएंड कनेक्शन आवश्यक है।' : 'Local data complete. Backend sync required to reach cloud.'}
           </div>
         </div>
       `;
@@ -1224,8 +1209,6 @@ async function initIdentity() {
     activeWorker = storedIdentity.worker;
     activeCentre = storedIdentity.centre;
     if (storedIdentity.worker && storedIdentity.worker.name) {
-      T.hi.greet = `सुप्रभात, ${storedIdentity.worker.name}।`;
-      T.en.greet = `Good morning, ${storedIdentity.worker.name}.`;
     }
     try {
       const kids = await AURA_API.getChildren(activeCentre);
@@ -1506,30 +1489,21 @@ async function loadECEActivity() {
   const childProfiles = present.map(c => ({ child_id: c.childId, age_months: c.age_months || 36, needs: c.needs || [] }));
 
   const derivedBand = deriveBandClient(childProfiles);
-  const payload = { node_id: activeNode, age_band_months: derivedBand, child_profiles: childProfiles, context: roomContext };
+  const derivedNode = deriveNodeFromBand(derivedBand);
+  const payload = { node_id: derivedNode, age_band_months: derivedBand, child_profiles: childProfiles, context: roomContext };
 
-  const online = (typeof navigator !== 'undefined' && navigator.onLine) && isOnline();
-
-  if (!online) { currentActivity = await localActivityFromBank(payload, 'offline_template'); render(); return; }
-
+  // Local retrieval engine (runs on device server — no cloud LLM, works offline too)
   try {
-    let resp = await fetch('/api/llm/activity', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
-    }).catch(() => null);
-
-    if (resp && resp.ok) {
-      currentActivity = normalizeActivity(await resp.json(), 'cloud_llm_proxy', 'cloud_llm');
-      render(); return;
-    }
-
-    resp = await fetch('/api/activity/next', {
+    const resp = await fetch('/api/activity/next', {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
     });
     if (!resp.ok) throw new Error('retrieval engine error');
     currentActivity = normalizeActivity(await resp.json(), 'retrieval_engine', 'retrieval_engine');
+    activeNode = currentActivity.milestone_targeted || derivedNode;
     render();
   } catch (err) {
-    console.warn('[Activity online path failed -> local template]', err);
+    console.warn('[Activity retrieval failed -> local template]', err);
+    activeNode = derivedNode;
     currentActivity = await localActivityFromBank(payload, 'offline_template');
     render();
   }
@@ -1635,9 +1609,9 @@ function localActivityFallback(tier) {
       ? ['बच्चे के सामने नरम गेंद रखें और पकड़ने के लिए बढ़ावा दें।', 'गेंद थोड़ा दूर खिसकाएँ।']
       : ['Place a soft ball within reach and encourage the child to grasp it.', 'Move the ball slightly further away.'],
     required_materials: ['soft_ball'],
-    safety_guard_applied: true,
-    inclusion_modifications: lang === 'hi' ? ['गैर-मौखिक बच्चों के लिए इशारे स्वीकार करें'] : ['Accept gesture responses for non-verbal children'],
-    provenance: { rules_fired: ['SAFE_CHOKE_01', 'INC_ATTUNE_01'], generated_offline: true },
+    safety_guard_applied: false,
+    inclusion_modifications: { vast_parameter: 'none', instruction_override: '' },
+    provenance: { rules_fired: [], generated_offline: true },
     fallback_tier: tier || 'offline_template'
   };
 }
@@ -1774,7 +1748,17 @@ function startVoiceCapture(){
       if(out){ out.textContent = txt; out.style.color = 'var(--ink)'; }
     };
     voiceRecognition.onerror = (e) => { if(status) status.textContent = (lang==='hi'?'त्रुटि: ':'Error: ') + (e.error||''); };
-    voiceRecognition.onend = () => { if(status) status.textContent = lang==='hi'?'समाप्त। दोबारा बोलने के लिए टैप करें।':'Done. Tap to speak again.'; };
+    voiceRecognition.onend = () => {
+      if(status) status.textContent = lang==='hi'?'समाप्त। दोबारा बोलने के लिए टैप करें।':'Done. Tap to speak again.';
+      const transcript = out ? out.textContent.trim() : '';
+      if (transcript && transcript !== '…') {
+        const tokens = transcript.toLowerCase().split(/[\s,،।]+/).filter(tok => tok.length > 2);
+        if (tokens.length > 0) {
+          roomMaterials = [...new Set([...roomMaterials, ...tokens])];
+          showBktToast(lang==='hi' ? 'सामग्री अपडेट ✓' : 'Room materials updated ✓');
+        }
+      }
+    };
     voiceRecognition.start();
   } catch(err){ if(status) status.textContent = lang==='hi'?'आवाज़ शुरू नहीं हो सकी।':'Could not start voice.'; }
 }
@@ -1788,7 +1772,6 @@ function openMic(){
 }
 function closeMic(){
   document.getElementById('micmodal').classList.remove('show');
-  go('voice');
 }
 
 function setLang(l){
