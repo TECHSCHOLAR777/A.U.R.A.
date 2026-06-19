@@ -1,4 +1,4 @@
-# AURA: Adaptive Universal Response for Anganwadis
+# AURA: Anganwadi Unified Resource Assistant
 
 A Progressive Web App (PWA) runtime and local intelligence engine serving Anganwadi Workers (AWWs) with real-time early childhood stimulation guidelines, disability screening schedules, and clinical tracking under harsh, offline-native field environments.
 
