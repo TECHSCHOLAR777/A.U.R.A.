@@ -753,6 +753,7 @@ const screens = {
       <button class="btn green" style="display:flex;gap:8px;align-items:center;justify-content:center" onclick="retryVoice()">${SVG.voice} ${L({en:'Speak again',hi:'फिर से बोलो'})}</button>
       </div></div></div>`;
   },
+<<<<<<< HEAD
   vl3(){
     const t=T[lang];
     const detectedLangName = lang === 'hi' ? 'हिंदी (Hindi)' : 'English (अंग्रेज़ी)';
@@ -762,6 +763,36 @@ const screens = {
       <div style="margin:14px 0"><div class="globewrap">${SVG.globe}</div></div>
       <div style="text-align:center;font-size:17px;font-weight:800;margin-bottom:16px">
         ${lang === 'hi' ? 'भाषा पहचानी गई' : 'Language Detected'}
+=======
+  shell() {
+    const t = T[lang];
+    const slots = t.slots.map(s => `<div class="slot ${s[2] === 'att' ? 'now' : ''}" onclick="go('${s[2]}')"><div class="dot">${SVG[navic[s[2]]]}</div><div class="meta"><div class="a">${s[0]}</div><div class="b">${s[1]}</div></div>${s[2] === 'att' ? `<span class="nowtag">${t.nowtag}</span>` : `<span class="stt">${s[4] ? t.doneShort : t.pendShort}</span>`}</div>`).join('');
+    return `
+      <div class="screen active">${statusbar(nowClock())}${header()}
+        <div class="scroll">
+          <div class="body">
+            <div class="greet">${lang==='hi' ? 'सुप्रभात' : 'Good morning'}, ${activeWorker ? activeWorker.name : (lang==='hi' ? 'कार्यकर्ता' : 'Worker')}<small>${new Date().toLocaleDateString(lang==='hi'?'hi-IN':'en-IN',{weekday:'long',day:'numeric',month:'long'})}</small></div>
+            ${activeChildren.length === 0 ? `
+              <div class="alert" style="background:var(--rl);border:1px solid var(--red);border-left:4px solid var(--red);border-radius:11px;padding:14px;margin-top:16px;cursor:pointer;" onclick="go('children_manager')">
+                <span class="ai" style="color:var(--red);">${SVG.warn}</span>
+                <span class="t" style="color:var(--red);font-size:12px;">${lang === 'hi' ? 'कोई बच्चा पंजीकृत नहीं है! बच्चों को पंजीकृत करने के लिए यहाँ क्लिक करें।' : 'No children registered! Click here to register children.'}</span>
+                <span class="chev" style="color:var(--red);">›</span>
+              </div>
+            ` : ''}
+            <div class="nowcard">
+              <div class="nclock">${SVG.clock} ${nowClock()}</div>
+              <div class="nlabel">${t.nowLabel}</div>
+              <h2>${t.nowTask}</h2>
+              <div class="ntask">${t.nowSub}</div>
+              <button class="nowbtn" onclick="go('att')">${t.start}<span class="arrow">→</span></button>
+            </div>
+
+            <div class="sectionlabel">${t.day}</div>
+            ${slots}
+          </div>
+        </div>
+        ${nav('home')}
+>>>>>>> 43006d6 (3 changes)
       </div>
       <div class="nowcard" style="padding:16px">
         <div class="nlabel">${lang === 'hi' ? 'पहचानी गई भाषा' : 'Detected Language'}</div>
@@ -853,6 +884,7 @@ const screens = {
           <option value="REGISTER_15">${lang==='hi'?'रजिस्टर १५: गंभीर कुपोषण (SAM) ट्रैकिंग':'Register No. 15: SAM Tracking & Referral'}</option>
         </select>
 
+<<<<<<< HEAD
         <div style="display:flex;gap:8px;margin-bottom:12px">
           <div style="flex:1">
             <div class="nlabel" style="color:var(--muted);font-size:11px">${lang==='hi'?'महीना':'Month'}</div>
@@ -870,6 +902,42 @@ const screens = {
               <option value="11">11 (Nov / नवंबर)</option>
               <option value="12">12 (Dec / दिसंबर)</option>
             </select>
+=======
+  ece(){
+    const t = T[lang];
+    const online = isOnline();
+    
+    const sourceLabel = online 
+      ? (lang === 'hi' ? 'स्रोत: ऑनलाइन अनुकूलन (बैकएंड)' : 'Source: Online adaptation (backend)')
+      : (lang === 'hi' ? 'स्रोत: लोकल टेम्पलेट (ऑफ़लाइन)' : 'Source: Local template (offline)');
+      
+    // Voice only for non-PII materials/counts; online + Web Speech only (Req 5).
+    const voiceOnline = (typeof navigator !== 'undefined' && navigator.onLine) && isOnline();
+    const voiceWarningHtml = voiceOnline
+      ? `<button class="btn ghost" style="border-color:var(--green);color:var(--green);margin-bottom:10px;" onclick="go('voice')">${SVG.voice} ${lang === 'hi' ? 'सामग्री / गिनती - आवाज़ (नाम नहीं)' : 'Materials / count - voice (no names)'}</button>`
+      : `<div style="background:var(--rl);color:var(--red);border-radius:10px;padding:8px;font-size:9.5px;font-weight:700;margin-bottom:10px;text-align:center;">⚠️ ${lang === 'hi' ? 'ऑफ़लाइन: आवाज़ बंद; टैप/मैनुअल इनपुट करें' : 'Voice requires internet; use tap/manual input'}</div>`;
+
+    const presentChildren = activeChildren.filter(c => c.present);
+    const kidsGridHtml = presentChildren.map(c => {
+      const record = masteryMap.get(c.childId);
+      const flag = record ? record.trajectory_flag : null;
+      const initials = c.name[lang].charAt(0).toUpperCase();
+      // Two-state mastery model only: Mastered (green) or Needs Attention (red).
+      // Any non-mastered trajectory flag (rising/stalled/at_risk/none) collapses
+      // to Needs Attention so the grid stays a simple two-state view.
+      let color = 'var(--red)';
+      let label = lang === 'hi' ? 'ध्यान दें' : 'Needs Attention';
+      if (flag === 'mastered') { color = 'var(--green)'; label = lang === 'hi' ? 'सफल' : 'Mastered'; }
+
+      return `
+        <div class="avatar-card" 
+             style="display:flex;flex-direction:column;align-items:center;padding:10px 6px;border:1.5px solid var(--line);border-radius:var(--r-tile);cursor:pointer;background:#fff;user-select:none;touch-action:none;min-width:64px;"
+             onclick="toggleBktStatus('${c.childId}')"
+             title="${c.name[lang]} (${label})">
+          <div class="avatar-circle" style="width:36px;height:36px;border-radius:50%;background:${color};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;position:relative;margin-bottom:6px;">
+            ${initials}
+            <span style="position:absolute;bottom:-2px;right:-2px;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid ${color};"></span>
+>>>>>>> 43006d6 (3 changes)
           </div>
           <div style="flex:1">
             <div class="nlabel" style="color:var(--muted);font-size:11px">${lang==='hi'?'वर्ष':'Year'}</div>
@@ -892,10 +960,82 @@ const screens = {
           </div>
         </div>
       </div>
+<<<<<<< HEAD
       <div class="nowcard" style="background:#fff5f5;border:1px solid #feb2b2;color:#9b2c2c;padding:16px;margin-bottom:16px;border-radius:14px">
         <div class="nclock" style="color:#e53e3e">⚠️ ${lang==='hi'?'शिकायत पोर्टल':'Infrastructure Grievance Portal'}</div>
         <div class="nlabel" style="color:#c53030;margin-top:6px">${lang==='hi'?'टूटी हुई चीजें या समस्याओं की रिपोर्ट करें':'Report infrastructure issues directly to Block Officer'}</div>
         <button class="nowbtn" style="background:#e53e3e;color:#fff;margin-top:10px" onclick="go('grievance')">${lang==='hi'?'शिकायत दर्ज करें':'File Grievance'}<span>→</span></button>
+=======
+    ` : '';
+    const alternativesHtml = currentActivity && Array.isArray(currentActivity.alternatives) && currentActivity.alternatives.length ? `
+      <div style="margin-top:12px;">
+        <div style="font-size:9px;font-weight:800;color:var(--muted);text-transform:uppercase;margin-bottom:6px;">${lang === 'hi' ? 'अन्य सुरक्षित विकल्प' : 'Other safe options'}</div>
+        <div style="display:grid;grid-template-columns:1fr;gap:8px;">
+          ${currentActivity.alternatives.map((alt, idx) => `
+            <div class="vcard" style="margin-bottom:0;border-left-color:${idx === 0 ? 'var(--green)' : 'var(--amber)'};background:#fff;">
+              <div style="font-size:12px;font-weight:800;color:var(--ink);">${alt.adapted_title}</div>
+              <div style="font-size:9px;color:var(--muted);margin-top:3px;">${alt.targeted_domain} · ${alt.age_band_months}</div>
+              <div style="font-size:10px;line-height:1.45;margin-top:6px;color:var(--ink);">${Array.isArray(alt.step_by_step_instructions) ? alt.step_by_step_instructions.slice(0, 2).join('<br>') : ''}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    ` : '';
+
+    return `
+      <div class="screen active">${statusbar(nowClock())}${header()}
+        <div class="scroll">
+          <div class="body">
+            ${kw(t.eceKw,'--purple')}
+            <div class="sub">${t.eceSub}</div>
+            
+            <button class="btn green" style="margin-bottom:12px" onclick="loadECEActivity()" id="btn-load-activity">
+              🎯 ${lang === 'hi' ? 'गतिविधि अनुकूलित करें (Adapt)' : 'Adapt Activity for Room'}
+            </button>
+
+            <div class="vcard" style="border-left-color:var(--purple);background:#fff;position:relative;">
+              <div style="position:absolute;top:10px;right:12px;font-size:8px;font-weight:800;color:#fff;background:var(--purple);padding:3px 8px;border-radius:8px;">
+                ${sourceLabel}
+              </div>
+              <div style="font-size:16px;font-weight:800;margin-top:6px;max-width:80%;">${currentActivity ? currentActivity.adapted_title : t.eceGame}</div>
+              <div style="font-size:9.5px;color:var(--muted);margin-top:4px">${currentActivity ? (currentActivity.age_band_months + ' months · ' + currentActivity.targeted_domain) : t.eceAge}</div>
+              <div style="font-size:10.5px;line-height:1.55;margin-top:8px">${currentActivity ? currentActivity.step_by_step_instructions.join('<br>') : t.eceDesc}</div>
+              <div style="font-size:8px;color:var(--muted);margin-top:8px">${currentActivity ? ('milestone: ' + currentActivity.milestone_targeted) : t.ecePick}</div>
+              ${currentActivity && currentActivity.inclusion_modifications && currentActivity.inclusion_modifications.length ? `<div style="margin-top:8px;font-size:9.5px;color:var(--navy);line-height:1.4;"><strong style="font-size:8px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:2px;">${lang==='hi'?'समावेश संशोधन':'Inclusion modifications'}</strong>${currentActivity.inclusion_modifications.map(m => '• ' + m).join('<br>')}</div>` : ''}
+
+              ${guardrailHtml}
+              ${alternativesHtml}
+            </div>
+            
+            <button class="btn ghost" style="border-color:var(--purple);color:var(--purple);margin-top:6px;" onclick="go('dss')">
+              ${SVG.clip} ${t.eceScreen}
+            </button>
+            
+            <div class="sectionlabel" style="display:flex;justify-content:space-between;align-items:center;margin-top:24px;">
+              <span>${lang === 'hi' ? 'बाल दक्षता ट्रैकिंग (BKT)' : 'Child Mastery Grid (BKT)'}</span>
+              <span style="font-size:10px;text-transform:none;color:var(--green);font-weight:700;">${masteredCount} / ${presentChildren.length} ${lang === 'hi' ? 'सफल' : 'Mastered'}</span>
+            </div>
+            
+            <div style="font-size:9.5px;color:var(--muted);margin-bottom:10px;line-height:1.4;">
+              💡 ${lang === 'hi' ? 'एक क्लिक: सफल (हरा), डबल क्लिक: ध्यान दें (लाल)' : 'Click: Mastered (green), Double-click: Needs attention (red)'}
+            </div>
+            
+            <div class="bkt-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:18px;">
+              ${kidsGridHtml}
+            </div>
+            
+            <div class="sectionlabel">${t.eceFocus}</div>
+            <div class="vcard" style="background:var(--al);border-left-color:var(--amber)">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span style="font-size:13px;font-weight:700">${lang === 'hi' ? 'इन्क्लूज़न अनुकूलन (उदाहरण)' : 'Inclusion adaptation (example)'}</span>
+                <span style="background:var(--muted);color:#fff;font-size:7.5px;font-weight:600;padding:3px 8px;border-radius:9px">${lang === 'hi' ? 'उदाहरण' : 'Example'}</span>
+              </div>
+              <div style="font-size:10px;margin-top:6px;line-height:1.5">${lang === 'hi' ? 'उदाहरण: गैर-मौखिक बच्चे के लिए इशारों से जवाब का रास्ता। (वास्तविक बच्चा नहीं - चित्रण मात्र)' : 'Example: a non-verbal response path (gestures) for an inclusion need. (Illustrative - not a real child.)'}</div>
+            </div>
+          </div>
+        </div>
+        ${nav('ece')}
+>>>>>>> 43006d6 (3 changes)
       </div>
     </div></div>${nav('home')}</div>`;
   },
@@ -1332,10 +1472,205 @@ function showASRModal(onStopClick) {
   const stopBtn = document.getElementById('asr-stop-btn');
   const pulse = document.getElementById('asr-pulse');
 
+<<<<<<< HEAD
   if (modal) modal.style.display = 'flex';
   if (title) title.textContent = lang === 'hi' ? 'सुन रहे हैं...' : 'Listening...';
   if (subtitle) subtitle.textContent = lang === 'hi' ? 'माइक्रोफोन में स्पष्ट रूप से बोलें' : 'Speak clearly into the microphone';
   if (pulse) pulse.className = 'pulse-icon recording';
+=======
+function setAuthMode(mode) {
+  authMode = mode;
+  render();
+}
+
+async function handleAuthSubmit(mode) {
+  const t = T[lang];
+  if (mode === 'signup') {
+    const nameInput = document.getElementById('auth-name');
+    const idInput = document.getElementById('auth-id');
+    const centreInput = document.getElementById('auth-centre');
+    const pinInput = document.getElementById('auth-pin');
+
+    const name = nameInput ? nameInput.value.trim() : '';
+    const workerId = idInput ? idInput.value.trim() : '';
+    const centre = centreInput ? centreInput.value.trim() : '';
+    const pin = pinInput ? pinInput.value.trim() : '';
+
+    if (!name || !workerId || !centre || pin.length !== 4 || isNaN(pin)) {
+      alert(lang === 'hi' ? 'कृपया सभी फ़ील्ड सही से भरें और 4-अंकीय पिन दर्ज करें।' : 'Please fill all fields correctly and enter a 4-digit PIN.');
+      return;
+    }
+
+    const success = await AURA_DB.setupIdentity({ name, id: workerId }, pin, centre, lang);
+    if (success) {
+      alert(t.msgSuccess);
+      authMode = 'login';
+      await initIdentity();
+      render();
+    } else {
+      alert(lang === 'hi' ? 'डाटाबेस त्रुटी' : 'Database registration failed');
+    }
+  } else if (mode === 'login') {
+    const idInput = document.getElementById('auth-id');
+    const pinInput = document.getElementById('auth-pin');
+    const workerId = idInput ? idInput.value.trim() : '';
+    const pin = pinInput ? pinInput.value.trim() : '';
+    
+    if (!workerId || pin.length !== 4 || isNaN(pin)) {
+      const errorDiv = document.getElementById('auth-error');
+      if (errorDiv) errorDiv.style.display = 'block';
+      return;
+    }
+
+    const storedIdentity = await AURA_DB.getIdentity();
+    if (!storedIdentity) {
+      alert(lang === 'hi' ? 'कोई प्रोफ़ाइल नहीं मिली। कृपया पहले साइनअप करें।' : 'No profile found. Please Sign Up first.');
+      authMode = 'signup';
+      render();
+      return;
+    }
+
+    const isPinValid = await AURA_DB.verifyPin(pin);
+    const storedWorkerId = storedIdentity.worker ? storedIdentity.worker.id : '';
+
+    if (workerId.toUpperCase() === storedWorkerId.toUpperCase() && isPinValid) {
+      await initIdentity();
+      jump('shell');
+    } else {
+      const errorDiv = document.getElementById('auth-error');
+      if (errorDiv) errorDiv.style.display = 'block';
+    }
+  }
+}
+
+async function initIdentity() {
+  const storedIdentity = await AURA_DB.getIdentity();
+  if (storedIdentity) {
+    activeWorker = storedIdentity.worker;
+    activeCentre = storedIdentity.centre;
+    if (storedIdentity.worker && storedIdentity.worker.name) {
+      T.hi.greet = `सुप्रभात, ${storedIdentity.worker.name}।`;
+      T.en.greet = `Good morning, ${storedIdentity.worker.name}.`;
+    }
+    try {
+      const kids = await AURA_API.getChildren(activeCentre);
+      activeChildren = kids.map(c => ({
+        childId: c.id || c.child_id || Math.random().toString(36).slice(2),
+        name: {
+          en: c.name || c.nameEn || 'Child',
+          hi: c.nameHi || c.name || 'बच्चा'
+        },
+        age: {
+          en: c.age || (c.age_months ? c.age_months + ' months' : '3 years'),
+          hi: c.age || (c.age_months ? c.age_months + ' महीने' : '3 साल')
+        },
+        age_months: c.age_months || 36,
+        needs: Array.isArray(c.needs) ? c.needs : [],
+        present: true
+      }));
+
+      
+      await loadMasteryMap();
+      
+      syncQueueSize = (await AURA_DB.getPendingSync()).length;
+    } catch(e) {
+      console.error('Kids roster initialization failed:', e);
+    }
+  }
+}
+
+async function loadMasteryMap() {
+  const records = await MasteryStore.getAllByNode(activeNode);
+  masteryMap = new Map();
+  for (const child of activeChildren) {
+    masteryMap.set(child.childId, null);
+  }
+  for (const record of records) {
+    if (masteryMap.has(record.child_id)) {
+      masteryMap.set(record.child_id, record);
+    }
+  }
+}
+
+function toggleBktStatus(childId) {
+  const current = masteryMap.get(childId);
+  const shouldMarkMastered = !(current && current.trajectory_flag === 'mastered');
+  updateBktStatus(childId, shouldMarkMastered);
+}
+
+async function updateBktStatus(childId, isCorrect) {
+  try {
+    const record = await BKTEngine.tapMastery(childId, activeNode, isCorrect);
+    masteryMap.set(childId, record);
+    
+    syncQueueSize = (await AURA_DB.getPendingSync()).length;
+    
+    const nameStr = getChildName(childId);
+    const statusMsg = record.trajectory_flag === 'mastered'
+      ? (lang === 'hi' ? `${nameStr}: सफल ✓` : `${nameStr}: Mastered ✓`)
+      : (lang === 'hi' ? `${nameStr}: ध्यान दें ⚠️` : `${nameStr}: Needs Attention ⚠️`);
+    
+    showBktToast(statusMsg);
+    render();
+  } catch (err) {
+    console.error('[BKT Update failed]', err);
+    showBktToast(lang==='hi' ? 'सिस्टम त्रुटि: पुनः प्रयास करें' : 'System error: please retry');
+  }
+}
+
+function getChildName(childId) {
+  const child = activeChildren.find(c => c.childId === childId);
+  return child ? child.name[lang] : childId;
+}
+
+function showBktToast(msg) {
+  let toast = document.getElementById('toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'toast';
+    toast.style.cssText = "position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1c1c1c;color:#fff;padding:8px 16px;border-radius:10px;font-size:12px;font-weight:700;z-index:100;box-shadow:0 4px 10px rgba(0,0,0,.3);pointer-events:none;";
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.style.display = 'block';
+  setTimeout(() => { toast.style.display = 'none'; }, 2000);
+}
+
+function toggleGuardrailPanel(event) {
+  if (event) event.stopPropagation();
+  const panel = document.getElementById('gr-detail');
+  const arrow = document.getElementById('gr-arrow');
+  if (panel) {
+    const isHidden = panel.style.display === 'none';
+    panel.style.display = isHidden ? 'block' : 'none';
+    if (arrow) arrow.textContent = isHidden ? '▲' : '▼';
+  }
+}
+
+function selectDssChild(childId) {
+  const child = activeChildren.find(c => c.childId === childId);
+  if (!child) return;
+  dssSelectedChild = {
+    childId: child.childId,
+    name: child.name,
+    age: child.age,
+    age_months: child.age_months || 36
+  };
+  dssAnswers = {};
+  render();
+}
+
+function clearDssSelection() {
+  dssSelectedChild = null;
+  dssAnswers = {};
+  render();
+}
+
+function toggleDssQuestion(qId, val) {
+  dssAnswers[qId] = val;
+  const yesBtn = document.getElementById(`btn-${qId}-yes`);
+  const noBtn = document.getElementById(`btn-${qId}-no`);
+>>>>>>> 43006d6 (3 changes)
   
   if (stopBtn) {
     stopBtn.onclick = () => {
@@ -1619,6 +1954,7 @@ async function handleHealthAction(action){
     : (action==='weigh'?'Weight entry screen: coming soon':'Hospital referral created ✓'));
 }
 
+<<<<<<< HEAD
 // ─── Open Health Screen with real DB-driven early warning ──────────────────
 async function openHealthScreen(childId){
   // Start by showing the default static view immediately
@@ -1626,6 +1962,9 @@ async function openHealthScreen(childId){
   go('health');
 
   if(!childId) return; // no DB child → stay with static mock
+=======
+  if (!online) { currentActivity = buildLocalActivityFallback('offline_template'); render(); return; }
+>>>>>>> 43006d6 (3 changes)
 
   try {
     const data = await AURA_API.getHealthRisk(childId);
@@ -1659,6 +1998,7 @@ async function openHealthScreen(childId){
       scoreEl.innerHTML = `<div style="font-size:9px;color:var(--amber);margin-top:4px">ML Risk Score: ${(data.riskScore * 100).toFixed(1)}%</div>`;
     }
 
+<<<<<<< HEAD
     console.log(`[Early Warning] childId=${childId} risk=${data.riskScore?.toFixed(3)} highRisk=${data.isHighRisk} reason=${data.reason ? L(data.reason) : 'n/a'}`);
   } catch(err) {
     console.warn('[Early Warning] API fetch failed, staying with static data', err);
@@ -1693,6 +2033,146 @@ async function handleAuditCommit(){
 async function updatePDFList() {
   const container = document.getElementById('pdf-list');
   if (!container) return;
+=======
+    resp = await fetch('/api/activity/next', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+    });
+    if (!resp.ok) throw new Error('retrieval engine error');
+    currentActivity = normalizeActivity(await resp.json(), 'retrieval_engine', 'retrieval_engine');
+    render();
+  } catch (err) {
+    console.warn('[Activity online path failed -> local template]', err);
+    currentActivity = buildLocalActivityFallback('offline_template');
+    render();
+  }
+}
+
+function normalizeActivity(a, sourceDefault, tier) {
+  a = a || {};
+  const prov = a.provenance || {};
+  return {
+    activity_id: a.activity_id || a.id || 'ACT-UNKNOWN',
+    source: a.source || sourceDefault,
+    targeted_domain: a.targeted_domain || a.domain || 'physical',
+    age_band_months: a.age_band_months || '36-48',
+    milestone_targeted: a.milestone_targeted || a.milestone || activeNode,
+    adapted_title: a.adapted_title || a.title || (lang === 'hi' ? 'गतिविधि' : 'Activity'),
+    step_by_step_instructions: Array.isArray(a.step_by_step_instructions) ? a.step_by_step_instructions : (Array.isArray(a.steps) ? a.steps : []),
+    required_materials: a.required_materials || a.materials || [],
+    safety_guard_applied: a.safety_guard_applied != null ? a.safety_guard_applied : true,
+    inclusion_modifications: normalizeInclusionModifications(a.inclusion_modifications ?? prov.inclusion_modifications),
+    alternatives: Array.isArray(a.alternatives) ? a.alternatives.map(item => normalizeActivity(item, sourceDefault, tier)) : [],
+    provenance: { rules_fired: Array.isArray(prov.rules_fired) ? prov.rules_fired : [], generated_offline: false },
+    fallback_tier: a.fallback_tier || tier
+  };
+}
+
+function buildLocalActivityFallback(tier) {
+  return {
+    activity_id: 'ACT-OFFLINE-01',
+    source: 'local_template',
+    targeted_domain: 'physical',
+    age_band_months: '36-48',
+    milestone_targeted: activeNode,
+    adapted_title: lang === 'hi' ? 'गेंद की ओर बढ़ना (ऑफ़लाइन टेम्पलेट)' : 'Reaching for the ball (offline template)',
+    step_by_step_instructions: lang === 'hi'
+      ? ['बच्चे के सामने नरम गेंद रखें और पकड़ने के लिए बढ़ावा दें।', 'गेंद थोड़ा दूर खिसकाएँ।']
+      : ['Place a soft ball within reach and encourage the child to grasp it.', 'Move the ball slightly further away.'],
+    required_materials: ['soft_ball'],
+    safety_guard_applied: true,
+    inclusion_modifications: lang === 'hi' ? ['गैर-मौखिक बच्चों के लिए इशारे स्वीकार करें'] : ['Accept gesture responses for non-verbal children'],
+    provenance: { rules_fired: ['SAFE_CHOKE_01', 'INC_ATTUNE_01'], generated_offline: true },
+    fallback_tier: tier || 'offline_template'
+  };
+}
+
+function normalizeInclusionModifications(value) {
+  if (Array.isArray(value)) return value.filter(Boolean);
+  if (typeof value === 'string') return value.trim() ? [value.trim()] : [];
+  if (value && typeof value === 'object') {
+    const parts = [];
+    if (typeof value.instruction_override === 'string' && value.instruction_override.trim()) {
+      parts.push(value.instruction_override.trim());
+    }
+    if (typeof value.vast_parameter === 'string' && value.vast_parameter && value.vast_parameter !== 'none') {
+      parts.push(`VAST: ${value.vast_parameter}`);
+    }
+    return parts;
+  }
+  return [];
+}
+
+function makeFallbackActivity({ id, title, domain, ageBand, milestone, steps, materials, inclusion, rules }) {
+  return {
+    activity_id: id,
+    source: 'local_template',
+    targeted_domain: domain,
+    age_band_months: ageBand,
+    milestone_targeted: milestone,
+    adapted_title: title,
+    step_by_step_instructions: steps,
+    required_materials: materials,
+    safety_guard_applied: true,
+    inclusion_modifications: inclusion,
+    provenance: { rules_fired: rules, generated_offline: true },
+    fallback_tier: 'offline_template'
+  };
+}
+
+function localActivityFallback(tier) {
+  const primary = makeFallbackActivity({
+    id: 'ACT-OFFLINE-01',
+    title: lang === 'hi' ? 'गेंद की ओर बढ़ना (ऑफ़लाइन टेम्पलेट)' : 'Reaching for the ball (offline template)',
+    domain: 'physical',
+    ageBand: '36-48',
+    milestone: activeNode,
+    steps: lang === 'hi'
+      ? ['बच्चे के सामने नरम गेंद रखें और पकड़ने के लिए बढ़ावा दें।', 'गेंद थोड़ी दूर खिसकाएँ।']
+      : ['Place a soft ball within reach and encourage the child to grasp it.', 'Move the ball slightly further away.'],
+    materials: ['soft_ball'],
+    inclusion: lang === 'hi' ? ['गैर-मौखिक बच्चों के लिए इशारे स्वीकार करें'] : ['Accept gesture responses for non-verbal children'],
+    rules: ['SAFE_CHOKE_01', 'INC_ATTUNE_01']
+  });
+
+  const alternativeOne = makeFallbackActivity({
+    id: 'ACT-OFFLINE-02',
+    title: lang === 'hi' ? 'कप छिपाओ-ढूँढो (ऑफ़लाइन टेम्पलेट)' : 'Hide and find cups (offline template)',
+    domain: 'cognitive',
+    ageBand: '36-48',
+    milestone: activeNode,
+    steps: lang === 'hi'
+      ? ['तीन कप उलटे रखें और एक के नीचे छोटी वस्तु छिपाएँ।', 'बच्चे को इशारे से अनुमान लगाने दें और फिर खोजने दें।']
+      : ['Place three cups upside down and hide a small object under one.', 'Let the child point or gesture to guess, then reveal it.'],
+    materials: ['cups', 'small_object'],
+    inclusion: lang === 'hi' ? ['इशारे से उत्तर स्वीकार करें'] : ['Accept gesture-based responses'],
+    rules: ['INC_ATTUNE_01']
+  });
+
+  const alternativeTwo = makeFallbackActivity({
+    id: 'ACT-OFFLINE-03',
+    title: lang === 'hi' ? 'ताली और दोहराओ (ऑफ़लाइन टेम्पलेट)' : 'Clap and repeat (offline template)',
+    domain: 'language',
+    ageBand: '36-48',
+    milestone: activeNode,
+    steps: lang === 'hi'
+      ? ['धीरे-धीरे ताली बजाएँ और बच्चा दोहराए तो प्रोत्साहित करें।', 'ताल बदलकर बच्चे की प्रतिक्रिया देखें।']
+      : ['Clap slowly and invite the child to copy the rhythm.', 'Vary the pattern and notice the response.'],
+    materials: ['none'],
+    inclusion: lang === 'hi' ? ['आवाज़ कम रखें, इशारे अपनाएँ'] : ['Keep the voice low and accept gestures'],
+    rules: ['INC_ATTUNE_01', 'VAST_VISIBILITY_01']
+  });
+
+  return {
+    ...primary,
+    alternatives: [alternativeOne, alternativeTwo],
+    fallback_tier: tier || 'offline_template'
+  };
+}
+
+
+async function loadDssQuestions() {
+  if (dssQuestions.length > 0) return;
+>>>>>>> 43006d6 (3 changes)
   try {
     const list = await AURA_API.listPDFs();
     if (!list || list.length === 0) {
@@ -1887,10 +2367,40 @@ function render(){
   try { history.replaceState(null,'','/?screen='+id); } catch{}
 }
 
+<<<<<<< HEAD
 /* ============================================================
    SECTION 11 — PWA BOOTSTRAP
    ============================================================ */
 let deferredInstallPrompt = null;
+=======
+// ── Attach module functions to window for onclick/inline integration ────────
+window.setLang = setLang;
+window.go = go;
+window.jump = jump;
+window.navTap = navTap;
+window.back = back;
+window.setAuthMode = setAuthMode;
+window.handleAuthSubmit = handleAuthSubmit;
+window.toggleOnline = toggleOnline;
+window.toggleAttendance = toggleAttendance;
+window.toggleBktStatus = toggleBktStatus;
+window.selectDssChild = selectDssChild;
+window.clearDssSelection = clearDssSelection;
+window.toggleGuardrailPanel = toggleGuardrailPanel;
+window.toggleDssQuestion = toggleDssQuestion;
+window.calculateDssResult = calculateDssResult;
+window.resetDssScreener = resetDssScreener;
+window.simulateSync = simulateSync;
+window.resetProfileIdentity = resetProfileIdentity;
+window.startVoiceCapture = startVoiceCapture;
+window.openMic = openMic;
+window.closeMic = closeMic;
+window.loadECEActivity = loadECEActivity;
+window.submitAttendanceRoster = submitAttendanceRoster;
+window.generateDayReportPDF = generateDayReportPDF;
+window.openHeadcountModel = openHeadcountModel;
+window.submitChildRegistration = submitChildRegistration;
+>>>>>>> 43006d6 (3 changes)
 
 function updateSyncPill(){
   const q = AURA_DB.get('syncQueue') || [];
