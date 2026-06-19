@@ -270,7 +270,7 @@ const T={
   day:"दिन का नक्शा",nowtag:"अभी",doneShort:"हो गया",pendShort:"बाकी",
   slots:[["हाज़िरी और नाश्ता","8 से 9 बजे","att",1,0],["खेल और जाँच","9 से 12 बजे","ece",0,0],["दिन की जाँच","2 बजे बाद","audit",0,0]],
   voiceKw:["बस ","बोल दें"],voiceSub:"एक बार बोलें, हर रजिस्टर में अपने आप दर्ज हो जाएगा।",
-  attKw:["आज ","सब आए हैं"],allCount:"केंद्र के सभी बच्चे उपस्थित",
+  attKw:["हाज़िरी ","जाँचें"],allCount:"सभी बच्चे अभी उपस्थित चिह्नित हैं",
   camLine:"फ़ोटो से गिनती मिलाएँ",camMatch:"कैमरा खोलने के लिए टैप करें",
   sumLine:"आज की हाज़िरी",
   eceKw:["आज का ","खेल"],eceSub:"आज के कमरे के बच्चों के लिए गतिविधि।",
@@ -296,7 +296,7 @@ const T={
   day:"Today's plan",nowtag:"now",doneShort:"done",pendShort:"left",
   slots:[["Attendance and breakfast","8 to 9 AM","att",1,0],["Play and screening","9 to 12","ece",0,0],["Day review","After 2","audit",0,0]],
   voiceKw:["Just ","say it"],voiceSub:"Speak once. It records into every register on its own.",
-  attKw:["Everyone ","is here today"],allCount:"Every child in the centre is here",
+  attKw:["Review ","attendance"],allCount:"Every child is currently marked present",
   camLine:"Match the count with a photo",camMatch:"Tap to open the camera",
   sumLine:"Today's attendance",
   eceKw:["Today's ","activity"],eceSub:"A Navchetana activity for the children in the room today.",
@@ -350,6 +350,11 @@ async function loadDailyState() {
   if (saved && typeof saved === 'object') dailyState = { ...dailyState, ...saved };
 }
 
+async function loadDssResults() {
+  const saved = await AURA_DB.get('dssResults');
+  dssResults = saved && typeof saved === 'object' ? saved : {};
+}
+
 async function saveDailyState(patch = {}) {
   dailyState = { ...dailyState, ...patch };
   await AURA_DB.set(DAILY_STATE_KEY, dailyState);
@@ -359,7 +364,7 @@ function workflowStep(label, done, active, blocked) {
   const bg = done ? 'var(--gl)' : active ? 'var(--pl)' : blocked ? 'var(--rl)' : 'var(--card)';
   const color = done ? 'var(--green)' : active ? 'var(--purple)' : blocked ? 'var(--red)' : 'var(--muted)';
   const mark = done ? '✓' : active ? '•' : blocked ? '!' : '○';
-  return `<div style="min-width:86px;background:${bg};color:${color};border:1px solid ${color};border-radius:10px;padding:7px 8px;font-size:9px;font-weight:800;display:flex;align-items:center;gap:5px;white-space:nowrap;"><span>${mark}</span>${label}</div>`;
+  return `<div style="background:${bg};color:${color};border:1px solid ${color};border-radius:10px;padding:7px 6px;font-size:8.5px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:4px;white-space:nowrap;"><span>${mark}</span>${label}</div>`;
 }
 
 function workflowStrip(activeStep) {
@@ -374,7 +379,7 @@ function workflowStrip(activeStep) {
     workflowStep(labels.dss, dailyState.dss_completed, activeStep === 'dss', false),
     workflowStep(labels.day, dailyState.day_closed, activeStep === 'day', false)
   ];
-  return `<div style="display:flex;gap:6px;overflow-x:auto;padding:10px 0 4px;margin-bottom:8px;">${steps.join('')}</div>`;
+  return `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:10px 0 4px;margin-bottom:8px;">${steps.join('')}</div>`;
 }
 
 // Online check maps to the inverse of the debug offline mode flag
@@ -439,6 +444,9 @@ function getActivityCacheKey(payload) {
 
 async function refreshPendingPromotions() {
   pendingPromotions = await AURA_DB.getPendingPromotions();
+  pendingPromotions = pendingPromotions
+    .slice()
+    .sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')));
   return pendingPromotions;
 }
 
@@ -465,7 +473,22 @@ function getInsightChip(childId) {
 }
 
 function recoveryForecastPanel(presentChildren) {
-  const rows = (presentChildren || []).map((child) => {
+  const children = presentChildren || [];
+  const counts = children.reduce((acc, child) => {
+    const state = (recoveryInsights[child.childId] || { state: 'needs_data' }).state;
+    acc[state] = (acc[state] || 0) + 1;
+    return acc;
+  }, {});
+  const priorityChildren = children
+    .slice()
+    .sort((a, b) => {
+      const rank = { increase_dosage: 0, needs_data: 1, on_track: 2 };
+      const stateA = (recoveryInsights[a.childId] || { state: 'needs_data' }).state;
+      const stateB = (recoveryInsights[b.childId] || { state: 'needs_data' }).state;
+      return (rank[stateA] ?? 3) - (rank[stateB] ?? 3);
+    })
+    .slice(0, 8);
+  const rows = priorityChildren.map((child) => {
     const insight = recoveryInsights[child.childId] || { state: 'needs_data', points: 0 };
     const color = insight.state === 'on_track' ? 'var(--green)' : insight.state === 'increase_dosage' ? 'var(--red)' : 'var(--amber)';
     const text = insight.state === 'on_track'
@@ -478,7 +501,12 @@ function recoveryForecastPanel(presentChildren) {
   return `
     <div class="vcard" style="background:#fff;border-left-color:var(--navy);margin-bottom:16px;">
       <div style="font-size:13px;font-weight:800;color:var(--navy);">Recovery forecast</div>
-      <div style="font-size:10px;color:var(--muted);line-height:1.5;margin-top:5px;">Forecast needs at least 3 observations per child/domain.</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px;">
+        <div style="background:var(--rl);border-radius:9px;padding:8px;text-align:center;"><strong style="display:block;color:var(--red);font-size:14px;">${counts.increase_dosage || 0}</strong><span style="font-size:8px;color:var(--red);font-weight:800;">Support</span></div>
+        <div style="background:var(--al);border-radius:9px;padding:8px;text-align:center;"><strong style="display:block;color:var(--amber);font-size:14px;">${counts.needs_data || 0}</strong><span style="font-size:8px;color:var(--amber);font-weight:800;">More data</span></div>
+        <div style="background:var(--gl);border-radius:9px;padding:8px;text-align:center;"><strong style="display:block;color:var(--green);font-size:14px;">${counts.on_track || 0}</strong><span style="font-size:8px;color:var(--green);font-weight:800;">On track</span></div>
+      </div>
+      <div style="font-size:10px;color:var(--muted);line-height:1.5;margin-top:8px;">Priority list from recent observations. Showing up to 8 children.</div>
       <div style="margin-top:8px;">${rows || `<div style="font-size:10px;color:var(--muted);">No present children.</div>`}</div>
     </div>
   `;
@@ -737,9 +765,9 @@ const screens={
       : `<div style="background:var(--al);border:1px solid var(--amber);border-radius:10px;padding:9px 11px;margin:8px 0 12px;font-size:10.5px;font-weight:800;color:var(--amber);">${lang==='hi'?'All children start present. Tap only absent children, then confirm attendance.':'All children start as present. Tap only absent children, then confirm attendance.'}</div>`;
 
     const allPresentHero = presentCount === totalCount
-      ? `<div class="hero" style="background:var(--green);margin-top:6px">
-          <h2>${lang === 'hi' ? `सभी ${totalCount} बच्चे उपस्थित` : `All ${totalCount} children present`}</h2>
-          <p>${t.allCount}</p>
+      ? `<div class="hero" style="background:linear-gradient(135deg,var(--green),var(--forest));margin-top:6px">
+          <h2>${lang === 'hi' ? `हाज़िरी तैयार: ${totalCount}/${totalCount}` : `Attendance ready: ${totalCount}/${totalCount}`}</h2>
+          <p>${lang === 'hi' ? 'All children are currently marked present. Review the roster below before confirming.' : 'All children are currently marked present. Review the roster below before confirming.'}</p>
           <p style="font-size:10px;margin-top:6px;opacity:.85">${lang === 'hi' ? `${nowClock()} दर्ज` : `Recorded at ${nowClock()}`}</p>
          </div>`
       : `<div class="hero" style="background:var(--amber);margin-top:6px">
@@ -826,8 +854,7 @@ const screens={
 
       return `
         <div class="avatar-card" 
-             style="display:flex;flex-direction:column;align-items:center;padding:10px 6px;border:1.5px solid var(--line);border-radius:var(--r-tile);cursor:pointer;background:#fff;user-select:none;touch-action:none;min-width:64px;"
-             onclick="bktSingleClick('${c.childId}')"
+             style="display:flex;flex-direction:column;align-items:center;padding:10px 6px;border:1.5px solid var(--line);border-radius:var(--r-tile);background:#fff;user-select:none;touch-action:none;min-width:64px;"
              title="${c.name[lang]} (${label})">
           <div class="avatar-circle" style="width:36px;height:36px;border-radius:50%;background:${color};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;position:relative;margin-bottom:6px;">
             ${initials}
@@ -839,8 +866,8 @@ const screens={
           ${hasPendingPromotion ? `<span style="margin-top:4px;font-size:8px;font-weight:700;padding:2px 6px;border-radius:8px;background:var(--al);color:var(--amber);">${lang === 'hi' ? 'समीक्षा' : 'Review'}</span>` : ''}
           ${getInsightChip(c.childId)}
           <div style="display:flex;gap:4px;margin-top:7px;width:100%;">
-            <button style="flex:1;border:1px solid var(--green);background:var(--gl);color:var(--green);border-radius:7px;font-size:8px;font-weight:800;padding:5px 2px;" onclick="event.stopPropagation();recordObservation('${c.childId}', true)">Got it</button>
-            <button style="flex:1;border:1px solid var(--red);background:var(--rl);color:var(--red);border-radius:7px;font-size:8px;font-weight:800;padding:5px 2px;" onclick="event.stopPropagation();recordObservation('${c.childId}', false)">Support</button>
+            <button ${dailyState.activity_completed ? '' : 'disabled'} style="flex:1;border:1px solid var(--green);background:var(--gl);color:var(--green);border-radius:7px;font-size:8px;font-weight:800;padding:5px 2px;opacity:${dailyState.activity_completed ? '1' : '.45'};" onclick="event.stopPropagation();recordObservation('${c.childId}', true)">Got it</button>
+            <button ${dailyState.activity_completed ? '' : 'disabled'} style="flex:1;border:1px solid var(--red);background:var(--rl);color:var(--red);border-radius:7px;font-size:8px;font-weight:800;padding:5px 2px;opacity:${dailyState.activity_completed ? '1' : '.45'};" onclick="event.stopPropagation();recordObservation('${c.childId}', false)">Support</button>
           </div>
         </div>
       `;
@@ -952,7 +979,6 @@ const screens={
               ${guardrailHtml}${offlineNoteHtml}
             </div>
             ${duoPathHtml}
-            ${reflectionActionHtml}
             
             <button class="btn ghost" style="border-color:var(--purple);color:var(--purple);margin-top:6px;" onclick="go('dss')">
               ${SVG.clip} ${t.eceScreen}
@@ -964,7 +990,7 @@ const screens={
             </div>
             
             <div style="font-size:9.5px;color:var(--muted);margin-bottom:10px;line-height:1.4;">
-              💡 ${lang === 'hi' ? 'एक क्लिक: सफल (हरा), डबल क्लिक: ध्यान दें (लाल)' : 'Click: Mastered (green), Double-click: Needs attention (red)'}
+              ${lang === 'hi' ? 'Activity done करने के बाद Got it या Support चुनें.' : 'Use Got it or Support after marking the activity done.'}
             </div>
             
             <div class="bkt-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:18px;">
@@ -1138,12 +1164,13 @@ const screens={
     const presentCount = activeChildren.filter(c => c.present).length;
     const absentCount = totalCount - presentCount;
     const masteredCount = activeChildren.filter(c => { const r = masteryMap.get(c.childId); return r && r.trajectory_flag === 'mastered'; }).length;
-    const dssAnswered = Object.keys(dssAnswers).length;
-    const dssRed = Object.values(dssAnswers).filter(v => v === true).length;
+    const dssResultValues = Object.values(dssResults || {});
+    const dssScreenedCount = dssResultValues.length;
+    const dssRed = dssResultValues.reduce((sum, item) => sum + Number(item.redFlags || 0), 0);
     const onlineNow = (typeof navigator !== 'undefined' && navigator.onLine) && isOnline();
-    const dssLabel = dssAnswered === 0
+    const dssLabel = dssScreenedCount === 0
       ? (lang==='hi' ? 'DSS: अभी नहीं की गई' : 'DSS: not run yet')
-      : (lang==='hi' ? `DSS: ${dssRed} लाल झंडे · ${dssRed===0?'सामान्य':dssRed===1?'निगरानी':'रेफर'}` : `DSS: ${dssRed} red flag(s) · ${dssRed===0?'typical':dssRed===1?'monitor':'refer'}`);
+      : (lang==='hi' ? `DSS: ${dssScreenedCount} children screened · ${dssRed} red flags` : `DSS: ${dssScreenedCount} child result(s) · ${dssRed} red flag(s)`);
     const actLabel = currentActivity
       ? ((lang==='hi' ? `गतिविधि: ${currentActivity.adapted_title}` : `Activity: ${currentActivity.adapted_title}`) + ` (${currentActivity.fallback_tier || currentActivity.source})`)
       : (lang==='hi' ? 'गतिविधि: अभी अनुकूलित नहीं' : 'Activity: not adapted yet');
@@ -1158,8 +1185,8 @@ const screens={
       [`Activity completed: ${currentActivity ? currentActivity.adapted_title : 'not adapted'}`, dailyState.activity_completed ? 1 : 0],
       [`Observations recorded: ${masteredCount} of ${totalCount} mastered`, dailyState.observations_recorded ? 1 : 0],
       [`Reflection checked: ${pendingPromotions.length} pending`, dailyState.reflection_checked && pendingPromotions.length === 0 ? 1 : 0],
-      [`DSS completed: ${dssAnswered} answers`, dailyState.dss_completed ? 1 : 0],
-      [dssLabel, dssAnswered===0 ? 0 : (dssRed===0 ? 1 : 0)],
+      [`DSS today: ${dailyState.dss_completed ? 'completed' : 'not run today'}`, dailyState.dss_completed ? 1 : 0],
+      [dssLabel, dssScreenedCount > 0 ? 1 : 0],
       [syncLabel, syncQueueSize===0 ? 1 : 0]
     ];
     const items=auditRows.map(i=>`<div class="item" style="border-left-color:var(${i[1]?'--green':'--red'})"><span class="b" style="background:var(${i[1]?'--green':'--red'})">${i[1]?'✓':'!'}</span><span class="x">${i[0]}</span></div>`).join('');
@@ -1613,6 +1640,7 @@ function calculateDssResult() {
       redFlags: redFlagsCount,
       timestamp: new Date().toISOString()
     };
+    AURA_DB.set('dssResults', dssResults);
     saveDailyState({ dss_completed: true });
   }
 
@@ -2151,6 +2179,9 @@ async function seedDemoData() {
     age_months: ageMonths,
     needs
   }));
+  const demoIds = children.map((child) => child.id);
+  await AURA_DB.clearDemoData(demoIds);
+  await Promise.all(demoIds.flatMap((childId) => DEMO_DOMAIN_NODES.map(([, nodeId]) => MasteryStore.delete(childId, nodeId))));
 
   await AURA_DB.setupIdentity({ name: 'Demo AWW', id: 'AWW_DEMO_01' }, '1234', centreId, lang);
   await AURA_DB.set('children', children);
@@ -2218,6 +2249,7 @@ async function seedDemoData() {
     'demo-child-02': { result: 'refer', redFlags: 2, timestamp: new Date(now - 3 * 86400000).toISOString() },
     'demo-child-06': { result: 'typical', redFlags: 0, timestamp: new Date(now - 4 * 86400000).toISOString() }
   };
+  await AURA_DB.set('dssResults', dssResults);
   dssAnswers = {};
   dssSelectedChild = null;
   activeNode = 'FM-3';
@@ -2229,9 +2261,9 @@ async function seedDemoData() {
     activity_ready: false,
     activity_started: false,
     activity_completed: false,
-    observations_recorded: true,
+    observations_recorded: false,
     reflection_checked: false,
-    dss_completed: true,
+    dss_completed: false,
     day_closed: false
   });
   await AURA_DB.set('demoSeededAt', new Date().toISOString());
@@ -2459,6 +2491,7 @@ window.submitChildRegistration = submitChildRegistration;
     }
   }
   await loadDailyState();
+  await loadDssResults();
   await initIdentity();
   await loadDssQuestions();
   render();

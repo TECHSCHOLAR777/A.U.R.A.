@@ -725,23 +725,44 @@ export const AURA_DB = {
     if (!db) {
       const key = 'aura::pendingPromotions';
       const items = (function () { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } })() || [];
-      const idx = items.findIndex((item) => item.id === record.id);
+      const idx = items.findIndex((item) => item.id === record.id || (
+        item.status === 'pending' &&
+        item.child_id === record.child_id &&
+        item.node_id === record.node_id
+      ));
       if (idx >= 0) items[idx] = record;
       else items.push(record);
       try { localStorage.setItem(key, JSON.stringify(items)); } catch (e) { console.warn('[DB]', e); }
       return record;
+    }
+    const existing = await db.pendingPromotions
+      .where('child_id')
+      .equals(record.child_id)
+      .and((item) => item.status === 'pending' && item.node_id === record.node_id && item.id !== record.id)
+      .toArray();
+    if (existing.length) {
+      await Promise.all(existing.map((item) => db.pendingPromotions.delete(item.id)));
     }
     await db.pendingPromotions.put(record);
     return record;
   },
 
   getPendingPromotions: async () => {
+    const dedupe = (items) => {
+      const map = new Map();
+      for (const item of items || []) {
+        const key = `${item.child_id}|${item.node_id}`;
+        const current = map.get(key);
+        if (!current || String(item.created_at || '') > String(current.created_at || '')) map.set(key, item);
+      }
+      return Array.from(map.values());
+    };
     if (!db) {
       const key = 'aura::pendingPromotions';
       const items = (function () { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } })() || [];
-      return items.filter((item) => item.status === 'pending');
+      return dedupe(items.filter((item) => item.status === 'pending'));
     }
-    return await db.pendingPromotions.where('status').equals('pending').toArray();
+    return dedupe(await db.pendingPromotions.where('status').equals('pending').toArray());
   },
 
   resolvePendingPromotions: async (ids, status) => {
@@ -773,6 +794,24 @@ export const AURA_DB = {
       try { return JSON.parse(localStorage.getItem('aura::remediationTemplates')) || []; } catch { return []; }
     }
     return await db.remediationTemplates.toArray();
+  },
+
+  clearDemoData: async (childIds = []) => {
+    const ids = Array.isArray(childIds) ? childIds : [];
+    if (!db) {
+      for (const key of ['aura::bktHistory', 'aura::pendingPromotions']) {
+        const items = (function () { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } })() || [];
+        const filtered = items.filter((item) => !item.demo_seed && !ids.includes(item.child_id));
+        try { localStorage.setItem(key, JSON.stringify(filtered)); } catch (e) { console.warn('[DB]', e); }
+      }
+      try { localStorage.removeItem('aura::demoSeededAt'); } catch {}
+      return;
+    }
+    if (ids.length) {
+      await db.bktHistory.where('child_id').anyOf(ids).delete();
+      await db.pendingPromotions.where('child_id').anyOf(ids).delete();
+    }
+    await db.kv.delete('demoSeededAt');
   }
 };
 
