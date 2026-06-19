@@ -1,0 +1,37 @@
+[
+  {
+    "template_key": "cognitive:none",
+    "domain": "cognitive",
+    "age_band_months": "24-36",
+    "material_key": "none",
+    "scaffold_text": "Seat the beta children close to you for one extra guided round.|Use one prompt at a time and wait before repeating.|Model the answer with gesture support before asking again."
+  },
+  {
+    "template_key": "language:none",
+    "domain": "language",
+    "age_band_months": "24-36",
+    "material_key": "none",
+    "scaffold_text": "Use short repeat-after-me phrases with the beta children first.|Accept one-word or gesture responses before asking for a fuller answer.|Echo the child response clearly for the whole group."
+  },
+  {
+    "template_key": "motor_physical:none",
+    "domain": "motor_physical",
+    "age_band_months": "24-36",
+    "material_key": "none",
+    "scaffold_text": "Demonstrate the movement slowly beside the beta children.|Break the movement into two smaller steps.|Offer hand-over-hand support only if the child is comfortable."
+  },
+  {
+    "template_key": "socio_emotional:none",
+    "domain": "socio_emotional",
+    "age_band_months": "24-36",
+    "material_key": "none",
+    "scaffold_text": "Pair each beta child with a calm peer for the first turn.|Give a clear turn cue using name, gesture, and eye contact.|Praise waiting, sharing, or imitation immediately after it happens."
+  },
+  {
+    "template_key": "creative:none",
+    "domain": "creative",
+    "age_band_months": "24-36",
+    "material_key": "none",
+    "scaffold_text": "Offer the beta children a simpler first mark, shape, or rhythm to copy.|Let them choose between two easy ways to participate.|Notice effort and exploration before asking for another attempt."
+  }
+]

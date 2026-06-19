@@ -230,12 +230,13 @@
     <button id="lang-en" onclick="setLang('en')">English</button>
   </div>
 </div>
-<div class="phone"><div id="app"></div><div class="modal" id="micmodal"><div class="micbox"><div class="micring"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2C8.3 2 7 3.3 7 5V10C7 11.7 8.3 13 10 13S13 11.7 13 10V5C13 3.3 11.7 2 10 2Z"/><path d="M5 10C5 13.5 7.4 16 10 16S15 13.5 15 10"/><path d="M10 16V19M7 19H13"/></svg></div><div class="ml" id="micl"></div><div class="ms" id="mics"></div><button class="mc" onclick="closeMic()" id="micc"></button></div></div></div>
+<div class="phone"><div id="app"></div><div class="modal" id="micmodal"><div class="micbox"><div class="micring"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2C8.3 2 7 3.3 7 5V10C7 11.7 8.3 13 10 13S13 11.7 13 10V5C13 3.3 11.7 2 10 2Z"/><path d="M5 10C5 13.5 7.4 16 10 16S15 13.5 15 10"/><path d="M10 16V19M7 19H13"/></svg></div><div class="ml" id="micl"></div><div class="ms" id="mics"></div><button class="mc" onclick="closeMic()" id="micc"></button></div></div><div class="modal" id="reflectionmodal"><div class="micbox" style="max-width:340px;text-align:left;"><div class="ml" id="reflection-title" style="text-align:center;margin-bottom:8px;"></div><div class="ms" id="reflection-sub" style="text-align:center;margin-bottom:14px;"></div><div id="reflection-list" style="max-height:280px;overflow:auto;"></div><button class="btn green" style="margin-top:14px;" onclick="confirmPendingPromotions()" id="reflection-confirm"></button><button class="mc" onclick="closeReflectionModal()" id="reflection-cancel" style="margin-top:10px;"></button></div></div></div>
 <p class="hint" id="hint"></p>
 <script type="module">
 import { BKTEngine } from './bkt_engine.js';
 import { MasteryStore, AURA_API, AURA_DB } from './aura-api.js';
 import { GuardrailEngine } from './guardrail_engine.js';
+import { buildRecoveryActivity, getRecoveryInsight, rememberDomain } from './recovery_engine.js';
 
 const SVG={
   home:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M10 2L2 9V18H7V13H13V18H18V9Z"/></svg>',
@@ -328,6 +329,9 @@ let masteryMap = new Map();
 let dssSelectedChild = null;
 let dssResults = {};
 let activityBankCache = null;
+let pendingPromotions = [];
+let recoveryCohort = null;
+let recoveryInsights = {};
 const ACTIVITY_CACHE_PREFIX = 'activity-cache::';
 
 // Online check maps to the inverse of the debug offline mode flag
@@ -388,6 +392,33 @@ function getActivityCacheKey(payload) {
     ? payload.child_profiles.map((child) => child.age_months || 'na').join('|')
     : '';
   return `${ACTIVITY_CACHE_PREFIX}${payload.age_band_months}::${payload.node_id}::${materials}::${needs}::${ages}`;
+}
+
+async function refreshPendingPromotions() {
+  pendingPromotions = await AURA_DB.getPendingPromotions();
+  return pendingPromotions;
+}
+
+async function buildRecoveryInsights(presentChildren) {
+  const entries = await Promise.all((presentChildren || []).map(async (child) => {
+    const insight = await getRecoveryInsight(child.childId, activeNode);
+    return [child.childId, insight];
+  }));
+  recoveryInsights = Object.fromEntries(entries);
+}
+
+function getInsightChip(childId) {
+  const insight = recoveryInsights[childId];
+  if (!insight) return '';
+  const palette = insight.state === 'on_track'
+    ? { bg: 'var(--gl)', color: 'var(--green)' }
+    : insight.state === 'increase_dosage'
+      ? { bg: 'var(--rl)', color: 'var(--red)' }
+      : { bg: 'var(--al)', color: 'var(--amber)' };
+  const label = lang === 'hi'
+    ? (insight.state === 'on_track' ? `रिकवरी ${insight.label}` : insight.state === 'increase_dosage' ? 'और सहारा दें' : 'और डेटा चाहिए')
+    : (insight.state === 'on_track' ? `Recovery ${insight.label}` : insight.state === 'increase_dosage' ? 'Increase support' : 'Needs data');
+  return `<div style="margin-top:4px;font-size:8px;font-weight:700;display:inline-block;padding:3px 7px;border-radius:8px;background:${palette.bg};color:${palette.color};">${label}</div>`;
 }
 
 // Parse DSS milestone_due strings to months (e.g. "6 months" -> 6, "3 years" -> 36)
@@ -685,10 +716,15 @@ const screens={
       : `<div style="background:var(--rl);color:var(--red);border-radius:10px;padding:8px;font-size:9.5px;font-weight:700;margin-bottom:10px;text-align:center;">⚠️ ${lang === 'hi' ? 'ऑफ़लाइन: आवाज़ बंद; टैप/मैनुअल इनपुट करें' : 'Voice requires internet; use tap/manual input'}</div>`;
 
     const presentChildren = activeChildren.filter(c => c.present);
+    const betaIds = currentActivity && currentActivity.macro_cohort_split && Array.isArray(currentActivity.macro_cohort_split.cohort_beta_uuids)
+      ? currentActivity.macro_cohort_split.cohort_beta_uuids
+      : [];
     const kidsGridHtml = presentChildren.map(c => {
       const record = masteryMap.get(c.childId);
       const flag = record ? record.trajectory_flag : null;
       const initials = c.name[lang].charAt(0).toUpperCase();
+      const isBeta = betaIds.includes(c.childId);
+      const hasPendingPromotion = pendingPromotions.some((item) => item.child_id === c.childId && item.node_id === activeNode);
       // Two-state mastery model only: Mastered (green) or Needs Attention (red).
       // Any non-mastered trajectory flag (rising/stalled/at_risk/none) collapses
       // to Needs Attention so the grid stays a simple two-state view.
@@ -707,6 +743,9 @@ const screens={
           </div>
           <span style="font-size:9.5px;font-weight:700;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;color:var(--ink);">${c.name[lang].split(' ')[0]}</span>
           <span style="font-size:8px;color:var(--muted);">${label}</span>
+          ${isBeta ? `<span style="margin-top:4px;font-size:8px;font-weight:700;padding:2px 6px;border-radius:8px;background:var(--pl);color:var(--purple);">${lang === 'hi' ? 'बीटा' : 'Beta'}</span>` : ''}
+          ${hasPendingPromotion ? `<span style="margin-top:4px;font-size:8px;font-weight:700;padding:2px 6px;border-radius:8px;background:var(--al);color:var(--amber);">${lang === 'hi' ? 'समीक्षा' : 'Review'}</span>` : ''}
+          ${getInsightChip(c.childId)}
         </div>
       `;
     }).join('');
@@ -769,6 +808,28 @@ const screens={
       </div>
     ` : '';
 
+    const duoPathHtml = currentActivity && currentActivity.macro_cohort_split && currentActivity.macro_cohort_split.is_split ? `
+      <div class="vcard" style="margin-top:12px;border-left-color:var(--green);background:linear-gradient(180deg,#fff,#f9fbfa);">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div style="border:1px solid var(--line);border-radius:10px;padding:10px;">
+            <div style="font-size:9px;font-weight:800;color:var(--green);text-transform:uppercase;margin-bottom:6px;">${lang === 'hi' ? 'पूरी कक्षा' : 'Alpha Path'}</div>
+            <div style="font-size:10px;line-height:1.5;">${(currentActivity.path_alpha_core || []).join('<br>')}</div>
+          </div>
+          <div style="border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--pl);">
+            <div style="font-size:9px;font-weight:800;color:var(--purple);text-transform:uppercase;margin-bottom:6px;">${lang === 'hi' ? 'रिकवरी सहारा' : 'Beta Support'}</div>
+            <div style="font-size:10px;line-height:1.5;">${(currentActivity.path_beta_remediation || []).join('<br>')}</div>
+            <div style="margin-top:8px;font-size:8px;color:var(--muted);">${lang === 'hi' ? 'बच्चे' : 'Children'}: ${presentChildren.filter((child) => betaIds.includes(child.childId)).map((child) => child.name[lang].split(' ')[0]).join(', ')}</div>
+          </div>
+        </div>
+      </div>
+    ` : '';
+
+    const reflectionActionHtml = pendingPromotions.length > 0 ? `
+      <button class="btn outline" style="margin-top:10px;" onclick="openReflectionModal()">
+        ${lang === 'hi' ? `सत्र समीक्षा (${pendingPromotions.length})` : `Session review (${pendingPromotions.length})`}
+      </button>
+    ` : '';
+
     return `
       <div class="screen active">${statusbar(nowClock())}${header()}
         <div class="scroll">
@@ -791,6 +852,8 @@ const screens={
               ${inclHtml}
               ${guardrailHtml}${offlineNoteHtml}
             </div>
+            ${duoPathHtml}
+            ${reflectionActionHtml}
             
             <button class="btn ghost" style="border-color:var(--purple);color:var(--purple);margin-top:6px;" onclick="go('dss')">
               ${SVG.clip} ${t.eceScreen}
@@ -807,6 +870,24 @@ const screens={
             
             <div class="bkt-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:18px;">
               ${kidsGridHtml}
+            </div>
+            <div class="vcard" style="background:var(--al);border-left-color:var(--amber);margin-bottom:16px;">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span style="font-size:13px;font-weight:700">${lang === 'hi' ? 'रिकवरी और ध्यान सूची' : 'Recovery and watch list'}</span>
+                <span style="background:var(--amber);color:#fff;font-size:7.5px;font-weight:700;padding:3px 8px;border-radius:9px">${pendingPromotions.length} ${lang === 'hi' ? 'समीक्षा' : 'review'}</span>
+              </div>
+              <div style="font-size:10px;margin-top:6px;line-height:1.5">
+                ${currentActivity && currentActivity.macro_cohort_split && currentActivity.macro_cohort_split.is_split
+                  ? (lang === 'hi'
+                    ? `बीटा समूह ${currentActivity.remediation_domain} डोमेन में अतिरिक्त सहारे के लिए चुना गया है।`
+                    : `The beta group has been selected for extra support in ${currentActivity.remediation_domain}.`)
+                  : (lang === 'hi'
+                    ? 'आज का सत्र सामान्य पूरे-समूह पथ पर है।'
+                    : 'Today stays on the standard whole-group path.')}
+              </div>
+              <div style="font-size:9px;color:var(--muted);margin-top:8px;">
+                ${lang === 'hi' ? 'रिकवरी संकेत प्रत्येक बच्चे के कार्ड पर दिख रहे हैं।' : 'Recovery insight chips are shown on each child card.'}
+              </div>
             </div>
             
             <div class="sectionlabel">${t.eceFocus}</div>
@@ -967,11 +1048,15 @@ const screens={
     const syncLabel = lang==='hi'
       ? `सिंक: ${syncQueueSize} कतार में · ${onlineNow?'ऑनलाइन':'ऑफ़लाइन'}`
       : `Sync: ${syncQueueSize} queued · ${onlineNow?'online':'offline'}`;
+    const reflectionLabel = lang==='hi'
+      ? `समीक्षा: ${pendingPromotions.length} लंबित`
+      : `Review: ${pendingPromotions.length} pending`;
     const auditRows = [
       [lang==='hi' ? `हाज़िरी: ${presentCount} उपस्थित, ${absentCount} अनुपस्थित` : `Attendance: ${presentCount} present, ${absentCount} absent`, 1],
       [lang==='hi' ? `दक्षता: ${totalCount} में से ${masteredCount} ने सीखा` : `Mastery: ${masteredCount} of ${totalCount} mastered`, 1],
       [dssLabel, dssAnswered===0 ? 0 : (dssRed===0 ? 1 : 0)],
       [actLabel, currentActivity ? 1 : 0],
+      [reflectionLabel, pendingPromotions.length === 0 ? 1 : 0],
       [syncLabel, syncQueueSize===0 ? 1 : 0]
     ];
     const items=auditRows.map(i=>`<div class="item" style="border-left-color:var(${i[1]?'--green':'--red'})"><span class="b" style="background:var(${i[1]?'--green':'--red'})">${i[1]?'✓':'!'}</span><span class="x">${i[0]}</span></div>`).join('');
@@ -1265,6 +1350,7 @@ async function initIdentity() {
       await loadMasteryMap();
       
       syncQueueSize = (await AURA_DB.getPendingSync()).length;
+      await refreshPendingPromotions();
     } catch(e) {
       console.error('Kids roster initialization failed:', e);
     }
@@ -1282,6 +1368,8 @@ async function loadMasteryMap() {
       masteryMap.set(record.child_id, record);
     }
   }
+  await refreshPendingPromotions();
+  await buildRecoveryInsights(activeChildren.filter(c => c.present));
 }
 
 function bktSingleClick(childId) {
@@ -1296,14 +1384,23 @@ function bktDoubleClick(childId) {
 async function updateBktStatus(childId, isCorrect) {
   try {
     const record = await BKTEngine.tapMastery(childId, activeNode, isCorrect);
-    masteryMap.set(childId, record);
+    if (record.committed) {
+      masteryMap.set(childId, record);
+    }
+    await refreshPendingPromotions();
+    await buildRecoveryInsights(activeChildren.filter(c => c.present));
     
     syncQueueSize = (await AURA_DB.getPendingSync()).length;
     
     const nameStr = getChildName(childId);
-    const statusMsg = record.trajectory_flag === 'mastered'
-      ? (lang === 'hi' ? `${nameStr}: सफल ✓` : `${nameStr}: Mastered ✓`)
-      : (lang === 'hi' ? `${nameStr}: ध्यान दें ⚠️` : `${nameStr}: Needs Attention ⚠️`);
+    let statusMsg;
+    if (record.pending_promotion) {
+      statusMsg = lang === 'hi' ? `${nameStr}: समीक्षा के लिए लंबित` : `${nameStr}: pending review`;
+    } else {
+      statusMsg = record.trajectory_flag === 'mastered'
+        ? (lang === 'hi' ? `${nameStr}: सफल ✓` : `${nameStr}: Mastered ✓`)
+        : (lang === 'hi' ? `${nameStr}: ध्यान दें ⚠️` : `${nameStr}: Needs Attention ⚠️`);
+    }
     
     showBktToast(statusMsg);
     render();
@@ -1505,6 +1602,10 @@ async function loadECEActivity() {
   const derivedNode = deriveNodeFromBand(derivedBand);
   const payload = { node_id: derivedNode, age_band_months: derivedBand, child_profiles: childProfiles, context: roomContext };
   const activityCacheKey = getActivityCacheKey(payload);
+  const childMasteryEntries = await Promise.all(
+    present.map(async (child) => [child.childId, await BKTEngine.getAllChildMastery(child.childId)])
+  );
+  const childMasteryMap = new Map(childMasteryEntries);
 
   // Local retrieval engine (runs on device server — no cloud LLM, works offline too)
   try {
@@ -1512,18 +1613,29 @@ async function loadECEActivity() {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
     });
     if (!resp.ok) throw new Error('retrieval engine error');
-    currentActivity = normalizeActivity(await resp.json(), 'activity_bank', 'none');
+    const baseActivity = normalizeActivity(await resp.json(), 'activity_bank', 'none');
+    const recoveryResult = await buildRecoveryActivity({ baseActivity, payload, presentChildren: present, childMasteryMap });
+    currentActivity = recoveryResult.activity;
+    recoveryCohort = recoveryResult.cohort;
     cacheResolvedActivity(activityCacheKey, currentActivity);
     activeNode = currentActivity.milestone_targeted || derivedNode;
     window.currentActivity = currentActivity;
+    rememberDomain(currentActivity.targeted_domain);
+    await buildRecoveryInsights(present);
     render();
   } catch (err) {
     console.warn('[Activity retrieval failed -> offline fallback]', err);
     activeNode = derivedNode;
-    currentActivity = await resolveOfflineActivity(payload, activityCacheKey);
+    const baseActivity = await resolveOfflineActivity(payload, activityCacheKey);
+    const recoveryResult = await buildRecoveryActivity({ baseActivity, payload, presentChildren: present, childMasteryMap });
+    currentActivity = recoveryResult.activity;
+    recoveryCohort = recoveryResult.cohort;
     window.currentActivity = currentActivity;
+    rememberDomain(currentActivity.targeted_domain);
+    await buildRecoveryInsights(present);
     render();
   }
+  if (btn) { btn.disabled = false; btn.textContent = lang === 'hi' ? '🎯 गतिविधि अनुकूलित करें (Adapt)' : '🎯 Adapt Activity for Room'; }
 }
 
 function normalizeActivity(a, sourceDefault, tier) {
@@ -1539,8 +1651,15 @@ function normalizeActivity(a, sourceDefault, tier) {
     adapted_title: a.adapted_title || a.title || (lang === 'hi' ? 'गतिविधि' : 'Activity'),
     step_by_step_instructions: Array.isArray(a.step_by_step_instructions) ? a.step_by_step_instructions : (Array.isArray(a.steps) ? a.steps : []),
     required_materials: a.required_materials || a.materials || [],
+    keywords: Array.isArray(a.keywords) ? a.keywords : [],
+    inclusion_tags: Array.isArray(a.inclusion_tags) ? a.inclusion_tags : [],
+    recent_domains: Array.isArray(a.recent_domains) ? a.recent_domains : [],
     safety_guard_applied: a.safety_guard_applied != null ? a.safety_guard_applied : true,
     inclusion_modifications: inclusionMods,
+    macro_cohort_split: a.macro_cohort_split || null,
+    path_alpha_core: Array.isArray(a.path_alpha_core) ? a.path_alpha_core : null,
+    path_beta_remediation: Array.isArray(a.path_beta_remediation) ? a.path_beta_remediation : null,
+    remediation_domain: a.remediation_domain || null,
     provenance: {
       rules_fired: Array.isArray(prov.rules_fired) ? prov.rules_fired : [],
       generated_offline: !!prov.generated_offline,
@@ -1866,6 +1985,79 @@ function closeMic(){
   document.getElementById('micmodal').classList.remove('show');
 }
 
+function renderReflectionModal() {
+  const title = document.getElementById('reflection-title');
+  const subtitle = document.getElementById('reflection-sub');
+  const list = document.getElementById('reflection-list');
+  const confirmBtn = document.getElementById('reflection-confirm');
+  const cancelBtn = document.getElementById('reflection-cancel');
+  if (!title || !subtitle || !list || !confirmBtn || !cancelBtn) return;
+
+  title.textContent = lang === 'hi' ? 'माइलस्टोन पुष्टि' : 'Milestone Confirmation';
+  subtitle.textContent = pendingPromotions.length
+    ? (lang === 'hi' ? 'दिन समाप्त करने से पहले इन सुझाए गए आगे बढ़ावों की जाँच करें।' : 'Review these suggested promotions before closing the session.')
+    : (lang === 'hi' ? 'कोई लंबित प्रमोशन नहीं है।' : 'No pending promotions.');
+  confirmBtn.textContent = lang === 'hi' ? 'चयनित बच्चों की पुष्टि करें' : 'Confirm selected children';
+  cancelBtn.textContent = lang === 'hi' ? 'बाद में देखें' : 'Review later';
+
+  if (!pendingPromotions.length) {
+    list.innerHTML = `<div style="font-size:11px;color:var(--muted);text-align:center;padding:16px 0;">${lang === 'hi' ? 'सब कुछ अपडेट है।' : 'Everything is up to date.'}</div>`;
+    confirmBtn.style.display = 'none';
+    return;
+  }
+
+  confirmBtn.style.display = 'flex';
+  list.innerHTML = pendingPromotions.map((item, idx) => {
+    const child = activeChildren.find((entry) => entry.childId === item.child_id);
+    const childName = child ? child.name[lang] : item.child_id;
+    const nextLevel = item.node_id;
+    return `
+      <label style="display:flex;align-items:flex-start;gap:10px;border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px;cursor:pointer;">
+        <input type="checkbox" data-promotion-id="${item.id}" checked style="margin-top:2px;width:18px;height:18px;accent-color:var(--green);">
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--ink);">${idx + 1}. ${childName}</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px;">${lang === 'hi' ? 'डोमेन' : 'Domain'}: ${item.domain}</div>
+          <div style="font-size:10px;color:var(--muted);">${lang === 'hi' ? 'नोड' : 'Node'}: ${nextLevel} · p=${Number(item.p_mastery || 0).toFixed(2)}</div>
+        </div>
+      </label>
+    `;
+  }).join('');
+}
+
+async function openReflectionModal() {
+  await refreshPendingPromotions();
+  renderReflectionModal();
+  document.getElementById('reflectionmodal').classList.add('show');
+}
+
+function closeReflectionModal() {
+  document.getElementById('reflectionmodal').classList.remove('show');
+}
+
+async function confirmPendingPromotions() {
+  const checkboxes = Array.from(document.querySelectorAll('#reflection-list input[type="checkbox"][data-promotion-id]'));
+  const confirmedIds = checkboxes.filter((box) => box.checked).map((box) => box.getAttribute('data-promotion-id'));
+  const rejectedIds = checkboxes.filter((box) => !box.checked).map((box) => box.getAttribute('data-promotion-id'));
+
+  const confirmedItems = pendingPromotions.filter((item) => confirmedIds.includes(item.id));
+  for (const item of confirmedItems) {
+    if (item && item.candidate_record) {
+      await MasteryStore.put(item.candidate_record);
+      masteryMap.set(item.child_id, item.candidate_record);
+    }
+  }
+
+  await AURA_DB.resolvePendingPromotions(confirmedIds, 'confirmed');
+  await AURA_DB.resolvePendingPromotions(rejectedIds, 'rejected');
+  await refreshPendingPromotions();
+  await buildRecoveryInsights(activeChildren.filter(c => c.present));
+  closeReflectionModal();
+  showBktToast(lang === 'hi'
+    ? `पुष्टि: ${confirmedIds.length}, रोके गए: ${rejectedIds.length}`
+    : `Confirmed: ${confirmedIds.length}, held back: ${rejectedIds.length}`);
+  render();
+}
+
 function setLang(l){
   lang=l;
   document.getElementById('lang-hi').classList.toggle('on',l==='hi');
@@ -1918,6 +2110,9 @@ window.resetProfileIdentity = resetProfileIdentity;
 window.startVoiceCapture = startVoiceCapture;
 window.openMic = openMic;
 window.closeMic = closeMic;
+window.openReflectionModal = openReflectionModal;
+window.closeReflectionModal = closeReflectionModal;
+window.confirmPendingPromotions = confirmPendingPromotions;
 window.loadECEActivity = loadECEActivity;
 window.submitAttendanceRoster = submitAttendanceRoster;
 window.generateDayReportPDF = generateDayReportPDF;

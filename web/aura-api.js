@@ -555,6 +555,15 @@ if (db) {
     banditWeights: 'key',
     identity: 'id'
   });
+  db.version(2).stores({
+    kv: 'key',
+    syncQueue: 'id, op, status',
+    banditWeights: 'key',
+    identity: 'id',
+    bktHistory: '++id, child_id, domain, node_id, timestamp',
+    pendingPromotions: 'id, status, child_id, node_id, domain, created_at',
+    remediationTemplates: '++id, domain, age_band_months, material_key'
+  });
 }
 
 export const AURA_DB = {
@@ -674,6 +683,92 @@ export const AURA_DB = {
     if (!record) return null;
     const { worker, centre, language } = record;
     return { worker, centre, language };
+  },
+
+  addBktHistory: async (entry) => {
+    const record = {
+      ...entry,
+      timestamp: entry && entry.timestamp ? entry.timestamp : new Date().toISOString()
+    };
+    if (!db) {
+      const key = 'aura::bktHistory';
+      const items = (function () { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } })() || [];
+      items.push(record);
+      try { localStorage.setItem(key, JSON.stringify(items.slice(-500))); } catch (e) { console.warn('[DB]', e); }
+      return record;
+    }
+    await db.bktHistory.add(record);
+    return record;
+  },
+
+  getBktHistory: async (child_id, domain) => {
+    if (!db) {
+      const key = 'aura::bktHistory';
+      const items = (function () { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } })() || [];
+      return items.filter((item) => item.child_id === child_id && (!domain || item.domain === domain));
+    }
+    let records = await db.bktHistory.where('child_id').equals(child_id).toArray();
+    if (domain) records = records.filter((item) => item.domain === domain);
+    return records.sort((a, b) => String(a.timestamp || '').localeCompare(String(b.timestamp || '')));
+  },
+
+  upsertPendingPromotion: async (promotion) => {
+    const record = {
+      status: 'pending',
+      created_at: new Date().toISOString(),
+      ...promotion
+    };
+    if (!db) {
+      const key = 'aura::pendingPromotions';
+      const items = (function () { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } })() || [];
+      const idx = items.findIndex((item) => item.id === record.id);
+      if (idx >= 0) items[idx] = record;
+      else items.push(record);
+      try { localStorage.setItem(key, JSON.stringify(items)); } catch (e) { console.warn('[DB]', e); }
+      return record;
+    }
+    await db.pendingPromotions.put(record);
+    return record;
+  },
+
+  getPendingPromotions: async () => {
+    if (!db) {
+      const key = 'aura::pendingPromotions';
+      const items = (function () { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } })() || [];
+      return items.filter((item) => item.status === 'pending');
+    }
+    return await db.pendingPromotions.where('status').equals('pending').toArray();
+  },
+
+  resolvePendingPromotions: async (ids, status) => {
+    if (!Array.isArray(ids) || ids.length === 0) return;
+    if (!db) {
+      const key = 'aura::pendingPromotions';
+      const items = (function () { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } })() || [];
+      const updated = items.map((item) => ids.includes(item.id) ? { ...item, status, resolved_at: new Date().toISOString() } : item);
+      try { localStorage.setItem(key, JSON.stringify(updated)); } catch (e) { console.warn('[DB]', e); }
+      return;
+    }
+    await Promise.all(ids.map((id) => db.pendingPromotions.update(id, { status, resolved_at: new Date().toISOString() })));
+  },
+
+  saveRemediationTemplates: async (templates) => {
+    const items = Array.isArray(templates) ? templates : [];
+    if (!db) {
+      try { localStorage.setItem('aura::remediationTemplates', JSON.stringify(items)); } catch (e) { console.warn('[DB]', e); }
+      return;
+    }
+    await db.transaction('rw', db.remediationTemplates, async () => {
+      await db.remediationTemplates.clear();
+      if (items.length) await db.remediationTemplates.bulkAdd(items);
+    });
+  },
+
+  getRemediationTemplates: async () => {
+    if (!db) {
+      try { return JSON.parse(localStorage.getItem('aura::remediationTemplates')) || []; } catch { return []; }
+    }
+    return await db.remediationTemplates.toArray();
   }
 };
 

@@ -12,7 +12,7 @@
  *                          getRoomAggregate, getAllChildMastery, resetMastery)
  */
 
-import { MasteryStore } from './aura-api.js';
+import { MasteryStore, AURA_DB } from './aura-api.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants - Default BKT Parameters (Req 1.6)
@@ -28,6 +28,7 @@ const DEFAULT_PARAMS = Object.freeze({
 
 /** A child with p_mastery >= MASTERY_THRESHOLD is considered to have mastered the node. */
 const MASTERY_THRESHOLD = 0.80;
+const PROMOTION_THRESHOLD = 0.85;
 
 /** Maximum length of the rolling p_history window. */
 const HISTORY_WINDOW = 5;
@@ -154,6 +155,23 @@ function _getChildAgeBand(child_id) {
 
 function _getChildAgeBandMirror(child_id) {
   return _getChildAgeBand(child_id);
+}
+
+function _deriveDomainFromNode(node_id) {
+  const cleanNode = String(node_id || '').trim().toLowerCase();
+  if (cleanNode.startsWith('fm') || cleanNode.startsWith('gm') || cleanNode.includes('motor') || cleanNode.includes('physical')) {
+    return 'motor_physical';
+  }
+  if (cleanNode.startsWith('cg') || cleanNode.includes('cog') || cleanNode.includes('num')) {
+    return 'cognitive';
+  }
+  if (cleanNode.startsWith('la') || cleanNode.includes('lang')) {
+    return 'language';
+  }
+  if (cleanNode.startsWith('cr') || cleanNode.includes('create') || cleanNode.includes('art')) {
+    return 'creative';
+  }
+  return 'socio_emotional';
 }
 
 /**
@@ -389,9 +407,47 @@ async function tapMastery(child_id, node_id, got_it) {
   };
 
   // ── Persist to IDB and await completion before resolving (Req 1.5, 11.1) ─
+  const domain = _deriveDomainFromNode(node_id);
+  const crossedPromotionThreshold = prior < PROMOTION_THRESHOLD && new_p_mastery >= PROMOTION_THRESHOLD;
+  const timestamp = record.last_updated;
+
+  await AURA_DB.addBktHistory({
+    child_id,
+    node_id,
+    domain,
+    p_mastery: new_p_mastery,
+    trajectory_flag,
+    observation_count: record.observation_count,
+    timestamp,
+    pending_promotion: crossedPromotionThreshold
+  });
+
+  if (crossedPromotionThreshold) {
+    await AURA_DB.upsertPendingPromotion({
+      id: `${child_id}|${node_id}|${timestamp}`,
+      child_id,
+      node_id,
+      domain,
+      threshold: PROMOTION_THRESHOLD,
+      previous_record: existing || null,
+      candidate_record: record,
+      p_mastery: new_p_mastery,
+      trajectory_flag
+    });
+    return {
+      ...record,
+      pending_promotion: true,
+      committed: false
+    };
+  }
+
   await MasteryStore.put(record);
 
-  return record;
+  return {
+    ...record,
+    pending_promotion: false,
+    committed: true
+  };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
