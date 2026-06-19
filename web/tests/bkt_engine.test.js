@@ -146,7 +146,7 @@ import { BKTEngine } from '../bkt_engine.js';
 
 const DEFAULT_PARAMS = Object.freeze({
   p_l0: 0.15,
-  p_t:  0.20,
+  p_t:  0.15,
   p_g:  0.20,
   p_s:  0.10,
 });
@@ -207,7 +207,7 @@ describe('8.1 Cold-start initialisation (Req 1.1)', () => {
 // expected posterior ≈ 0.5541.
 
 describe('8.2 Default params produce the correct posterior (Req 1.6)', () => {
-  it('updateBKT(0.15, true, DEFAULT_PARAMS) ≈ 0.5541', () => {
+  it('updateBKT(0.15, true, DEFAULT_PARAMS) ≈ 0.5262', () => {
     const result = updateBKT(0.15, true, DEFAULT_PARAMS);
 
     // Manual derivation:
@@ -217,8 +217,8 @@ describe('8.2 Default params produce the correct posterior (Req 1.6)', () => {
     //   p_unknown_and_obs   = 0.85 * 0.20 = 0.170
     //   p_obs               = 0.305
     //   p_learned_given_obs = 0.135 / 0.305 ≈ 0.44262
-    //   posterior           = 0.44262 + 0.55738 * 0.20 ≈ 0.55410
-    const expected = 0.5540983606557377;
+    //   posterior           = 0.44262 + 0.55738 * 0.15 ≈ 0.52623
+    const expected = 0.5262295081967213;
 
     assert.ok(
       Math.abs(result - expected) < 1e-9,
@@ -226,12 +226,12 @@ describe('8.2 Default params produce the correct posterior (Req 1.6)', () => {
     );
   });
 
-  it('default params use P_L0=0.15, P_T=0.20, P_G=0.20, P_S=0.10', () => {
+  it('default params use P_L0=0.15, P_T=0.15, P_G=0.20, P_S=0.10', () => {
     // Verify by computing with explicit values matching the spec defaults
     const explicitResult = updateBKT(
       0.15,
       true,
-      { p_l0: 0.15, p_t: 0.20, p_g: 0.20, p_s: 0.10 }
+      { p_l0: 0.15, p_t: 0.15, p_g: 0.20, p_s: 0.10 }
     );
     const defaultResult  = updateBKT(0.15, true, DEFAULT_PARAMS);
     assert.equal(explicitResult, defaultResult);

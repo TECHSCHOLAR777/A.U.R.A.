@@ -179,10 +179,10 @@ describe('Property-Based Tests — BKT Engine', () => {
 
   it('Property 3 — Negative-Evidence Monotonicity (Req 1.3)', () => {
     // Default params from bkt_engine.js constants (Req 1.6)
-    const DEFAULT_PARAMS = { p_l0: 0.15, p_t: 0.20, p_g: 0.20, p_s: 0.10 };
+    const DEFAULT_PARAMS = { p_l0: 0.15, p_t: 0.15, p_g: 0.20, p_s: 0.10 };
 
     forAll('Negative Monotonicity', 500, (i) => ({
-      // Prior ∈ (0.25, 0.95): above the ≈0.229 crossover so negative
+      // Prior ∈ (0.25, 0.95): above the crossover so negative
       // evidence always dominates the learning transition boost.
       prior: rnd(i * 7, 0.25, 0.95),
     }), ({ prior }) => {

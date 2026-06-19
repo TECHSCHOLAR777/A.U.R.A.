@@ -251,7 +251,7 @@ const SVG={
   clip:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M7 4H5V17H15V4H13"/><rect x="7" y="2.5" width="6" height="3.2" rx="1"/><path d="M7.5 9H12.5M7.5 12H11" stroke-linecap="round"/></svg>',
   refer:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10H15M11 6L15 10L11 14"/></svg>'
 };
-const navic={att:'clock',ece:'book',health:'heart',audit:'grid'};
+const navic={att:'clock',ece:'book',audit:'grid'};
 
 const T={
  hi:{
@@ -295,7 +295,7 @@ const T={
   eceNote:"नोट",eceNoteV:"यह गतिविधि कमरे की उम्र और सामान के अनुसार बदली जा सकती है।",
   auditKw:["दिन की ","जाँच"],auditYes:"भेजने से पहले एक बार देख लें",auditYesD:"नीचे आज का सारा काम है। सही लगे तो भेज दें।",
   auditWhat:"आज क्या हुआ",
-  auditItems:[["हाज़िरी: 40 उपस्थित, 2 अनुपस्थित",1],["गरम खाना: 40 बच्चों को मिला",1],["सेहत जाँच: 3 बच्चे रेफर हुए",1],["खेल और जाँच: 1 बच्चे की DSS बाकी",0]],
+  auditItems:[["हाज़िरी: 40 उपस्थित, 2 अनुपस्थित",1],["गरम खाना: 40 बच्चों को मिला",1],["खेल और जाँच: 1 बच्चे की DSS बाकी",0]],
   auditSafe:"सारा डेटा इसी फ़ोन में सुरक्षित है। इंटरनेट आने पर अपने आप भेजा जाएगा।",auditApprove:"पक्का करें और दिन बंद करें",
   micL:"सुन रहे हैं...",micS:"साफ़ बोलें। केवल गिनती या सामान बोलें (नाम नहीं)।",micC:"बंद करें",
   notif:"सूचनाएँ"
@@ -341,7 +341,7 @@ const T={
   eceNote:"Note",eceNoteV:"This activity can change to fit the room's ages and materials.",
   auditKw:["Day ","review"],auditYes:"Check once before sending",auditYesD:"Below is everything from today. Send if it looks right.",
   auditWhat:"What happened today",
-  auditItems:[["Attendance: 40 present, 2 absent",1],["Hot meal: served to 40 children",1],["Health check: 3 children referred",1],["Play and screening: 1 child's DSS pending",0]],
+  auditItems:[["Attendance: 40 present, 2 absent",1],["Hot meal: served to 40 children",1],["Play and screening: 1 child's DSS pending",0]],
   auditSafe:"All data is safe on this phone. It will send on its own when internet returns.",auditApprove:"Confirm and close the day",
   micL:"Listening...",micS:"Speak clearly. Say a count or a material only (no names).",micC:"Close",
   notif:"Notifications"
@@ -505,6 +505,13 @@ const screens={
         <div class="scroll">
           <div class="body">
             <div class="greet">${lang==='hi' ? 'सुप्रभात' : 'Good morning'}, ${activeWorker ? activeWorker.name : (lang==='hi' ? 'कार्यकर्ता' : 'Worker')}<small>${new Date().toLocaleDateString(lang==='hi'?'hi-IN':'en-IN',{weekday:'long',day:'numeric',month:'long'})}</small></div>
+            ${activeChildren.length === 0 ? `
+              <div class="alert" style="background:var(--rl);border:1px solid var(--red);border-left:4px solid var(--red);border-radius:11px;padding:14px;margin-top:16px;cursor:pointer;" onclick="go('children_manager')">
+                <span class="ai" style="color:var(--red);">${SVG.warn}</span>
+                <span class="t" style="color:var(--red);font-size:12px;">${lang === 'hi' ? 'कोई बच्चा पंजीकृत नहीं है! बच्चों को पंजीकृत करने के लिए यहाँ क्लिक करें।' : 'No children registered! Click here to register children.'}</span>
+                <span class="chev" style="color:var(--red);">›</span>
+              </div>
+            ` : ''}
             <div class="nowcard">
               <div class="nclock">${SVG.clock} ${t.nowClock}</div>
               <div class="nlabel">${t.nowLabel}</div>
@@ -512,11 +519,7 @@ const screens={
               <div class="ntask">${t.nowSub}</div>
               <button class="nowbtn" onclick="go('att')">${t.start}<span class="arrow">→</span></button>
             </div>
-            <div class="alert" onclick="go('triage')">
-              <span class="ai">${SVG.warn}</span>
-              <span class="t">${t.alert}</span>
-              <span class="chev">›</span>
-            </div>
+
             <div class="sectionlabel">${t.day}</div>
             ${slots}
           </div>
@@ -525,23 +528,7 @@ const screens={
       </div>
     `;
   },
-  triage() {
-    const t = T[lang];
-    const blocks = t.blocks.map(b => `<div class="blockh" style="border-color:var(${b.c});background:var(${b.bg})"><span class="num" style="color:var(${b.c})">${b.n}</span><span class="ti" style="color:var(${b.c})">${b.t}</span><span class="su" style="color:var(${b.c})">${b.s}</span></div>${b.kids.map(k => `<div class="crow" style="border-left-color:var(${b.c})" onclick="go('health')"><div class="ic" style="background:var(${b.bg});color:var(${b.c})">!</div><div class="info"><div class="nm">${k.nm}</div><div class="ag">${k.ag}</div><div class="ds" style="color:var(${b.c})">${k.ds}</div></div>${k.tag ? `<span class="tag" style="background:var(${b.bg});color:var(${b.c})">${k.tag}</span>` : ''}</div>`).join('')}`).join('');
-    return `
-      <div class="screen active">${statusbar('8:04')}${header()}
-        <div class="scroll">
-          <div class="body" style="padding-top:6px">
-            <button class="backbtn" style="background:var(--rl);color:var(--red)" onclick="back()">
-              ‹ ${lang === 'hi' ? 'वापस' : 'Back'}
-            </button>
-            ${kw(t.triageKw, '--red')}${blocks}
-          </div>
-        </div>
-        ${nav('home')}
-      </div>
-    `;
-  },
+
   voice() {
     const t = T[lang];
     const online = (typeof navigator !== 'undefined' && navigator.onLine) && isOnline();
@@ -647,11 +634,7 @@ const screens={
       </div>
     `;
   },
-  health(){
-    const t=T[lang];
-    const vit=t.hVitals.map(v=>`<div class="vital"><div class="l">${v[0]}</div><div class="v">${v[1]}</div><div class="d" style="color:var(${v[3]?'--red':'--green'})">${v[2]||'&nbsp;'}</div></div>`).join('');
-    return `<div class="screen active">${statusbar('1:20')}<div class="scroll"><div class="hero" style="background:var(--red);border-radius:0;padding:14px 20px 18px"><button class="backbtn" onclick="back()">‹ ${lang==='hi'?'वापस':'Back'}</button><div style="display:flex;justify-content:space-between;align-items:flex-start"><div><h2>${t.hName}</h2><p>${t.hAge}</p></div><span style="background:#fff;color:var(--red);font-size:10px;font-weight:800;padding:5px 12px;border-radius:12px">${t.hDanger}</span></div></div><div class="body"><div style="background:var(--rl);border:1px solid var(--red);border-left:4px solid var(--red);border-radius:12px;padding:13px;display:flex;gap:10px;margin-top:14px"><span style="color:var(--red);width:20px;height:20px;flex-shrink:0">${SVG.warn}</span><div><div style="font-size:12px;font-weight:700;color:var(--red)">${t.hSignal}</div><div style="font-size:10px;color:var(--red);line-height:1.5;margin-top:4px">${t.hSignalD}</div></div></div><div class="grid2" style="margin-top:14px">${vit}</div><div class="vcard" style="border-left-color:var(--red);margin-top:14px"><div style="font-size:9px;color:var(--muted)">${t.hScore}</div><div style="font-size:18px;font-weight:800;color:var(--red);margin-top:2px">${t.hVeryWeak}</div></div><div class="grid2" style="margin-top:6px"><button class="btn red" onclick="alert('${lang==='hi'?'वज़न दर्ज करना — बैकएंड ज़रूरी':'Weight entry — backend required'}')">${t.hWeigh}</button><button class="btn primary" onclick="alert('${lang==='hi'?'रेफरल इस फ़ोन में दर्ज — बैकएंड सिंक ज़रूरी':'Referral saved locally — backend sync required'}')">${t.hRefer}</button></div></div></div>${nav('health')}</div>`;
-  },
+
   ece(){
     const t = T[lang];
     const online = isOnline();
@@ -928,16 +911,18 @@ const screens={
               </div>
             </div>
 
-            <div class="sectionlabel">${lang === 'hi' ? 'सेहत और पोषण (P2)' : 'Health & Nutrition (P2)'}</div>
-            <button class="btn ghost" style="border-color:var(--red);color:var(--red)" onclick="go('health')">
-              ${SVG.heart} ${lang === 'hi' ? 'सेहत जाँच खोलें' : 'Open health check'}
+
+
+            <div class="sectionlabel">${lang === 'hi' ? 'बच्चे' : 'Children'}</div>
+            <button class="btn primary" style="background:var(--forest);color:#fff;margin-bottom:14px;" onclick="go('children_manager')">
+              👥 ${lang === 'hi' ? 'बच्चों की सूची प्रबंधित करें' : 'Manage Children Roster'}
             </button>
-            <div style="font-size:9px;color:var(--muted);font-weight:600;margin:6px 2px 12px;">${lang === 'hi' ? 'बाद का चरण · मुख्य प्रवाह से अलग' : 'Later-stage · outside the core flow'}</div>
 
             <div class="sectionlabel">${lang === 'hi' ? 'रिपोर्ट और उपकरण' : 'Reports & Tools'}</div>
             <button class="btn ghost" style="border-color:var(--navy);color:var(--navy)" onclick="generateDayReportPDF()">
               ${SVG.clip} ${lang === 'hi' ? 'दिन की रिपोर्ट (PDF)' : 'Day report (PDF)'}
             </button>
+
             <div style="font-size:9px;color:var(--amber);font-weight:700;margin:6px 2px 12px;">${lang === 'hi' ? 'एक्सपोर्ट तैयार – बैकएंड/एक्सपोर्ट सेवा ज़रूरी' : 'Export ready – backend/export service required'}</div>
             <button class="btn ghost" style="border-color:var(--green);color:var(--green)" onclick="openHeadcountModel()">
               ${SVG.cam} ${lang === 'hi' ? 'फ़ोटो से गिनती (YOLO)' : 'Photo headcount (YOLO)'}
@@ -947,6 +932,97 @@ const screens={
             <button class="btn red" style="margin-top:24px;background:#fff;border:1.5px solid var(--red);color:var(--red);" onclick="resetProfileIdentity()">
               ⚠️ ${lang === 'hi' ? 'प्रोफ़ाइल हटाएं (Reset)' : 'Reset Profile Identity'}
             </button>
+          </div>
+        </div>
+        ${nav('more')}
+      </div>
+    `;
+  },
+  children_manager() {
+    const t = T[lang];
+    const childrenList = activeChildren.map(c => {
+      const needsText = c.needs && c.needs.length > 0 
+        ? (lang==='hi' ? `विशेष आवश्यकता: ${c.needs.join(', ')}` : `Needs: ${c.needs.join(', ')}`)
+        : (lang==='hi' ? 'सामान्य' : 'Typical');
+      const needsColor = c.needs && c.needs.length > 0 ? 'var(--red)' : 'var(--muted)';
+      
+      return `
+        <div class="crow" style="border-left-color:var(--forest);background:#fff;margin-bottom:8px;align-items:center;min-height:48px;">
+          <div class="ic" style="background:var(--gl);color:var(--green)">✓</div>
+          <div class="info">
+            <div class="nm">${c.name[lang]}</div>
+            <div class="ag">${c.age[lang]}</div>
+            <div style="font-size:9.5px;color:${needsColor};margin-top:2px;">${needsText}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    const emptyStateHtml = activeChildren.length === 0
+      ? `<div style="background:var(--card);border:1px dashed var(--line);border-radius:12px;padding:24px;text-align:center;color:var(--muted);margin-bottom:16px;">
+          <span style="font-size:32px;display:block;margin-bottom:8px;">👥</span>
+          <div style="font-weight:700;font-size:14px;color:var(--ink);">${lang === 'hi' ? 'कोई बच्चा पंजीकृत नहीं है' : 'No Children Registered'}</div>
+          <div style="font-size:11px;margin-top:4px;">${lang === 'hi' ? 'शुरू करने के लिए नीचे दिए गए फॉर्म का उपयोग करके पहला बच्चा जोड़ें।' : 'Add your first child using the form below to get started.'}</div>
+         </div>`
+      : `<div style="margin-bottom:16px;">${childrenList}</div>`;
+
+    const needsOptions = [
+      { id: 'mobility_impaired', label: { en: 'Mobility Impaired', hi: 'शारीरिक दिव्यांगता' } },
+      { id: 'non_verbal', label: { en: 'Non-Verbal', hi: 'गैर-मौखिक' } },
+      { id: 'selective_mutism', label: { en: 'Selective Mutism', hi: 'चयनात्मक मूकता' } },
+      { id: 'motor_delay', label: { en: 'Motor Delay', hi: 'मोटर देरी' } },
+      { id: 'visual_impaired', label: { en: 'Visual Impaired', hi: 'दृष्टि बाधित' } },
+      { id: 'shy', label: { en: 'Shy / Performance Anxiety', hi: 'शर्मीला / झिझक' } }
+    ];
+
+    const needsCheckboxes = needsOptions.map(opt => `
+      <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;margin-bottom:8px;cursor:pointer;color:var(--ink);">
+        <input type="checkbox" name="child-needs" value="${opt.id}" style="width:18px;height:18px;accent-color:var(--green);">
+        <span>${opt.label[lang]}</span>
+      </label>
+    `).join('');
+
+    return `
+      <div class="screen active">${statusbar(nowClock())}${header()}
+        <div class="scroll">
+          <div class="body" style="padding-top:6px;">
+            <button class="backbtn" style="background:var(--pl);color:var(--navy)" onclick="back()">
+              ‹ ${lang==='hi'?'वापस':'Back'}
+            </button>
+            ${kw(lang === 'hi' ? ["बच्चों का ", "पंजीकरण"] : ["Children ", "Roster"], '--navy')}
+            <div class="sub">
+              ${lang === 'hi' ? 'आँगनवाड़ी केंद्र के बच्चों की सूची और पंजीकरण।' : 'Register and manage child profiles in your Anganwadi center.'}
+            </div>
+
+            <div class="sectionlabel">${lang === 'hi' ? 'पंजीकृत बच्चे' : 'Registered Children'} (${activeChildren.length})</div>
+            ${emptyStateHtml}
+
+            <div class="sectionlabel">${lang === 'hi' ? 'नया बच्चा जोड़ें' : 'Register New Child'}</div>
+            <div class="vcard" style="border-left-color:var(--green);background:#fff;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.05);margin-bottom:24px;">
+              <div class="form-group">
+                <label>${lang === 'hi' ? 'बच्चे का नाम (English)' : 'Child Name (English)'}</label>
+                <input type="text" id="reg-child-name-en" placeholder="e.g. Aarav Kumar">
+              </div>
+              <div class="form-group">
+                <label>${lang === 'hi' ? 'बच्चे का नाम (हिंदी)' : 'Child Name (हिंदी)'}</label>
+                <input type="text" id="reg-child-name-hi" placeholder="जैसे: आरव कुमार">
+              </div>
+              <div class="form-group">
+                <label>${lang === 'hi' ? 'उम्र (महीनों में)' : 'Age (in Months)'}</label>
+                <input type="number" id="reg-child-age" min="1" max="72" placeholder="e.g. 36">
+              </div>
+              
+              <div class="form-group">
+                <label>${lang === 'hi' ? 'विशेष आवश्यकताएं (Inclusion)' : 'Special Needs (Inclusion)'}</label>
+                <div style="margin-top:8px;display:grid;grid-template-columns:1fr;gap:4px;">
+                  ${needsCheckboxes}
+                </div>
+              </div>
+
+              <button class="btn green" style="margin-top:14px;" onclick="submitChildRegistration()">
+                ＋ ${lang === 'hi' ? 'पंजीकृत करें' : 'Register Child'}
+              </button>
+            </div>
           </div>
         </div>
         ${nav('more')}
@@ -1070,8 +1146,11 @@ async function initIdentity() {
           en: c.age || (c.age_months ? c.age_months + ' months' : '3 years'),
           hi: c.age || (c.age_months ? c.age_months + ' महीने' : '3 साल')
         },
+        age_months: c.age_months || 36,
+        needs: Array.isArray(c.needs) ? c.needs : [],
         present: true
       }));
+
       
       // Load BKT status badges
       await loadMasteryMap();
@@ -1299,9 +1378,10 @@ async function loadECEActivity() {
     mastered_count: masteredCount,
     needs_attention_count: present.length - masteredCount,
     materials: roomMaterials,
-    inclusion_flags: present.filter(c => c.inclusion).map(c => String(c.childId).slice(0, 4))
+    inclusion_flags: present.filter(c => c.needs && c.needs.length > 0).map(c => String(c.childId).slice(0, 4))
   };
-  const childProfiles = present.map(c => ({ child_id: c.childId, age_months: c.age_months || 36 }));
+  const childProfiles = present.map(c => ({ child_id: c.childId, age_months: c.age_months || 36, needs: c.needs || [] }));
+
   const payload = { node_id: activeNode, age_band_months: '36-48', child_profiles: childProfiles, context: roomContext };
 
   const online = (typeof navigator !== 'undefined' && navigator.onLine) && isOnline();
@@ -1441,6 +1521,47 @@ function resetProfileIdentity() {
   }
 }
 
+async function submitChildRegistration() {
+  const nameEnInput = document.getElementById('reg-child-name-en');
+  const nameHiInput = document.getElementById('reg-child-name-hi');
+  const ageInput = document.getElementById('reg-child-age');
+  const needsCheckboxes = document.querySelectorAll('input[name="child-needs"]:checked');
+
+  const nameEn = nameEnInput ? nameEnInput.value.trim() : '';
+  const nameHi = nameHiInput ? nameHiInput.value.trim() : '';
+  const ageMonths = ageInput ? parseInt(ageInput.value, 10) : 0;
+  
+  if (!nameEn || !nameHi || !ageMonths || ageMonths <= 0) {
+    alert(lang === 'hi' ? 'कृपया सभी फ़ील्ड सही से भरें।' : 'Please fill all fields correctly.');
+    return;
+  }
+
+  const selectedNeeds = Array.from(needsCheckboxes).map(cb => cb.value);
+
+  const newChild = {
+    id: `CHILD_${Math.random().toString(36).slice(2).toUpperCase()}`,
+    name: nameEn,
+    nameHi: nameHi,
+    age_months: ageMonths,
+    needs: selectedNeeds
+  };
+
+  await AURA_API.registerChild(newChild);
+  
+  // Re-initialize children roster
+  await initIdentity();
+  
+  // Clear inputs
+  if (nameEnInput) nameEnInput.value = '';
+  if (nameHiInput) nameHiInput.value = '';
+  if (ageInput) ageInput.value = '';
+  document.querySelectorAll('input[name="child-needs"]').forEach(cb => cb.checked = false);
+
+  alert(lang === 'hi' ? 'बच्चा सफलतापूर्वक पंजीकृत किया गया!' : 'Child registered successfully!');
+  render();
+}
+
+
 function toggleOnline(event) {
   if (event) event.stopPropagation();
   window.DEBUG_OFFLINE_MODE = !window.DEBUG_OFFLINE_MODE;
@@ -1528,6 +1649,7 @@ window.loadECEActivity = loadECEActivity;
 window.submitAttendanceRoster = submitAttendanceRoster;
 window.generateDayReportPDF = generateDayReportPDF;
 window.openHeadcountModel = openHeadcountModel;
+window.submitChildRegistration = submitChildRegistration;
 
 // ── DOM Bootstrap ───────────────────────────────────────────────────────────
 (async () => {

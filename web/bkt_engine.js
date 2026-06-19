@@ -12,7 +12,7 @@
  *                          getRoomAggregate, getAllChildMastery, resetMastery)
  */
 
-import { MasteryStore } from './aura-api.js';
+import { MasteryStore, MOCK } from './aura-api.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants — Default BKT Parameters (Req 1.6)
@@ -21,7 +21,7 @@ import { MasteryStore } from './aura-api.js';
 /** Default BKT parameters used when no node-specific overrides are present. */
 const DEFAULT_PARAMS = Object.freeze({
   p_l0: 0.15,  // prior probability of initial knowledge
-  p_t:  0.20,  // learning transition probability
+  p_t:  0.15,  // learning transition probability
   p_g:  0.20,  // lucky-guess probability
   p_s:  0.10,  // slip probability
 });
@@ -33,54 +33,27 @@ const MASTERY_THRESHOLD = 0.80;
 const HISTORY_WINDOW = 5;
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Module-level curriculum DAG cache
+// Module-level milestone priors cache
 // ─────────────────────────────────────────────────────────────────────────────
 
-/**
- * Promise that resolves to the loaded curriculum DAG as a Map<node_id, KnowledgeNode>.
- * Loaded once at module initialisation time (Req 1.7, 2.8).
- *
- * If the fetch fails (offline, missing file) the engine logs a warning and
- * falls back to DEFAULT_PARAMS for every node (Req 1.6).
- *
- * @type {Promise<Map<string, object>>}
- */
-function _parseNodes(nodes) {
-  const map = new Map();
-  if (Array.isArray(nodes)) {
-    for (const node of nodes) {
-      if (node && typeof node.node_id === 'string') {
-        map.set(node.node_id, node);
-      }
-    }
-  } else if (nodes && typeof nodes === 'object') {
-    for (const [key, node] of Object.entries(nodes)) {
-      if (node && typeof node === 'object') {
-        map.set(key, node);
-      }
-    }
-  }
-  return map;
-}
-
-const _dagPromise = (async () => {
+const _priorsPromise = (async () => {
   try {
     const isNode = typeof process !== 'undefined' && process.versions && process.versions.node;
     if (typeof window === 'undefined' || isNode) {
       const fs = await import('fs');
       const path = await import('path');
       const pathsToTry = [
-        path.join(process.cwd(), 'knowledge_dag.json'),
-        path.join(process.cwd(), 'web', 'knowledge_dag.json')
+        path.join(process.cwd(), 'web', 'data', 'milestone_priors.json'),
+        path.join(process.cwd(), 'data', 'milestone_priors.json')
       ];
 
       try {
         const { fileURLToPath } = await import('url');
         const __filename = fileURLToPath(import.meta.url);
         const __dirname = path.dirname(__filename);
-        pathsToTry.push(path.join(__dirname, 'knowledge_dag.json'));
+        pathsToTry.push(path.join(__dirname, 'data', 'milestone_priors.json'));
       } catch (e) {
-        // Ignore if url/import.meta.url is not supported in this environment
+        // Ignore
       }
 
       let foundPath = null;
@@ -93,24 +66,23 @@ const _dagPromise = (async () => {
 
       if (foundPath) {
         const content = fs.readFileSync(foundPath, 'utf8');
-        return _parseNodes(JSON.parse(content));
+        return JSON.parse(content);
       } else {
-        throw new Error('File not found (knowledge_dag.json)');
+        throw new Error('File not found (milestone_priors.json)');
       }
     } else {
-      const response = await fetch('./knowledge_dag.json');
+      const response = await fetch('./data/milestone_priors.json');
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
       }
-      const nodes = await response.json();
-      return _parseNodes(nodes);
+      return await response.json();
     }
   } catch (err) {
     console.warn(
-      '[bkt_engine] Could not load knowledge_dag.json; using default BKT params for all nodes.',
+      '[bkt_engine] Could not load milestone_priors.json; using default BKT params.',
       err && err.message ? err.message : err
     );
-    return new Map();
+    return null;
   }
 })();
 
@@ -118,29 +90,97 @@ const _dagPromise = (async () => {
 // Internal helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
+function _getChildAgeBand(child_id) {
+  let ageMonths = 36; // default fallback
+  
+  if (typeof window !== 'undefined') {
+    if (Array.isArray(window.activeChildren)) {
+      const c = window.activeChildren.find(x => x.childId === child_id);
+      if (c && typeof c.age_months === 'number') {
+        ageMonths = c.age_months;
+      }
+    }
+  }
+  
+  try {
+    const kids = MOCK.children;
+    const c = kids.find(x => x.id === child_id);
+    if (c) {
+      if (typeof c.age_months === 'number') {
+        ageMonths = c.age_months;
+      } else if (typeof c.age === 'string') {
+        const match = c.age.match(/(\d+)\s*(yrs|months|महीने|साल)/);
+        if (match) {
+          const val = parseInt(match[1], 10);
+          if (match[2].includes('yr') || match[2].includes('साल')) {
+            ageMonths = val * 12;
+          } else {
+            ageMonths = val;
+          }
+        }
+      }
+    }
+  } catch (e) {
+    // Ignore
+  }
+
+  if (ageMonths < 3) return '0-3';
+  if (ageMonths < 6) return '3-6';
+  if (ageMonths < 9) return '6-9';
+  if (ageMonths < 12) return '9-12';
+  if (ageMonths < 18) return '12-18';
+  if (ageMonths < 24) return '18-24';
+  return '24-36';
+}
+
 /**
- * Look up node-specific BKT parameter overrides from the curriculum DAG and
- * merge them with DEFAULT_PARAMS.  If the node is not in the DAG, or if the
- * `bkt_params` field is absent, DEFAULT_PARAMS is returned as-is (Req 1.6, 1.7).
+ * Look up milestone-specific prior from milestone_priors.json and
+ * dynamically resolve parameters based on the child's age band.
  *
  * @param {string} node_id
+ * @param {string} child_id
  * @returns {Promise<{p_l0:number, p_t:number, p_g:number, p_s:number}>}
  */
-async function _resolveParams(node_id) {
-  const dag = await _dagPromise;
-  const node = dag.get(node_id);
-
-  if (!node || !node.bkt_params || typeof node.bkt_params !== 'object') {
+async function _resolveParams(node_id, child_id) {
+  const priorsData = await _priorsPromise;
+  if (!priorsData || !Array.isArray(priorsData.priors)) {
     return DEFAULT_PARAMS;
   }
 
-  // Partial override — merge with defaults so any missing keys use their default.
-  return {
-    p_l0: typeof node.bkt_params.p_l0 === 'number' ? node.bkt_params.p_l0 : DEFAULT_PARAMS.p_l0,
-    p_t:  typeof node.bkt_params.p_t  === 'number' ? node.bkt_params.p_t  : DEFAULT_PARAMS.p_t,
-    p_g:  typeof node.bkt_params.p_g  === 'number' ? node.bkt_params.p_g  : DEFAULT_PARAMS.p_g,
-    p_s:  typeof node.bkt_params.p_s  === 'number' ? node.bkt_params.p_s  : DEFAULT_PARAMS.p_s,
-  };
+  const ageBand = _getChildAgeBand(child_id);
+  const cleanNode = node_id.trim().toLowerCase();
+  
+  let matchedPrior = priorsData.priors.find(p => 
+    p.milestone.toLowerCase() === cleanNode ||
+    cleanNode.includes(p.milestone.toLowerCase()) ||
+    p.milestone.toLowerCase().includes(cleanNode)
+  );
+
+  if (!matchedPrior) {
+    let domain = 'socio_emotional'; // default fallback
+    if (cleanNode.startsWith('fm') || cleanNode.startsWith('gm') || cleanNode.includes('motor') || cleanNode.includes('physical')) {
+      domain = 'motor_physical';
+    } else if (cleanNode.startsWith('cg') || cleanNode.includes('cog') || cleanNode.includes('num')) {
+      domain = 'cognitive';
+    } else if (cleanNode.startsWith('la') || cleanNode.includes('lang')) {
+      domain = 'language';
+    } else if (cleanNode.startsWith('cr') || cleanNode.includes('create') || cleanNode.includes('art')) {
+      domain = 'creative';
+    }
+    
+    matchedPrior = priorsData.priors.find(p => p.domain === domain && p.age_band_months === ageBand);
+    if (!matchedPrior) {
+      matchedPrior = priorsData.priors.find(p => p.domain === domain);
+    }
+  }
+
+  const p_l0 = matchedPrior ? matchedPrior.P_L0 : DEFAULT_PARAMS.p_l0;
+  const fixed = priorsData.fixed_params || {};
+  const p_t = typeof fixed.P_T_learn === 'number' ? fixed.P_T_learn : DEFAULT_PARAMS.p_t;
+  const p_g = typeof fixed.P_G_guess === 'number' ? fixed.P_G_guess : DEFAULT_PARAMS.p_g;
+  const p_s = typeof fixed.P_S_slip === 'number' ? fixed.P_S_slip : DEFAULT_PARAMS.p_s;
+
+  return { p_l0, p_t, p_g, p_s };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -280,7 +320,7 @@ async function tapMastery(child_id, node_id, got_it) {
   }
 
   // ── Resolve BKT parameters for this node (Req 1.6, 1.7) ─────────────────
-  const params = await _resolveParams(node_id);
+  const params = await _resolveParams(node_id, child_id);
 
   // ── Read existing record or initialise from P_L0 (Req 1.1) ───────────────
   let existing = await MasteryStore.get(child_id, node_id);

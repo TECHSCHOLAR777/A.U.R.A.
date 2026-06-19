@@ -391,11 +391,34 @@ export const AURA_API = {
      GET /api/children?centre={centreId} */
   getChildren: async (centreId) => {
     try {
-      return await _apiFetch(`/api/children?centre=${encodeURIComponent(centreId)}`);
-    } catch {
-      return MOCK.children;
+      const kids = await _apiFetch(`/api/children?centre=${encodeURIComponent(centreId)}`);
+      await AURA_DB.set('children', kids);
+      return kids;
+    } catch (err) {
+      console.warn('[getChildren] API fetch failed, falling back to local DB cache:', err.message);
+      const cached = await AURA_DB.get('children');
+      return cached || [];
     }
   },
+
+  registerChild: async (child) => {
+    const cached = (await AURA_DB.get('children')) || [];
+    if (!cached.some(c => c.id === child.id)) {
+      cached.push(child);
+      await AURA_DB.set('children', cached);
+    }
+    await AURA_DB.queue({ op: 'register_child', childData: child, ts: Date.now() });
+    try {
+      return await _apiFetch('/api/children', {
+        method: 'POST',
+        body: JSON.stringify(child)
+      });
+    } catch (err) {
+      console.warn('[registerChild] Immediate server upload failed, queued offline:', err.message);
+      return { success: true, syncStatus: 'queued' };
+    }
+  },
+
 
   runSARR: async ({ transcript, centreId }) => {
     try {
@@ -423,44 +446,7 @@ export const AURA_API = {
     }
   },
 
-  /* ── [BROWSER] WHO Z-score + LightGBM early warning ─────────────────────
-     Runs fully client-side: fetches who_standards.json + SAM model once,
-     then computes offline. Falls back to /api/health/:childId when heavy
-     data (actual DB vitals) is needed. */
-  getHealthRisk: async (childId) => {
-    // Try server first for real DB vitals
-    try {
-      const serverData = await _apiFetch(`/api/health/${encodeURIComponent(childId)}`);
-      // Re-run browser inference on top of server vitals for explainability
-      const [whoStd, modelTxt] = await Promise.all([_loadWHOStandards(), _loadSAMModel()]);
-      if (serverData.vitals && whoStd && modelTxt && typeof predictMalnutritionRisk === 'function') {
-        const w = parseFloat(serverData.vitals.weight);
-        const h = parseFloat(serverData.vitals.height);
-        if (!isNaN(w) && !isNaN(h)) {
-          const z = _calculateWHOZScore(w, h, serverData.zscore < 0 ? 'girls' : 'girls', whoStd);
-          const cat = _getClinicalDiagnosis(z);
-          // Use real DB-computed features from server mlFeatures, fallback to safe defaults
-          const mf = serverData.mlFeatures || {};
-          const cd = {
-            zwfl: z ?? serverData.zscore,
-            z_velocity: mf.z_velocity !== undefined ? mf.z_velocity : 0.0,
-            attendance_rate: mf.attendance_rate !== undefined ? mf.attendance_rate : 1.0,
-            missed_vaccine_streak: mf.missed_vaccine_streak !== undefined ? mf.missed_vaccine_streak : 0,
-            migrant_flag: mf.migrant_flag !== undefined ? mf.migrant_flag : 0,
-            z_acceleration: mf.z_acceleration !== undefined ? mf.z_acceleration : 0.0,
-            zwfl_min_3: mf.zwfl_min_3 !== undefined ? mf.zwfl_min_3 : (z ?? serverData.zscore),
-            cumulative_low_visits: mf.cumulative_low_visits !== undefined ? mf.cumulative_low_visits : 0
-          };
-          const risk = predictMalnutritionRisk(cd, modelTxt);
-          return { ...serverData, zscore: z ?? serverData.zscore, category: cat, ...risk };
-        }
-      }
-      return serverData;
-    } catch {
-      // Full offline path
-      return MOCK.healthRisk;
-    }
-  },
+
 
   /* ── [SERVER] log meal count ──────────────────────────────────────────────
      POST /api/meal */
@@ -504,20 +490,25 @@ export const AURA_API = {
       return { success: false, reason: 'offline_simulation' };
     }
 
-    // 1. Standard API Sync (Attendance, Meal, etc.)
+    // 1. Standard API Sync (Attendance, Meal, Child registration, etc.)
     const pending = await AURA_DB.getPendingSync();
     let synced = 0, failed = 0;
     for (const op of pending) {
       try {
         const path = op.op === 'attendance' ? '/api/attendance'
           : op.op === 'meal' ? '/api/meal'
-            : null;
+          : op.op === 'register_child' ? '/api/children'
+          : null;
         if (path) {
-          await _apiFetch(path, { method: 'POST', body: JSON.stringify(op) });
+          const body = op.op === 'register_child' ? op.childData : op;
+          await _apiFetch(path, { method: 'POST', body: JSON.stringify(body) });
           await AURA_DB.markSynced(op.id);
           synced++;
         }
-      } catch { failed++; }
+      } catch (err) {
+        console.error('[syncNow] operation failed:', err);
+        failed++;
+      }
     }
 
     // 2. Supabase Cloud Sync (Bandit Weights - Zero PII)

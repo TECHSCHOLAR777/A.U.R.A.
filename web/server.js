@@ -34,7 +34,7 @@ const __dirname  = dirname(__filename);
 /** Default BKT parameters (mirrors bkt_engine.js constants). */
 const DEFAULT_BKT_PARAMS = Object.freeze({
   p_l0: 0.15,
-  p_t:  0.20,
+  p_t:  0.15,
   p_g:  0.20,
   p_s:  0.10,
 });
@@ -45,8 +45,8 @@ const MASTERY_THRESHOLD = 0.80;
 /** Maximum length of the rolling p_history window. */
 const HISTORY_WINDOW = 5;
 
-/** Standard age bands in months. Lower-bound inclusive, upper-bound exclusive (except last). */
-const AGE_BANDS = ['0-12', '12-24', '24-36', '36-48', '48-60', '60-72'];
+/** Standard age bands in months. */
+const AGE_BANDS = ['0-3', '3-6', '6-9', '9-12', '12-18', '18-24', '24-36'];
 
 // ─────────────────────────────────────────────────────────────────────────────
 // In-memory mastery state (server-side substitute for IndexedDB)
@@ -55,6 +55,10 @@ const AGE_BANDS = ['0-12', '12-24', '24-36', '36-48', '48-60', '60-72'];
 
 /** @type {Map<string, object>} */
 const masteryStore = new Map();
+
+// In-memory children state (starts completely empty from scratch for production)
+let serverChildren = [];
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Activity bank — loaded once at startup
@@ -249,6 +253,9 @@ function selectCandidates(bank, node_id, age_band_months) {
  */
 function ageBandToDiffKey(band) {
   if (typeof band !== 'string') return null;
+  if (['0-3', '3-6', '6-9', '9-12'].includes(band)) return '0-1';
+  if (['12-18', '18-24'].includes(band)) return '1-2';
+  if (band === '24-36') return '2-3';
   const parts = band.split('-');
   if (parts.length !== 2) return null;
   const lo = parseInt(parts[0], 10);
@@ -310,39 +317,34 @@ function selectSafeSubstitute(bank, node_id, excludeId) {
  * deriveBand — Derive the standard age band from an array of child profiles.
  *
  * Computes the average age_months across all profiles and returns the
- * standard band string (e.g. "36-48") that the average falls into.
- * Falls back to "36-48" when no profiles are provided.
+ * standard band string (e.g. "24-36") that the average falls into.
+ * Falls back to "0-3" when no profiles are provided.
  *
- * Standard bands: 0-12, 12-24, 24-36, 36-48, 48-60, 60-72
- * (upper bound inclusive for last band; otherwise lower-inclusive, upper-exclusive)
+ * Standard bands: 0-3, 3-6, 6-9, 9-12, 12-18, 18-24, 24-36
  *
  * @param {object[]} childProfiles — Array of ChildProfile objects
  * @returns {string}  — Age band string
  */
 function deriveBand(childProfiles) {
   if (!Array.isArray(childProfiles) || childProfiles.length === 0) {
-    return '36-48'; // default per spec
+    return '0-3'; // default per spec
   }
 
   const ages = childProfiles
     .map(p => (typeof p.age_months === 'number' ? p.age_months : null))
     .filter(a => a !== null);
 
-  if (ages.length === 0) return '36-48';
+  if (ages.length === 0) return '0-3';
 
   const avg = ages.reduce((s, a) => s + a, 0) / ages.length;
 
-  // Find the standard band that covers the average age
-  const boundaries = [0, 12, 24, 36, 48, 60, 72];
-  for (let i = 0; i < boundaries.length - 1; i++) {
-    const lo = boundaries[i];
-    const hi = boundaries[i + 1];
-    if (avg >= lo && avg < hi) {
-      return `${lo}-${hi}`;
-    }
-  }
-  // avg >= 72: use last band
-  return '60-72';
+  if (avg < 3) return '0-3';
+  if (avg < 6) return '3-6';
+  if (avg < 9) return '6-9';
+  if (avg < 12) return '9-12';
+  if (avg < 18) return '12-18';
+  if (avg < 24) return '18-24';
+  return '24-36';
 }
 
 /**
@@ -371,7 +373,7 @@ function buildInclusionModifications(rules_fired, candidate) {
 
   const adaptations = candidate.inclusion_adaptations || {};
   let instruction_override = '';
-  let vast_parameter = 'V'; // default VAST axis
+  let vast_parameter = 'none'; // default VAST axis
 
   for (const rule_id of rules_fired) {
     if (!rule_id.startsWith('INC_')) continue;
@@ -381,11 +383,11 @@ function buildInclusionModifications(rules_fired, candidate) {
       if (adaptations[k]) {
         instruction_override = adaptations[k];
         // Map rule to VAST axis
-        if (rule_id === 'INC_ATTUNE_01' || rule_id === 'INC_ATTUNE_02') vast_parameter = 'A';
-        else if (rule_id === 'INC_MOTOR_01' || rule_id === 'INC_MOTOR_02') vast_parameter = 'S';
-        else if (rule_id === 'INC_VISUAL_01') vast_parameter = 'V';
-        else if (rule_id === 'INC_SHY_01') vast_parameter = 'T';
-        else if (rule_id === 'INC_LANG_01') vast_parameter = 'A';
+        if (rule_id === 'INC_ATTUNE_01' || rule_id === 'INC_ATTUNE_02') vast_parameter = 'attunement';
+        else if (rule_id === 'INC_MOTOR_01' || rule_id === 'INC_MOTOR_02') vast_parameter = 'safety';
+        else if (rule_id === 'INC_VISUAL_01') vast_parameter = 'visibility';
+        else if (rule_id === 'INC_SHY_01') vast_parameter = 'togetherness';
+        else if (rule_id === 'INC_LANG_01') vast_parameter = 'attunement';
         break;
       }
     }
@@ -492,7 +494,7 @@ function buildStaticFallback(nodeId, childProfiles) {
     ],
     required_materials:          [],
     safety_guard_applied:        false,
-    inclusion_modifications:     { vast_parameter: 'V', instruction_override: '' },
+    inclusion_modifications:     { vast_parameter: 'none', instruction_override: '' },
     provenance: {
       generated_offline: false,
       rules_fired:       [],
@@ -544,58 +546,7 @@ app.post('/api/mastery/tap', (req, res) => {
   }
 });
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Star 1a — GET /api/health/:childId (Growth screener backend endpoint)
-// ─────────────────────────────────────────────────────────────────────────────
-app.get('/api/health/:childId', (req, res) => {
-  const childId = req.params.childId;
 
-  if (childId === 'JH-003' || childId === 'C003') {
-    return res.status(200).json({
-      childId: childId,
-      name: "Suresh Oraon",
-      zscore: -3.5,
-      category: "SAM",
-      vitals: {
-        weight: "10.1",
-        height: "95.5",
-        arm: "10.8",
-        attendance: "14/20 days"
-      },
-      mlFeatures: {
-        z_velocity: -0.2,
-        attendance_rate: 0.45,
-        missed_vaccine_streak: 2,
-        migrant_flag: 0,
-        z_acceleration: 0.0,
-        zwfl_min_3: -3.1,
-        cumulative_low_visits: 3
-      }
-    });
-  }
-
-  return res.status(200).json({
-    childId: childId,
-    name: childId === 'JH-001' ? 'Rahul Munda' : 'Typical Child',
-    zscore: 0.1,
-    category: "normal",
-    vitals: {
-      weight: "14.2",
-      height: "102.5",
-      arm: "14.5",
-      attendance: "19/20 days"
-    },
-    mlFeatures: {
-      z_velocity: 0.05,
-      attendance_rate: 0.95,
-      missed_vaccine_streak: 0,
-      migrant_flag: 0,
-      z_acceleration: 0.0,
-      zwfl_min_3: 0.0,
-      cumulative_low_visits: 0
-    }
-  });
-});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Sub-task 5.2 — GET /api/mastery/aggregate/:node_id
@@ -683,11 +634,36 @@ app.post('/api/activity/next', (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Children Roster API endpoints
+// ─────────────────────────────────────────────────────────────────────────────
+
+app.get('/api/children', (req, res) => {
+  return res.status(200).json(serverChildren);
+});
+
+app.post('/api/children', (req, res) => {
+  const child = req.body || {};
+  if (!child.name || !child.nameHi || !child.age_months) {
+    return res.status(400).json({ error: 'Missing required child fields (name, nameHi, age_months).' });
+  }
+  const newChild = {
+    id: child.id || `CHILD_${Math.random().toString(36).slice(2).toUpperCase()}`,
+    name: child.name,
+    nameHi: child.nameHi,
+    age_months: parseInt(child.age_months, 10),
+    needs: Array.isArray(child.needs) ? child.needs : []
+  };
+  serverChildren.push(newChild);
+  return res.status(201).json(newChild);
+});
+
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Start server
 // ─────────────────────────────────────────────────────────────────────────────
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`[server] AURA server listening on port ${PORT}`);
 });
 
