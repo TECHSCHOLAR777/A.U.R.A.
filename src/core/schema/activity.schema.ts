@@ -296,7 +296,7 @@ export function validateC1(obj: unknown): C1Activity {
     throw new ValidationError('C1Activity', errors);
   }
 
-  return obj as C1Activity;
+  return obj as unknown as C1Activity;
 }
 
 /**

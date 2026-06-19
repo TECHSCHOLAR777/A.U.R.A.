@@ -504,6 +504,121 @@ function buildStaticFallback(nodeId, childProfiles) {
   };
 }
 
+function normalizeMaterials(value) {
+  return Array.isArray(value) ? value.map((item) => String(item).toLowerCase()) : [];
+}
+
+function toGuardrailCandidate(activity) {
+  const title = String(activity.adapted_title || '').toLowerCase();
+  const instructions = Array.isArray(activity.step_by_step_instructions)
+    ? activity.step_by_step_instructions.join(' ').toLowerCase()
+    : '';
+  const keywordText = `${title} ${instructions}`;
+  const keywords = keywordText
+    .split(/[^a-z_]+/)
+    .map((token) => token.trim())
+    .filter(Boolean);
+
+  return {
+    id: activity.activity_id,
+    targeted_domain: activity.targeted_domain || 'general',
+    materials: normalizeMaterials(activity.required_materials),
+    keywords,
+    choking_hazard: keywords.includes('bead') || keywords.includes('beads') || keywords.includes('pebble'),
+    inclusion_tags: [],
+    exclusion_tags: []
+  };
+}
+
+function activityMatchesNode(activity, node_id) {
+  const needle = String(node_id || '').toLowerCase();
+  const title = String(activity.adapted_title || '').toLowerCase();
+  const milestone = String(activity.milestone_targeted || '').toLowerCase();
+  return title.includes(needle) || milestone.includes(needle);
+}
+
+function scoreActivity(activity, node_id, age_band_months, context) {
+  let score = 0;
+  if (activity.age_band_months === age_band_months) score += 6;
+  if (activityMatchesNode(activity, node_id)) score += 3;
+
+  const requestedMaterials = normalizeMaterials(context && context.materials);
+  const activityMaterials = normalizeMaterials(activity.required_materials);
+  score += requestedMaterials.filter((material) => activityMaterials.includes(material)).length;
+
+  const inclusionFlags = Array.isArray(context && context.inclusion_flags) ? context.inclusion_flags : [];
+  if (inclusionFlags.length > 0 && activity.inclusion_modifications && activity.inclusion_modifications.instruction_override) {
+    score += 2;
+  }
+
+  return score;
+}
+
+function selectCandidatesV2(bank, node_id, age_band_months, context) {
+  if (!Array.isArray(bank) || bank.length === 0) return [];
+
+  const scored = bank
+    .filter((activity) => activity && Array.isArray(activity.step_by_step_instructions))
+    .map((activity) => ({
+      activity,
+      score: scoreActivity(activity, node_id, age_band_months, context)
+    }))
+    .sort((a, b) => b.score - a.score)
+    .map((entry) => entry.activity);
+
+  return scored;
+}
+
+function selectSafeSubstituteV2(bank, node_id, excludeId, age_band_months, context) {
+  return selectCandidatesV2(bank, node_id, age_band_months, context).find((activity) => activity.activity_id !== excludeId) || null;
+}
+
+function buildC1V2(candidate, validationResult, childProfiles, nodeId, offline) {
+  const age_band = deriveBand(childProfiles);
+  const normalized = structuredClone ? structuredClone(candidate) : JSON.parse(JSON.stringify(candidate));
+  normalized.activity_id = normalized.activity_id || `ACT_${Date.now()}`;
+  normalized.source = normalized.source || 'activity_bank';
+  normalized.age_band_months = normalized.age_band_months || age_band;
+  normalized.milestone_targeted = normalized.milestone_targeted || nodeId;
+  normalized.required_materials = Array.isArray(normalized.required_materials) ? normalized.required_materials : [];
+  normalized.inclusion_modifications = normalized.inclusion_modifications || { vast_parameter: 'none', instruction_override: '' };
+  normalized.safety_guard_applied = true;
+  normalized.provenance = {
+    ...(normalized.provenance || {}),
+    generated_offline: offline === true,
+    rules_fired: validationResult.rules_fired || [],
+    cache_key: cacheKey(normalized.activity_id, nodeId, normalized.age_band_months),
+    fallback_tier: offline ? (normalized.provenance && normalized.provenance.fallback_tier) || 'safe_default' : 'none'
+  };
+  return normalized;
+}
+
+function buildStaticFallbackV2(nodeId, childProfiles) {
+  const age_band = deriveBand(childProfiles);
+  return {
+    activity_id: `SAFE_FALLBACK_${nodeId}_${Date.now()}`,
+    source: 'safe_default',
+    targeted_domain: 'socio_emotional',
+    age_band_months: age_band,
+    milestone_targeted: nodeId,
+    adapted_title: 'Shared play circle',
+    step_by_step_instructions: [
+      'Seat the children in a circle.',
+      'Use claps, voice, or hand gestures to invite turn-taking.',
+      'Allow gesture or assisted responses for children who need extra time.'
+    ],
+    required_materials: [],
+    safety_guard_applied: true,
+    inclusion_modifications: { vast_parameter: 'attunement', instruction_override: 'Accept gesture responses and give extra wait time where needed.' },
+    provenance: {
+      generated_offline: false,
+      rules_fired: [],
+      cache_key: cacheKey('SAFE_FALLBACK', nodeId, age_band),
+      fallback_tier: 'safe_default'
+    }
+  };
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Express app setup
 // ─────────────────────────────────────────────────────────────────────────────
@@ -603,33 +718,34 @@ app.post('/api/activity/next', (req, res) => {
     const cleanNodeId = node_id.trim();
 
     // Select candidate activities from the bank
-    let candidates = selectCandidates(activityBank, cleanNodeId, age_band_months);
+    let candidates = selectCandidatesV2(activityBank, cleanNodeId, age_band_months, context);
 
     // If bandit weights are provided, score and sort candidates (D6 Integration)
     if (bandit_weights && context) {
       const features = extractFeatures(context);
       candidates = [...candidates].sort((a, b) => {
-        const scoreA = predictReward(a.id, features, bandit_weights);
-        const scoreB = predictReward(b.id, features, bandit_weights);
+        const scoreA = predictReward(a.activity_id || a.id, features, bandit_weights);
+        const scoreB = predictReward(b.activity_id || b.id, features, bandit_weights);
         return scoreB - scoreA; // descending order of expected reward
       });
     }
 
     // Reject/substitute loop (per design pseudocode)
     for (const candidate of candidates) {
-      const result = GuardrailEngine.validate(candidate, child_profiles);
+      const guardrailCandidate = toGuardrailCandidate(candidate);
+      const result = GuardrailEngine.validate(guardrailCandidate, child_profiles);
 
       if (result.action === null || result.action === 'flag_modify') {
         // Passed - assemble and return C1
-        const c1 = buildC1(candidate, result, child_profiles, cleanNodeId, false);
+        const c1 = buildC1V2(candidate, result, child_profiles, cleanNodeId, false);
         return res.status(200).json(c1);
 
       } else if (result.action === 'block_and_substitute') {
         // Substitute with a safe activity
-        const substitute = selectSafeSubstitute(activityBank, cleanNodeId, candidate.id);
+        const substitute = selectSafeSubstituteV2(activityBank, cleanNodeId, candidate.activity_id || candidate.id, age_band_months, context);
         if (substitute) {
-          const result2 = GuardrailEngine.validate(substitute, child_profiles);
-          const c1 = buildC1(substitute, result2, child_profiles, cleanNodeId, false);
+          const result2 = GuardrailEngine.validate(toGuardrailCandidate(substitute), child_profiles);
+          const c1 = buildC1V2(substitute, result2, child_profiles, cleanNodeId, false);
           return res.status(200).json(c1);
         }
         // No substitute found - continue to next candidate
@@ -638,7 +754,7 @@ app.post('/api/activity/next', (req, res) => {
     }
 
     // Sub-task 5.5 - All candidates exhausted: return static fallback (Req 7.7)
-    const fallback = buildStaticFallback(cleanNodeId, child_profiles);
+    const fallback = buildStaticFallbackV2(cleanNodeId, child_profiles);
     return res.status(200).json(fallback);
 
   } catch (err) {

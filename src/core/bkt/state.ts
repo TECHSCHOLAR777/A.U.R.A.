@@ -98,10 +98,11 @@ export function calculateTrajectoryFlag(state: ChildMasteryState): {
     }
 
     const h = pHistory.slice(-3);
+    const [h0, h1, h2] = h as [number, number, number];
     const deltas = [
-      h[1] - h[0],
-      h[2] - h[1],
-      currentPMastery - h[2],
+      h1 - h0,
+      h2 - h1,
+      currentPMastery - h2,
     ];
 
     const atRisk = deltas.every(d => d < -0.01) && currentPMastery < 0.50;

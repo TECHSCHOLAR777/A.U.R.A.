@@ -12,7 +12,7 @@
  *                          getRoomAggregate, getAllChildMastery, resetMastery)
  */
 
-import { MasteryStore, MOCK } from './aura-api.js';
+import { MasteryStore } from './aura-api.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants - Default BKT Parameters (Req 1.6)
@@ -90,7 +90,7 @@ const _priorsPromise = (async () => {
 // Internal helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
-function _getChildAgeBand(child_id) {
+function _getChildAgeBandFromWindow(child_id) {
   let ageMonths = 36; // default fallback
   
   if (typeof window !== 'undefined') {
@@ -131,6 +131,29 @@ function _getChildAgeBand(child_id) {
   if (ageMonths < 18) return '12-18';
   if (ageMonths < 24) return '18-24';
   return '24-36';
+}
+
+function _getChildAgeBand(child_id) {
+  let ageMonths = 36;
+
+  if (typeof window !== 'undefined' && Array.isArray(window.activeChildren)) {
+    const child = window.activeChildren.find((entry) => entry.childId === child_id);
+    if (child && typeof child.age_months === 'number') {
+      ageMonths = child.age_months;
+    }
+  }
+
+  if (ageMonths < 3) return '0-3';
+  if (ageMonths < 6) return '3-6';
+  if (ageMonths < 9) return '6-9';
+  if (ageMonths < 12) return '9-12';
+  if (ageMonths < 18) return '12-18';
+  if (ageMonths < 24) return '18-24';
+  return '24-36';
+}
+
+function _getChildAgeBandMirror(child_id) {
+  return _getChildAgeBand(child_id);
 }
 
 /**

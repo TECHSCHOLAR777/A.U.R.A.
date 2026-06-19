@@ -6,6 +6,7 @@
 <meta name="theme-color" content="#1B3A2D">
 <meta name="description" content="A.U.R.A. Anganwadi Unified Resource Assistant. Offline-first field tool for Anganwadi workers.">
 <title>A.U.R.A. Anganwadi Unified Resource Assistant</title>
+<link rel="manifest" href="/manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -223,7 +224,7 @@
 <body>
 <div class="top">
   <h1>A.U.R.A.</h1>
-  <p>Anganwadi Unified Resource Assistant. Connected production environment.</p>
+  <p>Anganwadi Unified Resource Assistant. Offline-ready support for the Anganwadi day.</p>
   <div class="langtoggle" role="group" aria-label="Language">
     <button id="lang-hi" class="on" onclick="setLang('hi')">हिंदी</button>
     <button id="lang-en" onclick="setLang('en')">English</button>
@@ -321,12 +322,13 @@ let activeCentre = null;
 let dssAnswers = {};
 let dssQuestions = [];
 let dssPlaceholder = false;
-let roomMaterials = ['soft_ball', 'cloth_pieces'];
+let roomMaterials = [];
 let voiceRecognition = null;
 let masteryMap = new Map();
 let dssSelectedChild = null;
 let dssResults = {};
 let activityBankCache = null;
+const ACTIVITY_CACHE_PREFIX = 'activity-cache::';
 
 // Online check maps to the inverse of the debug offline mode flag
 function isOnline() {
@@ -355,6 +357,37 @@ function deriveBandClient(childProfiles) {
   if (avg < 18) return '12-18';
   if (avg < 24) return '18-24';
   return '24-36';
+}
+
+function buildRoomContext(childProfiles) {
+  const presentCount = childProfiles.length;
+  const needs = new Set();
+  for (const profile of childProfiles) {
+    if (Array.isArray(profile.needs)) {
+      profile.needs.forEach((need) => needs.add(String(need)));
+    }
+  }
+
+  const ageMix = childProfiles.length
+    ? childProfiles.map((profile) => profile.age_months || 0).join(',')
+    : 'none';
+
+  return {
+    present_count: presentCount,
+    materials: roomMaterials,
+    inclusion_flags: [...needs],
+    ageMix,
+    materialsKey: roomMaterials.length ? roomMaterials.join(',') : 'none',
+  };
+}
+
+function getActivityCacheKey(payload) {
+  const materials = Array.isArray(payload.context?.materials) ? payload.context.materials.join('|') : '';
+  const needs = Array.isArray(payload.context?.inclusion_flags) ? payload.context.inclusion_flags.join('|') : '';
+  const ages = Array.isArray(payload.child_profiles)
+    ? payload.child_profiles.map((child) => child.age_months || 'na').join('|')
+    : '';
+  return `${ACTIVITY_CACHE_PREFIX}${payload.age_band_months}::${payload.node_id}::${materials}::${needs}::${ages}`;
 }
 
 // Parse DSS milestone_due strings to months (e.g. "6 months" -> 6, "3 years" -> 36)
@@ -1226,6 +1259,7 @@ async function initIdentity() {
         needs: Array.isArray(c.needs) ? c.needs : [],
         present: true
       }));
+      window.activeChildren = activeChildren;
 
       
       await loadMasteryMap();
@@ -1261,21 +1295,7 @@ function bktDoubleClick(childId) {
 
 async function updateBktStatus(childId, isCorrect) {
   try {
-    const existing = masteryMap.get(childId);
-    const observationCount = existing && typeof existing.observation_count === 'number'
-      ? existing.observation_count + 1
-      : 1;
-    const record = {
-      child_node_key: `${childId}|${activeNode}`,
-      child_id: childId,
-      node_id: activeNode,
-      p_mastery: isCorrect ? 0.85 : 0.25,
-      last_updated: new Date().toISOString(),
-      trajectory_flag: isCorrect ? 'mastered' : 'at_risk',
-      observation_count: observationCount,
-      p_history: [...((existing && Array.isArray(existing.p_history)) ? existing.p_history : []), isCorrect ? 0.85 : 0.25].slice(-5)
-    };
-    await MasteryStore.put(record);
+    const record = await BKTEngine.tapMastery(childId, activeNode, isCorrect);
     masteryMap.set(childId, record);
     
     syncQueueSize = (await AURA_DB.getPendingSync()).length;
@@ -1478,19 +1498,13 @@ async function loadECEActivity() {
   if (btn) { btn.disabled = true; btn.textContent = lang==='hi' ? '⏳ अनुकूलन जारी...' : '⏳ Adapting...'; }
 
   const present = activeChildren.filter(c => c.present);
-  const masteredCount = present.filter(c => { const r = masteryMap.get(c.childId); return r && r.trajectory_flag === 'mastered'; }).length;
-  const roomContext = {
-    present_count: present.length,
-    mastered_count: masteredCount,
-    needs_attention_count: present.length - masteredCount,
-    materials: roomMaterials,
-    inclusion_flags: present.filter(c => c.needs && c.needs.length > 0).map(c => String(c.childId).slice(0, 4))
-  };
   const childProfiles = present.map(c => ({ child_id: c.childId, age_months: c.age_months || 36, needs: c.needs || [] }));
+  const roomContext = buildRoomContext(childProfiles);
 
   const derivedBand = deriveBandClient(childProfiles);
   const derivedNode = deriveNodeFromBand(derivedBand);
   const payload = { node_id: derivedNode, age_band_months: derivedBand, child_profiles: childProfiles, context: roomContext };
+  const activityCacheKey = getActivityCacheKey(payload);
 
   // Local retrieval engine (runs on device server — no cloud LLM, works offline too)
   try {
@@ -1498,13 +1512,16 @@ async function loadECEActivity() {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
     });
     if (!resp.ok) throw new Error('retrieval engine error');
-    currentActivity = normalizeActivity(await resp.json(), 'retrieval_engine', 'retrieval_engine');
+    currentActivity = normalizeActivity(await resp.json(), 'activity_bank', 'none');
+    cacheResolvedActivity(activityCacheKey, currentActivity);
     activeNode = currentActivity.milestone_targeted || derivedNode;
+    window.currentActivity = currentActivity;
     render();
   } catch (err) {
-    console.warn('[Activity retrieval failed -> local template]', err);
+    console.warn('[Activity retrieval failed -> offline fallback]', err);
     activeNode = derivedNode;
-    currentActivity = await localActivityFromBank(payload, 'offline_template');
+    currentActivity = await resolveOfflineActivity(payload, activityCacheKey);
+    window.currentActivity = currentActivity;
     render();
   }
 }
@@ -1516,27 +1533,40 @@ function normalizeActivity(a, sourceDefault, tier) {
   return {
     activity_id: a.activity_id || a.id || 'ACT-UNKNOWN',
     source: a.source || sourceDefault,
-    targeted_domain: a.targeted_domain || a.domain || 'physical',
-    age_band_months: a.age_band_months || '36-48',
+    targeted_domain: a.targeted_domain || a.domain || 'socio_emotional',
+    age_band_months: a.age_band_months || deriveBandClient(activeChildren.map(c => ({ age_months: c.age_months || 36 }))),
     milestone_targeted: a.milestone_targeted || a.milestone || activeNode,
     adapted_title: a.adapted_title || a.title || (lang === 'hi' ? 'गतिविधि' : 'Activity'),
     step_by_step_instructions: Array.isArray(a.step_by_step_instructions) ? a.step_by_step_instructions : (Array.isArray(a.steps) ? a.steps : []),
     required_materials: a.required_materials || a.materials || [],
     safety_guard_applied: a.safety_guard_applied != null ? a.safety_guard_applied : true,
     inclusion_modifications: inclusionMods,
-    provenance: { rules_fired: Array.isArray(prov.rules_fired) ? prov.rules_fired : [], generated_offline: !!prov.generated_offline },
+    provenance: {
+      rules_fired: Array.isArray(prov.rules_fired) ? prov.rules_fired : [],
+      generated_offline: !!prov.generated_offline,
+      cache_key: prov.cache_key || '',
+      fallback_tier: prov.fallback_tier || tier || 'none'
+    },
     fallback_tier: a.fallback_tier || tier
   };
 }
 
 function normalizeInclusionMods(mods) {
-  if (!mods) return [];
-  if (Array.isArray(mods)) return mods.filter(Boolean).map(String);
-  if (typeof mods === 'string') return mods ? [mods] : [];
-  if (typeof mods === 'object') {
-    return Object.values(mods).filter(v => typeof v === 'string' && v.trim()).map(v => v.trim());
+  if (!mods) return { vast_parameter: 'none', instruction_override: '' };
+  if (Array.isArray(mods)) {
+    return {
+      vast_parameter: 'attunement',
+      instruction_override: mods.filter(Boolean).map(String).join(' ')
+    };
   }
-  return [];
+  if (typeof mods === 'string') return { vast_parameter: 'attunement', instruction_override: mods };
+  if (typeof mods === 'object') {
+    return {
+      vast_parameter: typeof mods.vast_parameter === 'string' ? mods.vast_parameter : 'none',
+      instruction_override: typeof mods.instruction_override === 'string' ? mods.instruction_override : ''
+    };
+  }
+  return { vast_parameter: 'none', instruction_override: '' };
 }
 
 async function getActivityBank() {
@@ -1576,8 +1606,11 @@ function adaptLocalActivity(activity, payload, tier) {
     rules_fired: Array.from(new Set([...(normalized.provenance.rules_fired || []), ...rules]))
   };
   normalized.fallback_tier = tier || 'local_template';
-  if (hasInclusionNeed && normalized.inclusion_modifications.length === 0) {
-    normalized.inclusion_modifications = ['Accept gesture responses and give extra wait time for children who need a non-verbal path.'];
+  if (hasInclusionNeed && !normalized.inclusion_modifications.instruction_override) {
+    normalized.inclusion_modifications = {
+      vast_parameter: 'attunement',
+      instruction_override: 'Accept gesture responses and give extra wait time for children who need a non-verbal path.'
+    };
   }
   return normalized;
 }
@@ -1589,54 +1622,113 @@ async function localActivityFromBank(payload, tier) {
       .filter(a => a && Array.isArray(a.step_by_step_instructions))
       .sort((a, b) => scoreLocalActivity(b, payload) - scoreLocalActivity(a, payload));
     const choice = candidates[0];
-    if (!choice) return localActivityFallback(tier);
+    if (!choice) return getSafeDefaultActivity();
     return adaptLocalActivity(choice, payload, tier);
   } catch (err) {
     console.warn('[Local activity bank unavailable -> safe fallback]', err);
-    return localActivityFallback(tier);
+    return getSafeDefaultActivity();
   }
 }
 
 function localActivityFallback(tier) {
   return {
     activity_id: 'ACT-OFFLINE-01',
-    source: 'local_template',
-    targeted_domain: 'physical',
-    age_band_months: '36-48',
+    source: tier === 'official_unmodified' ? 'official_unmodified' : 'safe_default',
+    targeted_domain: 'socio_emotional',
+    age_band_months: deriveBandClient(activeChildren.map(c => ({ age_months: c.age_months || 36 }))),
     milestone_targeted: activeNode,
     adapted_title: lang === 'hi' ? 'गेंद की ओर बढ़ना (ऑफ़लाइन टेम्पलेट)' : 'Reaching for the ball (offline template)',
     step_by_step_instructions: lang === 'hi'
       ? ['बच्चे के सामने नरम गेंद रखें और पकड़ने के लिए बढ़ावा दें।', 'गेंद थोड़ा दूर खिसकाएँ।']
       : ['Place a soft ball within reach and encourage the child to grasp it.', 'Move the ball slightly further away.'],
-    required_materials: ['soft_ball'],
-    safety_guard_applied: false,
+    required_materials: roomMaterials.slice(0, 3),
+    safety_guard_applied: true,
     inclusion_modifications: { vast_parameter: 'none', instruction_override: '' },
-    provenance: { rules_fired: [], generated_offline: true },
-    fallback_tier: tier || 'offline_template'
+    provenance: { rules_fired: [], generated_offline: true, cache_key: '', fallback_tier: tier || 'safe_default' },
+    fallback_tier: tier || 'safe_default'
   };
+}
+
+function cacheResolvedActivity(cacheKey, activity) {
+  try {
+    localStorage.setItem(`${ACTIVITY_CACHE_PREFIX}${cacheKey}`, JSON.stringify(activity));
+  } catch (err) {
+    console.warn('[Activity cache write skipped]', err);
+  }
+}
+
+function getCachedActivity(cacheKey) {
+  try {
+    const raw = localStorage.getItem(`${ACTIVITY_CACHE_PREFIX}${cacheKey}`);
+    if (!raw) return null;
+    return normalizeActivity(JSON.parse(raw), 'activity_cache', 'last_cache');
+  } catch (err) {
+    console.warn('[Activity cache read failed]', err);
+    return null;
+  }
+}
+
+function getSafeDefaultActivity() {
+  return {
+    activity_id: 'ACT-SAFE-DEFAULT-01',
+    source: 'safe_default',
+    targeted_domain: 'socio_emotional',
+    age_band_months: deriveBandClient(activeChildren.map(c => ({ age_months: c.age_months || 36 }))),
+    milestone_targeted: activeNode,
+    adapted_title: 'Shared play circle',
+    step_by_step_instructions: [
+      'Seat the children in a circle.',
+      'Use claps, voice, or hand gestures to invite turn-taking.',
+      'Allow gesture or assisted responses for children who need extra time.'
+    ],
+    required_materials: roomMaterials.slice(0, 3),
+    safety_guard_applied: true,
+    inclusion_modifications: { vast_parameter: 'attunement', instruction_override: 'Accept gesture responses and give extra wait time where needed.' },
+    provenance: { rules_fired: [], generated_offline: true, cache_key: '', fallback_tier: 'safe_default' },
+    fallback_tier: 'safe_default'
+  };
+}
+
+async function getOfficialFallbackActivity(payload) {
+  const bank = await getActivityBank();
+  const exact = bank.find((activity) => activity.age_band_months === payload.age_band_months);
+  return normalizeActivity(exact || getSafeDefaultActivity(), 'official_unmodified', 'official_unmodified');
+}
+
+async function resolveOfflineActivity(payload, cacheKey) {
+  const cached = getCachedActivity(cacheKey);
+  if (cached) return cached;
+  try {
+    return await localActivityFromBank(payload, 'safe_default');
+  } catch (err) {
+    console.warn('[Safe default lookup failed -> official fallback]', err);
+    return getOfficialFallbackActivity(payload);
+  }
 }
 
 
 async function loadDssQuestions() {
   if (dssQuestions.length > 0) return;
+  const cacheKey = 'dss-source::v1';
   try {
     const r = await fetch('/data/dss.json');
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const data = await r.json();
-    // Child developmental screening ONLY: use Part B milestone red-flags.
-    // Explicitly excludes caregiver pregnancy/birth-history items (Part A dss_01/dss_02 etc).
-    dssQuestions = data.items || [];
+    const allItems = Array.isArray(data.items) ? data.items : [];
+    localStorage.setItem(cacheKey, JSON.stringify(allItems));
+    // UI stays child-only: Part B only, while the source dataset remains explicit.
+    dssQuestions = allItems.filter(item => item && item.part === 'B');
     dssPlaceholder = false;
   } catch (err) {
-    console.warn('[DSS loading failed - using child-focused placeholder]', err);
-    // Navchetana DSS pending final data - child-development placeholder (no PII, no pregnancy items).
-    dssQuestions = [
-      { item_id: 'p1', milestone_due: '6 months', question: "Has the child NOT yet supported their own neck by 6 months?" },
-      { item_id: 'p2', milestone_due: '9 months', question: "Has the child NOT yet sat without support by 9 months?" },
-      { item_id: 'p3', milestone_due: '12 months', question: "Does the child NOT yet respond to their own name by 12 months?" },
-      { item_id: 'p4', milestone_due: '18 months', question: "Has the child NOT yet walked without support by 18 months?" },
-      { item_id: 'p5', milestone_due: '24 months', question: "Has the child NOT yet spoken a few words by 24 months?" }
-    ];
-    dssPlaceholder = true;
+    console.warn('[DSS loading failed - using cached authoritative dataset only]', err);
+    try {
+      const cached = JSON.parse(localStorage.getItem(cacheKey) || '[]');
+      dssQuestions = Array.isArray(cached) ? cached.filter(item => item && item.part === 'B') : [];
+      dssPlaceholder = dssQuestions.length === 0;
+    } catch (_cacheErr) {
+      dssQuestions = [];
+      dssPlaceholder = true;
+    }
   }
 }
 
@@ -1786,10 +1878,17 @@ function render(){
   document.getElementById('app').innerHTML=(screens[id] || screens.shell)();
   const hints={
     hi:"उत्पादन डाटाबेस-कनेक्टेड प्रणाली सक्रिय। भाषा बदलें, अनुकूलित खेल चुनें और ऑफ़लाइन/ऑनलाइन टॉगल करें।",
-    en:"Production database-connected system active. Select adapt activities, track attendance, and toggle offline simulator."
+    en:"Change language, mark attendance, and review today's activity."
   };
   document.getElementById('hint').textContent=hints[lang];
   document.querySelector('.phone').className='phone '+(lang==='hi'?'hindi':'');
+  if (id === 'ece') {
+    document.querySelectorAll('.vcard').forEach((card) => {
+      if (card.textContent.includes('Illustrative - not a real child.') || card.textContent.includes('Inclusion adaptation (example)')) {
+        card.remove();
+      }
+    });
+  }
 }
 
 function refreshDeviceTimes() {
@@ -1828,6 +1927,13 @@ window.submitChildRegistration = submitChildRegistration;
 // ── DOM Bootstrap ───────────────────────────────────────────────────────────
 (async () => {
   window.DEBUG_OFFLINE_MODE = false; // default online
+  if ('serviceWorker' in navigator) {
+    try {
+      await navigator.serviceWorker.register('/sw.js');
+    } catch (err) {
+      console.warn('[SW registration failed]', err);
+    }
+  }
   await initIdentity();
   await loadDssQuestions();
   render();

@@ -92,13 +92,15 @@ class BanditEngine {
    * Derive dynamic context from active session state.
    */
   getDynamicContext() {
-    const activity = (window.MOCK && window.MOCK.eceActivity) || {};
-    const domain = activity["targeted domain"] || activity.domain || 'general';
-    const materialsArray = activity["required materials"] || activity.materials || ['none'];
+    const activity = window.currentActivity || {};
+    const domain = activity.targeted_domain || activity.domain || 'general';
+    const materialsArray = activity.required_materials || activity.materials || ['none'];
     const materials = Array.isArray(materialsArray) ? materialsArray.join(',') : materialsArray;
 
-    const roomState = window.SESSION || {};
-    const ageMix = roomState.ageMix || 'mixed';
+    const children = Array.isArray(window.activeChildren) ? window.activeChildren : [];
+    const ageMix = children.length
+      ? children.map((child) => child.age_months || 0).join(',')
+      : 'mixed';
 
     return { ageMix, materials, domain };
   }

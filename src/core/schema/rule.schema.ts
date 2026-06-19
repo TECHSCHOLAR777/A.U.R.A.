@@ -433,5 +433,5 @@ export function validateC2Rule(obj: unknown): C2Rule {
     throw new ValidationError('C2Rule', errors);
   }
 
-  return obj as C2Rule;
+  return obj as unknown as C2Rule;
 }

@@ -692,7 +692,7 @@ if (typeof window !== 'undefined') {
    ============================================================================ */
 export const MOCK = {
   delay: (ms) => new Promise(r => setTimeout(r, ms)),
-  workerProfile: { id: 'AWW_KH_04', name: 'Worker', centre: 'AWC 04', block: 'Khunti, Jharkhand', childCount: 26, av: 'W' },
+  workerProfile: { id: 'AWW_LOCAL_01', name: 'Worker', centre: 'AWC', block: 'Local centre', childCount: 26, av: 'W' },
   children: [
     { id: 'JH-001', name: 'Child A', age: '6 yrs', nameHi: 'बच्चा A', status: 'normal' },
     { id: 'JH-002', name: 'Child B', age: '5 yrs', nameHi: 'बच्चा B', status: 'normal' },
@@ -728,5 +728,7 @@ export const MOCK = {
 if (typeof window !== 'undefined') {
   window.AURA_API = AURA_API;
   window.AURA_DB = AURA_DB;
-  window.MOCK = MOCK;
+  if (window.DEBUG_DEV_MOCKS === true) {
+    window.MOCK = MOCK;
+  }
 }
