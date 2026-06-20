@@ -3,30 +3,55 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#1B3A2D">
+<meta name="theme-color" content="#1A7F74">
 <meta name="description" content="A.U.R.A. Anganwadi Unified Resource Assistant. Offline-first field tool for Anganwadi workers.">
 <title>A.U.R.A. Anganwadi Unified Resource Assistant</title>
 <link rel="manifest" href="/manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --forest:#1B3A2D; --forest-d:#11261C; --green:#216A3F; --green-d:#1A5733; --red:#C0392B;
-    --amber:#CC6A1A; --orange:#D67424; --purple:#6B5296; --navy:#13384D;
-    --ink:#161616; --muted:#6B6B6B; --line:#E2E2E2; --card:#F6F6F6;
-    --bg:#FFFFFF; --rl:#FCEBE9; --al:#FCF3E3; --gl:#E9F3EC; --pl:#F0EDF7;
-    --saffron:#E8821E; --indiagreen:#1A7A3C;
-    --r-card:16px; --r-tile:11px; --tap:48px;
+    --color-primary:#1A7F74; --color-primary-light:#E8F5F3; --color-primary-dark:#115C52;
+    --color-success:#1B7E4A; --color-success-light:#E9F5EE; --color-success-text:#14562F;
+    --color-warning:#C07A00; --color-warning-light:#FFF3D6; --color-warning-text:#7A4E00;
+    --color-danger:#C0392B; --color-danger-light:#FDECEA; --color-danger-text:#8B1A12;
+    --color-info:#1A5B99; --color-info-light:#E8F0FB;
+    --color-neutral-900:#111827; --color-neutral-700:#374151; --color-neutral-500:#6B7280;
+    --color-neutral-400:#9CA3AF; --color-neutral-200:#E5E7EB; --color-neutral-100:#F3F4F6;
+    --color-neutral-50:#F9FAFB; --color-white:#FFFFFF; --color-surface:#FFFFFF; --color-background:#F4F6F8;
+    --color-domain-cognitive:#7C3AED; --color-domain-language:#1D4ED8; --color-domain-motor:#15803D;
+    --color-domain-socio:#D97706; --color-domain-creative:#BE185D;
+    --font-family:'Noto Sans','Noto Sans Devanagari',system-ui,sans-serif;
+    --text-display:700 26px/32px var(--font-family); --text-heading-lg:700 20px/26px var(--font-family);
+    --text-heading-md:700 17px/22px var(--font-family); --text-heading-sm:600 15px/20px var(--font-family);
+    --text-body-lg:500 15px/22px var(--font-family); --text-body-md:500 13px/20px var(--font-family);
+    --text-body-sm:500 12px/18px var(--font-family); --text-label:600 13px/18px var(--font-family);
+    --text-meta:500 11px/16px var(--font-family); --text-chip:600 11px/14px var(--font-family);
+    --text-button-lg:700 15px/20px var(--font-family); --text-button-md:700 13px/18px var(--font-family);
+    --text-button-sm:600 12px/16px var(--font-family);
+    --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px; --space-5:20px; --space-6:24px;
+    --space-8:32px; --space-12:48px; --space-14:56px;
+    --radius-sm:6px; --radius-md:10px; --radius-lg:16px; --radius-xl:24px; --radius-full:9999px;
+    --shadow-sm:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.06);
+    --shadow-md:0 4px 12px rgba(0,0,0,.10),0 2px 4px rgba(0,0,0,.06);
+    --shadow-lg:0 8px 24px rgba(0,0,0,.12),0 4px 8px rgba(0,0,0,.08);
+    --duration-fast:120ms; --duration-normal:200ms; --ease-out:cubic-bezier(0,0,.2,1);
+    --forest:var(--color-primary-dark); --forest-d:#11261C; --green:var(--color-success); --green-d:#14562F; --red:var(--color-danger);
+    --amber:var(--color-warning); --orange:#D67424; --purple:#6B5296; --navy:var(--color-info);
+    --ink:var(--color-neutral-900); --muted:var(--color-neutral-500); --line:var(--color-neutral-200); --card:var(--color-neutral-100);
+    --bg:var(--color-white); --rl:var(--color-danger-light); --al:var(--color-warning-light); --gl:var(--color-success-light); --pl:#F0EDF7;
+    --saffron:var(--color-warning); --indiagreen:var(--color-success);
+    --r-card:var(--radius-lg); --r-tile:var(--radius-md); --tap:44px;
   }
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html{-webkit-text-size-adjust:100%}
-  body{font-family:'Inter','Segoe UI',system-ui,-apple-system,sans-serif;background:#0d0d0d;color:var(--ink);
+  body{font-family:var(--font-family);background:#0d0d0d;color:var(--ink);
     min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:24px 12px 60px}
   .hindi *{font-family:'Noto Sans Devanagari','Inter',sans-serif}
   button{font-family:inherit}
-  :focus-visible{outline:3px solid var(--saffron);outline-offset:2px}
-  @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+  :focus-visible{outline:2px solid var(--color-primary);outline-offset:2px;border-radius:var(--radius-sm)}
+  @media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
 
   .top{width:100%;max-width:430px;color:#eee;margin-bottom:18px}
   .top h1{font-size:20px;font-weight:800;letter-spacing:.5px}
@@ -63,7 +88,7 @@
   .pill-lang{border:1px solid var(--line);border-radius:12px;padding:7px 11px;font-size:11px;font-weight:700;cursor:pointer;min-height:38px;background:#fff;color:var(--ink)}
   .bellbtn{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink);position:relative}
   .bellbtn .dotn{position:absolute;top:7px;right:8px;width:7px;height:7px;border-radius:50%;background:var(--red)}
-  .body{padding:0 20px 26px}
+  .body{padding:0 var(--space-4) calc(72px + var(--space-4))}
 
   .greet{font-size:16px;color:var(--muted);margin-top:12px}
   .greet small{display:block;font-size:13px;margin-top:2px}
@@ -138,7 +163,9 @@
   .vital .v{font-size:16px;font-weight:800;margin-top:3px}
   .vital .d{font-size:9.5px;margin-top:3px}
 
-  .btn{border:none;border-radius:11px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;width:100%;min-height:var(--tap);display:flex;align-items:center;justify-content:center;gap:8px}
+  .btn{border:none;border-radius:var(--radius-md);padding:12px 14px;font:var(--text-button-md);cursor:pointer;width:100%;min-height:var(--tap);display:flex;align-items:center;justify-content:center;gap:8px;transition:transform var(--duration-fast) var(--ease-out),background var(--duration-fast) var(--ease-out)}
+  .btn:active{transform:scale(.99)}
+  .btn:disabled{background:var(--color-neutral-100)!important;color:var(--color-neutral-400)!important;border-color:var(--color-neutral-200)!important;cursor:not-allowed;opacity:1!important}
   .btn svg{width:18px;height:18px}
   .btn.primary{background:var(--forest);color:#fff}
   .btn.green{background:var(--green);color:#fff}
@@ -217,6 +244,24 @@
   .mode-switch span{font-size:14px;font-weight:700;color:var(--muted);cursor:pointer;padding-bottom:4px;position:relative}
   .mode-switch span.active{color:var(--forest)}
   .mode-switch span.active::after{content:'';position:absolute;bottom:-12px;left:0;right:0;height:3px;background:var(--forest);border-radius:2px}
+
+  .workflow-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:10px 0 4px;margin-bottom:8px}
+  .workflow-chip{border-radius:var(--radius-md);padding:8px 6px;font:var(--text-chip);display:flex;align-items:center;justify-content:center;gap:4px;white-space:nowrap;min-height:36px}
+  .bkt-grid{grid-template-columns:repeat(3,1fr)!important;gap:10px!important}
+  .avatar-card{min-height:156px!important;padding:10px 7px!important}
+  .profile-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+  .profile-stat{background:var(--color-neutral-50);border:1px solid var(--line);border-radius:var(--radius-md);padding:10px 6px;text-align:center}
+  .domain-row{border:1px solid var(--line);border-radius:var(--radius-md);padding:10px 12px;margin-bottom:8px;background:#fff}
+  .domain-row .bar{height:7px;margin-top:7px}
+  .design-card{background:#fff;border:1px solid var(--line);border-left:4px solid var(--color-primary);border-radius:var(--radius-lg);padding:var(--space-4);box-shadow:var(--shadow-sm);margin-bottom:var(--space-4)}
+  .status-chip{display:inline-flex;align-items:center;justify-content:center;border-radius:var(--radius-full);padding:4px 9px;font:var(--text-chip);min-height:24px}
+  [style*="font-size:7"],[style*="font-size:8"],[style*="font-size:9"],[style*="font-size:10px"],[style*="font-size:10.5px"]{font-size:11px!important;line-height:16px!important}
+  button,[role="button"],.tab,.fab,.crow,.slot{min-height:44px}
+  .screen-reader-safe{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  @media (min-width:768px){
+    .phone{width:440px;height:820px}
+    body::before{content:"AURA works best on a mobile phone";position:fixed;top:10px;left:50%;transform:translateX(-50%);background:var(--color-neutral-50);color:var(--color-neutral-700);border:1px solid var(--line);border-radius:var(--radius-full);padding:6px 12px;font:var(--text-meta)}
+  }
 </style>
 <script src="https://unpkg.com/dexie@3/dist/dexie.js"></script>
 <script src="/config.js"></script>
@@ -230,7 +275,7 @@
     <button id="lang-en" onclick="setLang('en')">English</button>
   </div>
 </div>
-<div class="phone"><div id="app"></div><div class="modal" id="micmodal"><div class="micbox"><div class="micring"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2C8.3 2 7 3.3 7 5V10C7 11.7 8.3 13 10 13S13 11.7 13 10V5C13 3.3 11.7 2 10 2Z"/><path d="M5 10C5 13.5 7.4 16 10 16S15 13.5 15 10"/><path d="M10 16V19M7 19H13"/></svg></div><div class="ml" id="micl"></div><div class="ms" id="mics"></div><button class="mc" onclick="closeMic()" id="micc"></button></div></div><div class="modal" id="reflectionmodal"><div class="micbox" style="max-width:340px;text-align:left;"><div class="ml" id="reflection-title" style="text-align:center;margin-bottom:8px;"></div><div class="ms" id="reflection-sub" style="text-align:center;margin-bottom:14px;"></div><div id="reflection-list" style="max-height:280px;overflow:auto;"></div><button class="btn green" style="margin-top:14px;" onclick="confirmPendingPromotions()" id="reflection-confirm"></button><button class="mc" onclick="closeReflectionModal()" id="reflection-cancel" style="margin-top:10px;"></button></div></div></div>
+<div class="phone"><div id="app"></div><div class="modal" id="micmodal" role="dialog" aria-modal="true" aria-labelledby="micl"><div class="micbox"><div class="micring"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 2C8.3 2 7 3.3 7 5V10C7 11.7 8.3 13 10 13S13 11.7 13 10V5C13 3.3 11.7 2 10 2Z"/><path d="M5 10C5 13.5 7.4 16 10 16S15 13.5 15 10"/><path d="M10 16V19M7 19H13"/></svg></div><div class="ml" id="micl"></div><div class="ms" id="mics"></div><button class="mc" onclick="closeMic()" id="micc"></button></div></div><div class="modal" id="reflectionmodal" role="dialog" aria-modal="true" aria-labelledby="reflection-title"><div class="micbox" style="max-width:340px;text-align:left;"><div class="ml" id="reflection-title" style="text-align:center;margin-bottom:8px;"></div><div class="ms" id="reflection-sub" style="text-align:center;margin-bottom:14px;"></div><div id="reflection-list" style="max-height:280px;overflow:auto;"></div><button class="btn green" style="margin-top:14px;" onclick="confirmPendingPromotions()" id="reflection-confirm"></button><button class="mc" onclick="closeReflectionModal()" id="reflection-cancel" style="margin-top:10px;"></button></div></div></div>
 <p class="hint" id="hint"></p>
 <script type="module">
 import { BKTEngine } from './bkt_engine.js';
@@ -326,12 +371,14 @@ let dssPlaceholder = false;
 let roomMaterials = [];
 let voiceRecognition = null;
 let masteryMap = new Map();
+let allChildMasteryRecords = [];
 let dssSelectedChild = null;
 let dssResults = {};
 let activityBankCache = null;
 let pendingPromotions = [];
 let recoveryCohort = null;
 let recoveryInsights = {};
+let profileChildId = null;
 const ACTIVITY_CACHE_PREFIX = 'activity-cache::';
 const DAILY_STATE_KEY = 'dailyWorkflow';
 let dailyState = {
@@ -472,6 +519,22 @@ function getInsightChip(childId) {
   return `<div style="margin-top:4px;font-size:8px;font-weight:700;display:inline-block;padding:3px 7px;border-radius:8px;background:${palette.bg};color:${palette.color};">${label}</div>`;
 }
 
+function domainLabel(domain) {
+  const labels = {
+    cognitive: 'Cognitive',
+    language: 'Language',
+    motor_physical: 'Motor / physical',
+    socio_emotional: 'Social-emotional',
+    creative: 'Creative'
+  };
+  return labels[domain] || String(domain || 'Activity area').replace(/_/g, ' ');
+}
+
+function openChildProfile(childId) {
+  profileChildId = childId;
+  go('child_profile');
+}
+
 function recoveryForecastPanel(presentChildren) {
   const children = presentChildren || [];
   const counts = children.reduce((acc, child) => {
@@ -569,7 +632,7 @@ function nav(active){
       // Center action: forward-arrow opens the Day Review / send screen (Req 4). No voice here.
       html+=`<div class="navspacer"></div><div class="fab" role="button" aria-label="${lang==='hi'?'दिन की समीक्षा':'Day review'}" onclick="jump('audit')">${SVG.refer}</div><div class="navspacer"></div>`;
     }
-    else{const on=tb[0]===active?'on':'';html+=`<div class="tab ${on}" role="button" onclick="navTap('${tb[0]}')"><span>${SVG[tb[1]]}</span><span class="lab">${labels[i]}</span></div>`;}
+    else{const on=tb[0]===active?'on':'';html+=`<div class="tab ${on}" role="button" tabindex="0" aria-current="${tb[0]===active?'page':'false'}" onclick="navTap('${tb[0]}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();navTap('${tb[0]}')}"><span aria-hidden="true">${SVG[tb[1]]}</span><span class="lab">${labels[i]}</span></div>`;}
   });
   return html+'</div>';
 }
@@ -853,21 +916,21 @@ const screens={
       if (flag === 'mastered') { color = 'var(--green)'; label = lang === 'hi' ? 'सफल' : 'Mastered'; }
 
       return `
-        <div class="avatar-card" 
+        <div class="avatar-card" role="group" aria-label="${c.name[lang]}, ${label}" 
              style="display:flex;flex-direction:column;align-items:center;padding:10px 6px;border:1.5px solid var(--line);border-radius:var(--r-tile);background:#fff;user-select:none;touch-action:none;min-width:64px;"
              title="${c.name[lang]} (${label})">
           <div class="avatar-circle" style="width:36px;height:36px;border-radius:50%;background:${color};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;position:relative;margin-bottom:6px;">
             ${initials}
             <span style="position:absolute;bottom:-2px;right:-2px;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid ${color};"></span>
           </div>
-          <span style="font-size:9.5px;font-weight:700;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;color:var(--ink);">${c.name[lang].split(' ')[0]}</span>
+          <button style="border:none;background:transparent;color:var(--ink);font-size:11px;font-weight:800;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;cursor:pointer;min-height:24px;padding:0;" onclick="event.stopPropagation();openChildProfile('${c.childId}')" aria-label="Open ${c.name[lang]} profile">${c.name[lang].split(' ')[0]}</button>
           <span style="font-size:8px;color:var(--muted);">${label}</span>
-          ${isBeta ? `<span style="margin-top:4px;font-size:8px;font-weight:700;padding:2px 6px;border-radius:8px;background:var(--pl);color:var(--purple);">${lang === 'hi' ? 'बीटा' : 'Beta'}</span>` : ''}
+          ${isBeta ? `<span style="margin-top:4px;font-size:8px;font-weight:700;padding:2px 6px;border-radius:8px;background:var(--pl);color:var(--purple);">${lang === 'hi' ? 'अतिरिक्त सहारा' : 'Extra support'}</span>` : ''}
           ${hasPendingPromotion ? `<span style="margin-top:4px;font-size:8px;font-weight:700;padding:2px 6px;border-radius:8px;background:var(--al);color:var(--amber);">${lang === 'hi' ? 'समीक्षा' : 'Review'}</span>` : ''}
           ${getInsightChip(c.childId)}
           <div style="display:flex;gap:4px;margin-top:7px;width:100%;">
-            <button ${dailyState.activity_completed ? '' : 'disabled'} style="flex:1;border:1px solid var(--green);background:var(--gl);color:var(--green);border-radius:7px;font-size:8px;font-weight:800;padding:5px 2px;opacity:${dailyState.activity_completed ? '1' : '.45'};" onclick="event.stopPropagation();recordObservation('${c.childId}', true)">Got it</button>
-            <button ${dailyState.activity_completed ? '' : 'disabled'} style="flex:1;border:1px solid var(--red);background:var(--rl);color:var(--red);border-radius:7px;font-size:8px;font-weight:800;padding:5px 2px;opacity:${dailyState.activity_completed ? '1' : '.45'};" onclick="event.stopPropagation();recordObservation('${c.childId}', false)">Support</button>
+            <button ${dailyState.activity_completed ? '' : 'disabled'} aria-label="Mark ${c.name[lang]} as got it" style="flex:1;border:1px solid var(--green);background:var(--gl);color:var(--green);border-radius:7px;font-size:8px;font-weight:800;padding:5px 2px;opacity:${dailyState.activity_completed ? '1' : '.45'};" onclick="event.stopPropagation();recordObservation('${c.childId}', true)">Got it</button>
+            <button ${dailyState.activity_completed ? '' : 'disabled'} aria-label="Mark ${c.name[lang]} for support" style="flex:1;border:1px solid var(--red);background:var(--rl);color:var(--red);border-radius:7px;font-size:8px;font-weight:800;padding:5px 2px;opacity:${dailyState.activity_completed ? '1' : '.45'};" onclick="event.stopPropagation();recordObservation('${c.childId}', false)">Support</button>
           </div>
         </div>
       `;
@@ -935,11 +998,11 @@ const screens={
       <div class="vcard" style="margin-top:12px;border-left-color:var(--green);background:linear-gradient(180deg,#fff,#f9fbfa);">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
           <div style="border:1px solid var(--line);border-radius:10px;padding:10px;">
-            <div style="font-size:9px;font-weight:800;color:var(--green);text-transform:uppercase;margin-bottom:6px;">${lang === 'hi' ? 'पूरी कक्षा' : 'Alpha Path'}</div>
+            <div style="font-size:9px;font-weight:800;color:var(--green);text-transform:uppercase;margin-bottom:6px;">${lang === 'hi' ? 'पूरी कक्षा' : 'Whole-room path'}</div>
             <div style="font-size:10px;line-height:1.5;">${(currentActivity.path_alpha_core || []).join('<br>')}</div>
           </div>
           <div style="border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--pl);">
-            <div style="font-size:9px;font-weight:800;color:var(--purple);text-transform:uppercase;margin-bottom:6px;">${lang === 'hi' ? 'रिकवरी सहारा' : 'Beta Support'}</div>
+            <div style="font-size:9px;font-weight:800;color:var(--purple);text-transform:uppercase;margin-bottom:6px;">${lang === 'hi' ? 'रिकवरी सहारा' : 'Extra support group'}</div>
             <div style="font-size:10px;line-height:1.5;">${(currentActivity.path_beta_remediation || []).join('<br>')}</div>
             <div style="margin-top:8px;font-size:8px;color:var(--muted);">${lang === 'hi' ? 'बच्चे' : 'Children'}: ${presentChildren.filter((child) => betaIds.includes(child.childId)).map((child) => child.name[lang].split(' ')[0]).join(', ')}</div>
           </div>
@@ -972,7 +1035,7 @@ const screens={
                 ${sourceLabel}
               </div>
               <div style="font-size:16px;font-weight:800;margin-top:6px;max-width:80%;">${currentActivity ? currentActivity.adapted_title : t.eceGame}</div>
-              <div style="font-size:9.5px;color:var(--muted);margin-top:4px">${currentActivity ? (currentActivity.age_band_months + ' months · ' + currentActivity.targeted_domain) : t.eceAge}</div>
+              <div style="font-size:9.5px;color:var(--muted);margin-top:4px">${currentActivity ? (currentActivity.age_band_months + ' months · ' + domainLabel(currentActivity.targeted_domain)) : t.eceAge}</div>
               <div style="font-size:10.5px;line-height:1.55;margin-top:8px">${currentActivity ? currentActivity.step_by_step_instructions.join('<br>') : t.eceDesc}</div>
               <div style="font-size:8px;color:var(--muted);margin-top:8px">${currentActivity ? ('milestone: ' + currentActivity.milestone_targeted) : t.ecePick}</div>
               ${inclHtml}
@@ -1005,7 +1068,7 @@ const screens={
                 ${currentActivity && currentActivity.macro_cohort_split && currentActivity.macro_cohort_split.is_split
                   ? (lang === 'hi'
                     ? `बीटा समूह ${currentActivity.remediation_domain} डोमेन में अतिरिक्त सहारे के लिए चुना गया है।`
-                    : `The beta group has been selected for extra support in ${currentActivity.remediation_domain}.`)
+                    : `A small group has been selected for extra support in ${domainLabel(currentActivity.remediation_domain)}.`)
                   : (lang === 'hi'
                     ? 'आज का सत्र सामान्य पूरे-समूह पथ पर है।'
                     : 'Today stays on the standard whole-group path.')}
@@ -1136,8 +1199,8 @@ const screens={
             </div>
 
             <div style="background:var(--card);border-radius:10px;padding:8px 12px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
-              <span style="font-size:10.5px;font-weight:700;color:var(--ink);">${lang === 'hi' ? 'प्रगति' : 'Progress'}: ${answeredCount} / ${totalQ}</span>
-              <div style="flex:1;margin-left:12px;height:6px;background:var(--line);border-radius:3px;overflow:hidden;"><div style="height:100%;width:${totalQ > 0 ? Math.round((answeredCount / totalQ) * 100) : 0}%;background:var(--purple);border-radius:3px;transition:width .3s;"></div></div>
+              <span style="font-size:10.5px;font-weight:700;color:var(--ink);">${answeredCount >= totalQ && totalQ > 0 ? 'Screening complete' : `Question ${Math.min(answeredCount + 1, totalQ || 1)} of ${totalQ}`}</span>
+              <div role="progressbar" aria-valuenow="${totalQ > 0 ? Math.round((answeredCount / totalQ) * 100) : 0}" aria-valuemin="0" aria-valuemax="100" style="flex:1;margin-left:12px;height:6px;background:var(--line);border-radius:3px;overflow:hidden;"><div style="height:100%;width:${totalQ > 0 ? Math.round((answeredCount / totalQ) * 100) : 0}%;background:var(--purple);border-radius:3px;transition:width .3s;"></div></div>
             </div>
 
             ${dssPlaceholder ? `<div style="background:var(--al);border-left:4px solid var(--amber);border-radius:10px;padding:9px;font-size:9.5px;color:var(--amber);font-weight:700;margin-bottom:10px;">${lang==='hi'?'Navchetana DSS - अंतिम डेटा लंबित':'Navchetana DSS - final data pending'}</div>` : ''}
@@ -1189,7 +1252,27 @@ const screens={
       [dssLabel, dssScreenedCount > 0 ? 1 : 0],
       [syncLabel, syncQueueSize===0 ? 1 : 0]
     ];
-    const items=auditRows.map(i=>`<div class="item" style="border-left-color:var(${i[1]?'--green':'--red'})"><span class="b" style="background:var(${i[1]?'--green':'--red'})">${i[1]?'✓':'!'}</span><span class="x">${i[0]}</span></div>`).join('');
+    const statusItem = (label, ok, warnColor = '--amber') => `<div class="item" style="border-left-color:var(${ok?'--green':warnColor})"><span class="b" style="background:var(${ok?'--green':warnColor})">${ok?'✓':'!'}</span><span class="x">${label}</span></div>`;
+    const needsAttention = (!dailyState.observations_recorded || pendingPromotions.length > 0)
+      ? `<div class="design-card" style="background:var(--al);border-left-color:var(--amber);"><div style="font:var(--text-body-md);color:var(--amber);">${pendingPromotions.length ? `${pendingPromotions.length} milestone review(s) are waiting.` : 'Some children still need observation today.'}</div><button class="btn ghost" style="margin-top:12px;border-color:var(--amber);color:var(--amber);" onclick="jump('ece')">Go to Activity</button></div>`
+      : '';
+    const syncCard = syncQueueSize === 0
+      ? `<div class="design-card" style="background:var(--gl);border-left-color:var(--green);"><div style="font:var(--text-heading-sm);color:var(--green);">All data synced</div><div style="font:var(--text-meta);color:var(--muted);margin-top:4px;">Your data is always saved on this device first.</div></div>`
+      : `<div class="design-card" style="background:var(--al);border-left-color:var(--amber);"><div style="font:var(--text-heading-sm);color:var(--amber);">${syncQueueSize} item(s) queued</div><div style="font:var(--text-meta);color:var(--muted);margin-top:4px;">Will sync when the internet is available. Queued data is safe, not an error.</div></div>`;
+    const items=[
+      `<div class="sectionlabel">Today</div>`,
+      statusItem(`Attendance confirmed: ${presentCount} present, ${absentCount} absent`, dailyState.attendance_confirmed),
+      statusItem(`Activity completed: ${currentActivity ? currentActivity.adapted_title : 'not adapted yet'}`, dailyState.activity_completed),
+      statusItem(`Children observed: ${masteredCount} of ${totalCount} mastered`, dailyState.observations_recorded),
+      statusItem(`DSS screening: ${dssScreenedCount} completed`, dssScreenedCount > 0),
+      needsAttention,
+      `<div class="sectionlabel">Saved on device</div>`,
+      statusItem(`${dssScreenedCount} DSS screening result(s) saved`, dssScreenedCount > 0),
+      statusItem(`${masteredCount} mastery observation(s) saved`, masteredCount > 0),
+      statusItem(`${pendingPromotions.length} milestone review(s) pending`, pendingPromotions.length === 0),
+      `<div class="sectionlabel">Sync status</div>`,
+      syncCard
+    ].join('');
     return `<div class="screen active">${statusbar(nowClock())}${header()}<div class="scroll"><div class="body" style="padding-top:6px"><button class="backbtn" style="background:var(--pl);color:var(--navy)" onclick="back()">‹ ${lang==='hi'?'वापस':'Back'}</button>${workflowStrip('day')}${kw(t.auditKw,'--navy')}<div style="background:var(--al);border-left:6px solid var(--amber);border-radius:12px;padding:13px;margin:6px 0 14px"><div style="font-size:12px;font-weight:700;color:var(--amber)">${t.auditYes}</div><div style="font-size:9.5px;color:var(--amber);margin-top:4px">${t.auditYesD}</div></div><div class="sectionlabel">${t.auditWhat}</div>${items}<div style="background:var(--gl);border-radius:10px;padding:11px;margin-top:4px;font-size:9.5px;color:var(--green);line-height:1.5">${t.auditSafe}</div><button class="btn primary" style="margin-top:14px" onclick="closeDayReview()">${t.auditApprove}</button></div></div>${nav('home')}</div>`;
   },
   more() {
@@ -1264,6 +1347,82 @@ const screens={
           </div>
         </div>
         ${nav('more')}
+      </div>
+    `;
+  },
+  child_profile() {
+    const child = activeChildren.find(c => c.childId === profileChildId) || activeChildren[0];
+    if (!child) {
+      return `<div class="screen active">${statusbar(nowClock())}${header()}<div class="scroll"><div class="body" style="padding-top:6px"><button class="backbtn" style="background:var(--gl);color:var(--green)" onclick="back()">‹ Back</button><div class="design-card"><div style="font:var(--text-heading-md)">No child selected</div><div style="font:var(--text-body-sm);color:var(--muted);margin-top:6px;">Open a child from the activity screen to view progress.</div></div></div></div>${nav('ece')}</div>`;
+    }
+    const records = allChildMasteryRecords.filter(r => r && r.child_id === child.childId);
+    const domains = ['cognitive', 'language', 'motor_physical', 'socio_emotional', 'creative'];
+    const history = (window.__lastChildHistory || []).filter(item => item.child_id === child.childId).slice(-10).reverse();
+    const mastered = records.filter(r => r.trajectory_flag === 'mastered' || Number(r.p_mastery || 0) >= 0.85).length;
+    const lastSeen = child.present ? 'Today' : 'Not present today';
+    const domainRows = domains.map(domain => {
+      const domainRecords = records.filter(r => r.domain === domain);
+      const masteredDomain = domainRecords.filter(r => r.trajectory_flag === 'mastered' || Number(r.p_mastery || 0) >= 0.85).length;
+      const total = Math.max(domainRecords.length, 1);
+      const pct = Math.min(100, Math.round((masteredDomain / total) * 100));
+      return { domain, pct, text: domainRecords.length ? `${masteredDomain} mastered · ${Math.max(total - masteredDomain, 0)} in progress` : 'More observations needed' };
+    }).sort((a, b) => a.pct - b.pct).map(row => `
+      <div class="domain-row">
+        <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;">
+          <span class="status-chip" style="background:var(--color-primary-light);color:var(--color-primary-dark);">${domainLabel(row.domain)}</span>
+          <span style="font:var(--text-meta);color:var(--muted);">${row.text}</span>
+        </div>
+        <div class="bar" role="progressbar" aria-valuenow="${row.pct}" aria-valuemin="0" aria-valuemax="100"><i style="width:${row.pct}%;background:var(--color-primary);"></i></div>
+      </div>
+    `).join('');
+    const insight = recoveryInsights[child.childId] || { state: 'needs_data', label: '' };
+    const insightText = insight.state === 'on_track'
+      ? 'On track: progressing steadily from recent observations.'
+      : insight.state === 'increase_dosage'
+        ? 'Increase support: give more guided practice in the next session.'
+        : 'Needs more data: attend 2 or more sessions to show a forecast.';
+    const insightBg = insight.state === 'on_track' ? 'var(--gl)' : insight.state === 'increase_dosage' ? 'var(--al)' : 'var(--color-neutral-100)';
+    const insightColor = insight.state === 'on_track' ? 'var(--green)' : insight.state === 'increase_dosage' ? 'var(--amber)' : 'var(--muted)';
+    const dss = dssResults[child.childId];
+    const dssText = dss ? `${dss.result} · ${new Date(dss.timestamp).toLocaleDateString()}` : 'No screening saved yet';
+    return `
+      <div class="screen active">${statusbar(nowClock())}${header()}
+        <div class="scroll">
+          <div class="body" style="padding-top:6px;">
+            <button class="backbtn" style="background:var(--gl);color:var(--green)" onclick="back()">‹ ${lang==='hi'?'वापस':'Back'}</button>
+            <div class="design-card" style="border-left-color:var(--color-primary);">
+              <div style="display:flex;gap:14px;align-items:center;">
+                <div style="width:56px;height:56px;border-radius:50%;background:var(--color-primary);color:white;display:flex;align-items:center;justify-content:center;font:var(--text-heading-lg);">${child.name[lang].charAt(0).toUpperCase()}</div>
+                <div style="flex:1;">
+                  <div style="font:var(--text-heading-lg);">${child.name[lang]}</div>
+                  <div style="font:var(--text-body-sm);color:var(--muted);">${child.age[lang]} · ${activeCentre || 'Anganwadi room'}</div>
+                </div>
+              </div>
+              <div class="profile-summary">
+                <div class="profile-stat"><strong style="display:block;font:var(--text-heading-sm);">${mastered}</strong><span style="font:var(--text-meta);color:var(--muted);">Skills mastered</span></div>
+                <div class="profile-stat"><strong style="display:block;font:var(--text-heading-sm);">${history.length || records.length}</strong><span style="font:var(--text-meta);color:var(--muted);">Recent sessions</span></div>
+                <div class="profile-stat"><strong style="display:block;font:var(--text-heading-sm);">${lastSeen}</strong><span style="font:var(--text-meta);color:var(--muted);">Last seen</span></div>
+              </div>
+            </div>
+            <div class="sectionlabel">Development areas</div>
+            ${domainRows}
+            <div class="sectionlabel">Progress outlook</div>
+            <div class="design-card" style="background:${insightBg};border-left-color:${insightColor};">
+              <div style="font:var(--text-heading-sm);color:${insightColor};">${insightText}</div>
+              <div style="font:var(--text-meta);color:var(--muted);margin-top:8px;">Forecast is advisory only. It does not change activities automatically.</div>
+            </div>
+            <div class="sectionlabel">Recent sessions</div>
+            <div class="design-card">
+              ${(history.length ? history : records.slice(-5)).map(item => `<div style="display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid var(--line);padding:8px 0;font:var(--text-body-sm);"><span>${new Date(item.timestamp || item.updated_at || Date.now()).toLocaleDateString()} · ${item.is_correct === false ? 'Support' : 'Got it'}</span><span style="color:var(--muted);">${domainLabel(item.domain)}</span></div>`).join('') || `<div style="font:var(--text-body-sm);color:var(--muted);">No observations yet. Complete an activity and mark Got it or Support.</div>`}
+            </div>
+            <div class="sectionlabel">Screenings</div>
+            <div class="design-card" style="border-left-color:var(--purple);">
+              <div style="font:var(--text-body-md);">${dssText}</div>
+              <button class="btn ghost" style="border-color:var(--purple);color:var(--purple);margin-top:12px;" onclick="selectDssChild('${child.childId}')">Screen now</button>
+            </div>
+          </div>
+        </div>
+        ${nav('ece')}
       </div>
     `;
   },
@@ -1489,6 +1648,8 @@ async function initIdentity() {
 
 async function loadMasteryMap() {
   const records = await MasteryStore.getAllByNode(activeNode);
+  const allEntries = await Promise.all(activeChildren.map(child => BKTEngine.getAllChildMastery(child.childId)));
+  allChildMasteryRecords = allEntries.flat();
   masteryMap = new Map();
   for (const child of activeChildren) {
     masteryMap.set(child.childId, null);
@@ -1529,6 +1690,10 @@ async function updateBktStatus(childId, isCorrect) {
     if (record.committed) {
       masteryMap.set(childId, record);
     }
+    allChildMasteryRecords = await BKTEngine.getAllChildMastery(childId).then(records => {
+      const others = allChildMasteryRecords.filter(item => item && item.child_id !== childId);
+      return others.concat(records);
+    });
     await refreshPendingPromotions();
     await buildRecoveryInsights(activeChildren.filter(c => c.present));
     await saveDailyState({ observations_recorded: true, reflection_checked: pendingPromotions.length === 0 });
@@ -1592,6 +1757,7 @@ function selectDssChild(childId) {
     age_months: child.age_months || 36
   };
   dssAnswers = {};
+  if (stack[stack.length - 1] !== 'dss') stack.push('dss');
   render();
 }
 
@@ -2362,14 +2528,14 @@ function renderReflectionModal() {
   list.innerHTML = pendingPromotions.map((item, idx) => {
     const child = activeChildren.find((entry) => entry.childId === item.child_id);
     const childName = child ? child.name[lang] : item.child_id;
-    const nextLevel = item.node_id;
+    const evidence = Number(item.p_mastery || 0) >= 0.92 ? 'Consistent evidence' : 'Good evidence';
     return `
       <label style="display:flex;align-items:flex-start;gap:10px;border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px;cursor:pointer;">
         <input type="checkbox" data-promotion-id="${item.id}" checked style="margin-top:2px;width:18px;height:18px;accent-color:var(--green);">
         <div>
           <div style="font-size:12px;font-weight:700;color:var(--ink);">${idx + 1}. ${childName}</div>
-          <div style="font-size:10px;color:var(--muted);margin-top:2px;">${lang === 'hi' ? 'डोमेन' : 'Domain'}: ${item.domain}</div>
-          <div style="font-size:10px;color:var(--muted);">${lang === 'hi' ? 'नोड' : 'Node'}: ${nextLevel} · p=${Number(item.p_mastery || 0).toFixed(2)}</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px;">Activity area: ${domainLabel(item.domain)}</div>
+          <div style="font-size:10px;color:var(--muted);">${evidence} from recent observations</div>
         </div>
       </label>
     `;
@@ -2471,6 +2637,7 @@ window.closeMic = closeMic;
 window.openReflectionModal = openReflectionModal;
 window.closeReflectionModal = closeReflectionModal;
 window.confirmPendingPromotions = confirmPendingPromotions;
+window.openChildProfile = openChildProfile;
 window.loadECEActivity = loadECEActivity;
 window.startActivitySession = startActivitySession;
 window.completeActivitySession = completeActivitySession;
