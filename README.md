@@ -14,6 +14,8 @@ A.U.R.A. is designed for low-connectivity field use. The app keeps core interact
 - Bayesian Knowledge Tracing for child milestone progress
 - guardrail validation for safety and inclusion
 - recovery support through cohorting, reflection review, and local forecasting
+- child-level progress profiles across the 5 activity domains
+- production UI polish based on the AURA v2 design specification
 - offline queueing and zero-PII sync primitives
 
 ## What Is Implemented Today
@@ -25,6 +27,7 @@ The live product surface is the `web/` PWA, not the `src/` reference layer.
 Current user-facing screens include:
 
 - splash and profile setup/login
+- signup demo seed utility for 15 children and 10 days of local history
 - home dashboard
 - attendance
 - ECE activity
@@ -32,6 +35,7 @@ Current user-facing screens include:
 - day review
 - more/settings
 - child roster management
+- child profile with domain progress, recent observations, forecast, and DSS status
 
 The ECE flow currently supports:
 
@@ -41,6 +45,15 @@ The ECE flow currently supports:
 - recovery insight chips
 - duo-path recovery guidance for a selected beta cohort
 - pending promotion review through a reflection modal
+
+The current UI follows the AURA v2 design direction:
+
+- Noto Sans typography
+- teal, green, amber, red, and neutral design tokens
+- 44px minimum touch targets for primary interactions
+- 3-column mobile BKT grid
+- worker-facing recovery copy instead of technical cohort labels
+- accessible modal, navigation, progress, and focus-state improvements
 
 ### Intelligence and local logic
 
@@ -92,6 +105,7 @@ flowchart LR
 ### Runtime responsibilities
 
 - `web/index.html` is the main application shell and screen renderer.
+- `web/index.html` also contains the current design-token layer and screen-level UI composition.
 - `web/server.js` serves the PWA, static data, and current backend endpoints.
 - `web/aura-api.js` is the browser-side integration layer for local storage, queueing, and API calls.
 - `web/bkt_engine.js` manages child mastery state.
@@ -175,6 +189,24 @@ flowchart TD
     K --> L["Write history"]
     K --> M["Stage pending promotion if threshold crossed"]
     M --> N["Reflection modal confirms or rejects"]
+```
+
+### User flow diagram
+
+```mermaid
+flowchart TD
+    A["Signup or login"] --> B["Optional demo seed"]
+    B --> C["Home workflow"]
+    C --> D["Attendance"]
+    D --> E["Activity adaptation"]
+    E --> F["Start and complete activity"]
+    F --> G["Observe children with Got it or Support"]
+    G --> H["Recovery insights and reflection review"]
+    H --> I["Child profile"]
+    H --> J["DSS screening"]
+    I --> K["Day Review"]
+    J --> K
+    K --> L["Queued or synced records"]
 ```
 
 ### Request and data flow summary
@@ -310,6 +342,8 @@ cd web
 npm test
 ```
 
+Note: the root `package.json` currently contains a `smoke:test` script, but the referenced `scripts/smoke-test.mjs` file is not present in this checkout. Use the root and web test suites above, plus manual browser smoke testing, as the current reliable validation path.
+
 ## Operations Notes
 
 ### PWA behavior
@@ -324,6 +358,15 @@ npm test
 - Duo-path activities are additive wrappers around the base activity flow.
 - Forecasting is advisory only and does not auto-change milestones or activities.
 - Reflection review is the final gate before committing staged promotions.
+- Child Profile is an additive read-only progress view. It does not change milestones by itself.
+
+### Design system behavior
+
+- The production PWA uses AURA v2 design tokens directly in the frontend shell.
+- Text is protected against unreadably small inline sizes through the current CSS layer.
+- The mobile BKT grid is constrained to 3 columns for better legibility.
+- Technical terms such as probability values and beta cohort labels are hidden from worker-facing recovery review copy.
+- `AURA_DESIGN_SPEC.md`, when present in the workspace, is the authoritative design source for future UI decisions.
 
 ## Deployment
 
@@ -372,6 +415,7 @@ This does not mean every operational deployment is automatically privacy-complet
 
 - The main production UI is still a single-file PWA shell in `web/index.html`.
 - Some frontend flows queue data locally even when matching backend endpoints are not yet implemented on the server.
+- The design-token layer is implemented in the single-file shell. A future refactor can extract it into dedicated CSS/components without changing behavior.
 - The `src/` TypeScript layer is useful reference code, but the `web/` runtime is the real product surface.
 - Manual browser verification is still essential before production pushes, especially for offline and PWA behavior.
 
@@ -387,7 +431,10 @@ Before a production release, verify:
 6. BKT taps update child state as expected
 7. pending promotion review opens and confirms correctly
 8. DSS still filters questions by child age
-9. service worker registration succeeds on HTTPS deployment
+9. child profile opens from a BKT child card and shows domain progress
+10. demo seed creates the 15-child, 10-day local test room only when explicitly triggered
+11. Day Review shows Today, Saved on device, and Sync status sections
+12. service worker registration succeeds on HTTPS deployment
 
 ## License
 

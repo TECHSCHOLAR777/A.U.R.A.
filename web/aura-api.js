@@ -434,6 +434,27 @@ export const AURA_API = {
 
   /* ── [SERVER] submit attendance ──────────────────────────────────────────
      POST /api/attendance */
+  countHeadsByCamera: async (imageCanvas) => {
+    try {
+      const { analyzeClassroomPhoto } = await import('./ml_pipeline/vision_engine.js');
+      const res = await analyzeClassroomPhoto(imageCanvas, '/ml_pipeline/yolov8n.onnx');
+      return {
+        success: !!res.success,
+        count: Number.isFinite(res.headcount) ? res.headcount : 0,
+        confidence: Number.isFinite(res.confidenceAvg) ? res.confidenceAvg : 0,
+        message: res.message || 'Visual verification complete'
+      };
+    } catch (err) {
+      console.warn('[vision] headcount failed:', err);
+      return {
+        success: false,
+        count: 0,
+        confidence: 0,
+        message: err && err.message ? err.message : 'Vision model unavailable'
+      };
+    }
+  },
+
   submitAttendance: async ({ centreId, present, absent, photoCount }) => {
     AURA_DB.queue({ op: 'attendance', centreId, present, absent, photoCount, ts: Date.now() });
     try {

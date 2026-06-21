@@ -10,6 +10,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script type="importmap">
+{
+  "imports": {
+    "onnxruntime-web": "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.18.0/dist/esm/ort.all.min.js"
+  }
+}
+</script>
 <style>
   :root{
     --color-primary:#1A7F74; --color-primary-light:#E8F5F3; --color-primary-dark:#115C52;
@@ -389,7 +396,10 @@ let dailyState = {
   observations_recorded: false,
   reflection_checked: false,
   dss_completed: false,
-  day_closed: false
+  day_closed: false,
+  photo_count: null,
+  photo_confidence: null,
+  photo_verified_at: null
 };
 
 async function loadDailyState() {
@@ -851,11 +861,11 @@ const screens={
             
             ${allPresentHero}
             
-            <div class="camline" onclick="openHeadcountModel()">
+            <div class="camline" id="camline-btn" onclick="openHeadcountModel()" style="${Number.isFinite(Number(dailyState.photo_count)) ? (Number(dailyState.photo_count) === presentCount ? 'background:#143f2b;border:1px solid var(--green);' : 'background:#5f3514;border:1px solid var(--amber);') : ''}">
               <span class="ci">${SVG.cam}</span>
               <div>
-                <div style="color:#cdeede;font-size:11px;font-weight:600">${t.camLine}</div>
-                <div style="color:#7fae97;font-size:9px">${t.camMatch}</div>
+                <div id="camline-title" style="color:#cdeede;font-size:11px;font-weight:600">${Number.isFinite(Number(dailyState.photo_count)) ? (lang === 'hi' ? `फोटो से गिना: ${dailyState.photo_count}` : `Photo count: ${dailyState.photo_count} children`) : t.camLine}</div>
+                <div id="camline-subtitle" style="color:#7fae97;font-size:9px">${Number.isFinite(Number(dailyState.photo_count)) ? (Number(dailyState.photo_count) === presentCount ? (lang === 'hi' ? `रजिस्टर से मेल खाता है (${Math.round(Number(dailyState.photo_confidence || 0) * 100)}%)` : `Matches attendance (${Math.round(Number(dailyState.photo_confidence || 0) * 100)}% confidence)`) : (lang === 'hi' ? `अंतर: फोटो ${dailyState.photo_count}, रजिस्टर ${presentCount}` : `Mismatch: photo ${dailyState.photo_count}, attendance ${presentCount}`)) : (lang === 'hi' ? 'कक्षा की फोटो लें या चुनें' : 'Tap to capture or select a classroom photo')}</div>
               </div>
             </div>
             
@@ -1531,14 +1541,89 @@ async function generateDayReportPDF(){
   }
 }
 async function openHeadcountModel(){
-  try{
-    const res = await fetch('/api/vision/headcount', {method:'POST'});
-    if(!res.ok) throw new Error('model service unavailable');
-    const data = await res.json();
-    showBktToast((lang==='hi'?'गिनती: ':'Count: ') + data.count);
-  }catch(e){
-    showBktToast(lang==='hi' ? 'मॉडल इंटीग्रेशन ज़रूरी' : 'Model integration required');
+  let input = document.getElementById('attendance-photo-input');
+  if (!input) {
+    input = document.createElement('input');
+    input.id = 'attendance-photo-input';
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.capture = 'environment';
+    input.style.display = 'none';
+    document.body.appendChild(input);
   }
+
+  input.onchange = async () => {
+    const file = input.files && input.files[0];
+    input.value = '';
+    if (!file) return;
+
+    const titleEl = document.getElementById('camline-title');
+    const subtitleEl = document.getElementById('camline-subtitle');
+    const btnEl = document.getElementById('camline-btn');
+    if (titleEl) titleEl.textContent = lang === 'hi' ? 'फोटो लोड हो रही है...' : 'Loading photo...';
+    if (subtitleEl) subtitleEl.textContent = lang === 'hi' ? 'बच्चों की गिनती हो रही है' : 'Detecting children on this device...';
+
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+
+    img.onload = async () => {
+      try {
+        const canvas = document.createElement('canvas');
+        const maxSide = 960;
+        const width = img.naturalWidth || img.width || maxSide;
+        const height = img.naturalHeight || img.height || maxSide;
+        const scale = Math.min(1, maxSide / Math.max(width, height));
+        canvas.width = Math.max(1, Math.round(width * scale));
+        canvas.height = Math.max(1, Math.round(height * scale));
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) throw new Error('Canvas not available');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        const result = await AURA_API.countHeadsByCamera(canvas);
+        if (!result.success) throw new Error(result.message || 'Vision model failed');
+
+        const expected = activeChildren.filter(c => c.present).length;
+        const count = Number(result.count || 0);
+        const confidence = Number(result.confidence || 0);
+        await saveDailyState({
+          photo_count: count,
+          photo_confidence: confidence,
+          photo_verified_at: new Date().toISOString()
+        });
+
+        if (btnEl) {
+          btnEl.style.background = count === expected ? '#143f2b' : '#5f3514';
+          btnEl.style.border = count === expected ? '1px solid var(--green)' : '1px solid var(--amber)';
+        }
+        if (titleEl) titleEl.textContent = lang === 'hi' ? `फोटो से गिना: ${count}` : `Photo count: ${count} children`;
+        if (subtitleEl) {
+          subtitleEl.textContent = count === expected
+            ? (lang === 'hi' ? `रजिस्टर से मेल खाता है (${Math.round(confidence * 100)}%)` : `Matches attendance (${Math.round(confidence * 100)}% confidence)`)
+            : (lang === 'hi' ? `अंतर: फोटो ${count}, रजिस्टर ${expected}` : `Mismatch: photo ${count}, attendance ${expected}`);
+        }
+        showBktToast(count === expected
+          ? (lang === 'hi' ? 'फोटो गिनती मेल खाती है' : 'Photo count matches attendance')
+          : (lang === 'hi' ? 'फोटो और रजिस्टर में अंतर है' : 'Photo count differs from attendance'));
+      } catch (err) {
+        console.warn('[Headcount photo failed]', err);
+        if (titleEl) titleEl.textContent = lang === 'hi' ? 'फोटो गिनती नहीं हो सकी' : 'Photo count could not run';
+        if (subtitleEl) subtitleEl.textContent = lang === 'hi' ? 'उपस्थिति फिर भी मैनुअल रूप से सुरक्षित है' : 'Attendance is still saved manually; try another photo';
+        showBktToast(lang === 'hi' ? 'फोटो गिनती नहीं हो सकी' : 'Photo count could not run');
+      } finally {
+        URL.revokeObjectURL(url);
+      }
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      showBktToast(lang === 'hi' ? 'फोटो लोड नहीं हुई' : 'Photo could not be loaded');
+    };
+
+    img.src = url;
+  };
+
+  input.click();
 }
 
 function go(id){stack.push(id);render();}
@@ -1894,7 +1979,8 @@ async function submitAttendanceRoster() {
   const present = activeChildren.filter(c => c.present).map(c => c.childId);
   const absent = activeChildren.filter(c => !c.present).map(c => c.childId);
   
-  await AURA_API.submitAttendance({ centreId: activeCentre, present, absent, photoCount: 0 });
+  const photoCount = Number.isFinite(Number(dailyState.photo_count)) ? Number(dailyState.photo_count) : 0;
+  await AURA_API.submitAttendance({ centreId: activeCentre, present, absent, photoCount });
   syncQueueSize = (await AURA_DB.getPendingSync()).length;
   await saveDailyState({ attendance_confirmed: true });
   
