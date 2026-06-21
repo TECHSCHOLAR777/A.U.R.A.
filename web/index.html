@@ -1833,7 +1833,7 @@ const screens={
           <div class="ic" style="background:var(--gl);color:var(--green)">✓</div>
           <div class="info">
             <div class="nm">${c.name[lang]}</div>
-            <div class="ag">${c.age[lang]}</div>
+            <div class="ag">${c.age[lang]}${c.village ? ` - ${c.village}` : ''}</div>
             <div style="font-size:9.5px;color:${needsColor};margin-top:2px;">${needsText}</div>
           </div>
         </div>
@@ -2100,10 +2100,14 @@ async function initIdentity() {
         },
         age_months: c.age_months || 36,
         needs: Array.isArray(c.needs) ? c.needs : [],
+        village: c.village || '',
+        demo_scenario: c.demo_scenario || '',
         present: true
       }));
       window.activeChildren = activeChildren;
 
+      const savedMaterials = await AURA_DB.get('roomMaterials');
+      if (Array.isArray(savedMaterials)) roomMaterials = savedMaterials;
       
       await loadMasteryMap();
       
@@ -2790,14 +2794,50 @@ const DEMO_DOMAIN_NODES = [
   ['creative', 'CR-1']
 ];
 
+const DEMO_CHILD_CONTEXT = [
+  { village: 'Rampur Tola', scenario: 'motor_decline', attendance: [true, true, false, true, true, true, true, false, true, true] },
+  { village: 'Rampur Tola', scenario: 'language_referral', attendance: [true, false, true, true, false, true, true, true, true, true] },
+  { village: 'Bhairavpur', scenario: 'motor_stalled', attendance: [true, true, true, true, true, false, true, true, true, true] },
+  { village: 'Bhairavpur', scenario: 'hearing_language', attendance: [true, true, true, false, true, true, true, true, false, true] },
+  { village: 'Kheda Basti', scenario: 'motor_recovery_needed', attendance: [false, true, true, true, true, true, false, true, true, true] },
+  { village: 'Kheda Basti', scenario: 'steady_on_track', attendance: [true, true, true, true, true, true, true, true, true, true] },
+  { village: 'Amarpur', scenario: 'motor_access', attendance: [true, true, false, true, true, true, true, true, true, true] },
+  { village: 'Amarpur', scenario: 'creative_strength', attendance: [true, true, true, true, false, true, true, true, true, true] },
+  { village: 'Devganj', scenario: 'cognitive_strength', attendance: [true, true, true, true, true, true, true, false, true, true] },
+  { village: 'Devganj', scenario: 'visual_support', attendance: [true, false, true, true, true, true, true, true, true, true] },
+  { village: 'Rampur Tola', scenario: 'ready_to_promote', attendance: [true, true, true, true, true, true, true, true, true, true] },
+  { village: 'Bhairavpur', scenario: 'ready_to_promote', attendance: [true, true, true, true, true, true, true, true, true, true] },
+  { village: 'Kheda Basti', scenario: 'ready_to_promote', attendance: [true, true, true, true, true, true, true, true, true, true] },
+  { village: 'Amarpur', scenario: 'socio_emotional_watch', attendance: [true, true, true, true, true, false, true, true, true, true] },
+  { village: 'Devganj', scenario: 'new_child_needs_data', attendance: [false, false, false, false, false, false, false, false, true, true] }
+];
+
+const DEMO_CURVES = {
+  strong: [0.58, 0.62, 0.67, 0.71, 0.75, 0.79, 0.83, 0.86, 0.89, 0.91],
+  rising: [0.38, 0.42, 0.47, 0.51, 0.56, 0.61, 0.66, 0.70, 0.74, 0.78],
+  steady: [0.48, 0.50, 0.53, 0.55, 0.58, 0.60, 0.63, 0.65, 0.68, 0.70],
+  stalled: [0.45, 0.47, 0.48, 0.48, 0.49, 0.48, 0.49, 0.48, 0.49, 0.48],
+  decline: [0.62, 0.58, 0.54, 0.50, 0.47, 0.44, 0.42, 0.40, 0.38, 0.36],
+  promote: [0.61, 0.66, 0.71, 0.75, 0.79, 0.82, 0.85, 0.87, 0.89, 0.91],
+  sparse: [0.45, 0.50]
+};
+
 function demoSeries(childIndex, domain) {
-  const needsSupport = childIndex < 5;
-  const steady = childIndex >= 5 && childIndex < 10;
-  if (needsSupport && (domain === 'motor_physical' || domain === 'language')) {
-    return [0.50, 0.48, 0.46, 0.44, 0.43, 0.42, 0.40, 0.39, 0.38, 0.37];
-  }
-  if (steady) return [0.43, 0.46, 0.49, 0.52, 0.55, 0.58, 0.61, 0.64, 0.67, 0.70];
-  return [0.56, 0.60, 0.64, 0.68, 0.72, 0.76, 0.80, 0.84, 0.87, 0.90];
+  const scenario = DEMO_CHILD_CONTEXT[childIndex]?.scenario || 'steady_on_track';
+  if (scenario === 'new_child_needs_data') return DEMO_CURVES.sparse;
+  if (scenario === 'ready_to_promote' && domain === 'motor_physical') return DEMO_CURVES.promote;
+  if (scenario === 'motor_decline' && domain === 'motor_physical') return DEMO_CURVES.decline;
+  if (scenario === 'motor_stalled' && domain === 'motor_physical') return DEMO_CURVES.stalled;
+  if (scenario === 'motor_recovery_needed' && domain === 'motor_physical') return DEMO_CURVES.decline;
+  if (scenario === 'motor_access' && domain === 'motor_physical') return DEMO_CURVES.stalled;
+  if (scenario === 'language_referral' && domain === 'language') return DEMO_CURVES.decline;
+  if (scenario === 'hearing_language' && domain === 'language') return DEMO_CURVES.stalled;
+  if (scenario === 'visual_support' && domain === 'creative') return DEMO_CURVES.stalled;
+  if (scenario === 'socio_emotional_watch' && domain === 'socio_emotional') return DEMO_CURVES.decline;
+  if (scenario === 'creative_strength' && domain === 'creative') return DEMO_CURVES.strong;
+  if (scenario === 'cognitive_strength' && domain === 'cognitive') return DEMO_CURVES.strong;
+  if (scenario === 'steady_on_track') return DEMO_CURVES.rising;
+  return domain === 'motor_physical' ? DEMO_CURVES.rising : DEMO_CURVES.steady;
 }
 
 function trajectoryFromSeries(series) {
@@ -2817,13 +2857,16 @@ async function seedDemoData() {
   if (!ok) return;
 
   const centreId = 'AWC_DEMO_10DAY';
-  const children = DEMO_CHILDREN.map(([id, name, nameHi, ageMonths, needs]) => ({
+  const children = DEMO_CHILDREN.map(([id, name, nameHi, ageMonths, needs], index) => ({
     id,
     name,
     nameHi,
     age: `${ageMonths} months`,
     age_months: ageMonths,
-    needs
+    needs,
+    village: DEMO_CHILD_CONTEXT[index]?.village || 'Demo village',
+    demo_scenario: DEMO_CHILD_CONTEXT[index]?.scenario || 'steady_on_track',
+    demo_attendance_10_days: DEMO_CHILD_CONTEXT[index]?.attendance || []
   }));
   const demoIds = children.map((child) => child.id);
   await AURA_DB.clearDemoData(demoIds);
@@ -2845,7 +2888,7 @@ async function seedDemoData() {
           p_mastery: series[day],
           trajectory_flag: trajectoryFromSeries(series.slice(0, day + 1)),
           observation_count: day + 1,
-          timestamp: new Date(now - ((10 - day) * 86400000)).toISOString(),
+          timestamp: new Date(now - ((series.length - day) * 86400000)).toISOString(),
           demo_seed: true
         });
       }
@@ -2891,9 +2934,11 @@ async function seedDemoData() {
   }
 
   dssResults = {
-    'demo-child-01': { result: 'monitor', redFlags: 1, timestamp: new Date(now - 2 * 86400000).toISOString() },
-    'demo-child-02': { result: 'refer', redFlags: 2, timestamp: new Date(now - 3 * 86400000).toISOString() },
-    'demo-child-06': { result: 'typical', redFlags: 0, timestamp: new Date(now - 4 * 86400000).toISOString() }
+    'demo-child-01': { result: 'monitor', redFlags: 1, timestamp: new Date(now - 2 * 86400000).toISOString(), demo_seed: true },
+    'demo-child-02': { result: 'refer', redFlags: 2, timestamp: new Date(now - 3 * 86400000).toISOString(), demo_seed: true },
+    'demo-child-06': { result: 'typical', redFlags: 0, timestamp: new Date(now - 4 * 86400000).toISOString(), demo_seed: true },
+    'demo-child-10': { result: 'monitor', redFlags: 1, timestamp: new Date(now - 5 * 86400000).toISOString(), demo_seed: true },
+    'demo-child-15': { result: 'typical', redFlags: 0, timestamp: new Date(now - 1 * 86400000).toISOString(), demo_seed: true }
   };
   await AURA_DB.set('dssResults', dssResults);
   dssAnswers = {};
@@ -2901,7 +2946,8 @@ async function seedDemoData() {
   activeNode = 'FM-3';
   currentActivity = null;
   recoveryCohort = null;
-  roomMaterials = [];
+  roomMaterials = ['ball', 'picture cards', 'leaves', 'chalk', 'steel cups', 'floor mat'];
+  await AURA_DB.set('roomMaterials', roomMaterials);
   await saveDailyState({
     attendance_confirmed: false,
     activity_ready: false,
@@ -2910,7 +2956,10 @@ async function seedDemoData() {
     observations_recorded: false,
     reflection_checked: false,
     dss_completed: false,
-    day_closed: false
+    day_closed: false,
+    photo_count: null,
+    photo_confidence: null,
+    photo_verified_at: null
   });
   await AURA_DB.set('demoSeededAt', new Date().toISOString());
   activeWorker = { name: 'Demo AWW', id: 'AWW_DEMO_01' };
@@ -2921,6 +2970,8 @@ async function seedDemoData() {
     age: { en: child.age, hi: `${child.age_months} महीने` },
     age_months: child.age_months,
     needs: child.needs,
+    village: child.village,
+    demo_scenario: child.demo_scenario,
     present: true
   }));
   window.activeChildren = activeChildren;
