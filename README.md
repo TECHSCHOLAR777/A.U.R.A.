@@ -9,12 +9,15 @@ Live deployment: [https://a-u-r-a-s7jf.onrender.com/](https://a-u-r-a-s7jf.onren
 A.U.R.A. is designed for low-connectivity field use. The app keeps core interaction inside the browser, stores state locally, and degrades gracefully when the network is unavailable. The current codebase focuses on:
 
 - attendance and child roster handling
+- photo-assisted headcount verification for attendance
 - Navchetana-based ECE activity delivery
 - DSS screening with age-based child filtering
 - Bayesian Knowledge Tracing for child milestone progress
 - guardrail validation for safety and inclusion
 - recovery support through cohorting, reflection review, and local forecasting
+- support-first visual triage for children who need observation or guided practice
 - child-level progress profiles across the 5 activity domains
+- room-level 5-domain progress visualization
 - production UI polish based on the AURA v2 design specification
 - offline queueing and zero-PII sync primitives
 
@@ -27,7 +30,7 @@ The live product surface is the `web/` PWA, not the `src/` reference layer.
 Current user-facing screens include:
 
 - splash and profile setup/login
-- signup demo seed utility for 15 children and 10 days of local history
+- signup demo seed utility for a realistic 15-child Anganwadi room with 10 days of local history
 - home dashboard
 - attendance
 - ECE activity
@@ -40,9 +43,11 @@ Current user-facing screens include:
 The ECE flow currently supports:
 
 - room-aware activity adaptation
+- structured Activity Brief cards with age, domain, source, step-by-step guidance, milestone, and inclusion support
 - offline fallback activity resolution
 - BKT tap updates per child
 - recovery insight chips
+- Needs Support First visual triage and tap-to-open explanation drawer
 - duo-path recovery guidance for a selected beta cohort
 - pending promotion review through a reflection modal
 
@@ -52,6 +57,7 @@ The current UI follows the AURA v2 design direction:
 - teal, green, amber, red, and neutral design tokens
 - 44px minimum touch targets for primary interactions
 - 3-column mobile BKT grid
+- workflow progress tabs and home progress indicators
 - worker-facing recovery copy instead of technical cohort labels
 - accessible modal, navigation, progress, and focus-state improvements
 
@@ -71,6 +77,9 @@ The current runtime includes:
   - 5-domain recovery cohorting
   - duo-path assembly
   - local forecasting from stored history
+- `web/ml_pipeline/vision_engine.js`
+  - browser-side photo headcount inference for attendance support
+  - local model asset path at `web/ml_pipeline/yolov8n.onnx`
 
 ### Data model ground truth
 
@@ -197,16 +206,18 @@ flowchart TD
 flowchart TD
     A["Signup or login"] --> B["Optional demo seed"]
     B --> C["Home workflow"]
-    C --> D["Attendance"]
+    C --> D["Attendance + optional photo headcount"]
     D --> E["Activity adaptation"]
     E --> F["Start and complete activity"]
     F --> G["Observe children with Got it or Support"]
-    G --> H["Recovery insights and reflection review"]
-    H --> I["Child profile"]
-    H --> J["DSS screening"]
-    I --> K["Day Review"]
-    J --> K
-    K --> L["Queued or synced records"]
+    G --> H["Support-first triage + recovery insights"]
+    H --> I["Reflection review"]
+    H --> J["Child profile"]
+    H --> K["DSS screening"]
+    I --> L["Day Review"]
+    J --> L
+    K --> L
+    L --> M["Queued or synced records"]
 ```
 
 ### Request and data flow summary
@@ -215,8 +226,10 @@ flowchart TD
 - Activity requests are sent to `POST /api/activity/next`.
 - Recovery enrichment happens in the browser after the base activity is resolved.
 - BKT writes committed mastery into `mastery-records`.
+- BKT history powers the support-first list, child profile mini-lines, recovery forecast, and room 5-domain graph.
 - Higher-confidence milestone changes are first staged in `pendingPromotions`.
 - Reflection review decides whether staged promotions are committed.
+- Attendance can store an optional photo headcount value alongside the manual roster count.
 - When online sync is available, queued aggregate-safe data can be sent later.
 
 ## Repository Structure
@@ -254,6 +267,7 @@ A.U.R.A/
 - IndexedDB
 - Service Worker APIs
 - Web Speech API for limited non-PII voice capture
+- ONNX Runtime Web for browser-side attendance photo headcount inference
 - Vitest for root TypeScript-side tests
 - Node test runner for `web/tests`
 
@@ -351,6 +365,8 @@ Note: the root `package.json` currently contains a `smoke:test` script, but the 
 - The app registers `web/sw.js` when supported by the browser.
 - `web/manifest.json` enables installable PWA behavior.
 - HTTPS is strongly recommended for real installability and stable service worker behavior.
+- Attendance photo headcount runs in the browser using `web/ml_pipeline/yolov8n.onnx`. The ONNX Runtime Web module is currently loaded through the import map CDN entry in `web/index.html`.
+- Photo headcount is assistive only. Manual roster confirmation remains the source of truth for attendance.
 
 ### Recovery feature behavior
 
@@ -359,6 +375,14 @@ Note: the root `package.json` currently contains a `smoke:test` script, but the 
 - Forecasting is advisory only and does not auto-change milestones or activities.
 - Reflection review is the final gate before committing staged promotions.
 - Child Profile is an additive read-only progress view. It does not change milestones by itself.
+- The Needs Support First section, support explanation drawer, child profile sparklines, and room 5-domain graph all depend on stored BKT history.
+
+### Demo seed behavior
+
+- The demo seed button is available from signup for testing and recording only.
+- It creates a demo worker, 15 child profiles, village context, realistic inclusion needs, DSS summaries, pending promotions, room materials, and 10 days of local BKT history.
+- Seeded data is not part of the normal app state unless the demo seed button is explicitly used.
+- Seeding resets the current demo day to an unfinished workflow so the recording can show attendance, activity, observation, recovery, DSS, and day review in order.
 
 ### Design system behavior
 
@@ -425,16 +449,20 @@ Before a production release, verify:
 
 1. login or signup works
 2. child roster loads correctly
-3. attendance can be marked
-4. ECE activity loads online
-5. offline fallback activity still loads when the server path is unavailable
-6. BKT taps update child state as expected
-7. pending promotion review opens and confirms correctly
-8. DSS still filters questions by child age
-9. child profile opens from a BKT child card and shows domain progress
-10. demo seed creates the 15-child, 10-day local test room only when explicitly triggered
-11. Day Review shows Today, Saved on device, and Sync status sections
-12. service worker registration succeeds on HTTPS deployment
+3. attendance can be marked and confirmed
+4. optional photo headcount opens camera or file picker and does not block manual attendance if inference fails
+5. ECE activity loads online and renders the structured Activity Brief
+6. offline fallback activity still loads when the server path is unavailable
+7. Start Activity and Activity Done gates observation actions correctly
+8. BKT Got it and Support taps update child state as expected
+9. Needs Support First opens the support explanation drawer
+10. pending promotion review opens and confirms correctly
+11. DSS still filters questions by child age
+12. child profile opens from a BKT child card and shows domain progress sparklines
+13. More shows the room-level 5-domain progress graph
+14. demo seed creates the 15-child, 10-day local test room only when explicitly triggered
+15. Day Review shows Today, Saved on device, and Sync status sections
+16. service worker registration succeeds on HTTPS deployment
 
 ## License
 
