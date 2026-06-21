@@ -289,6 +289,16 @@
   .profile-stat{background:var(--color-neutral-50);border:1px solid var(--line);border-radius:var(--radius-md);padding:10px 6px;text-align:center}
   .domain-row{border:1px solid var(--line);border-radius:var(--radius-md);padding:10px 12px;margin-bottom:8px;background:#fff}
   .domain-row .bar{height:7px;margin-top:7px}
+  .today-progress{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:8px 0 14px}
+  .today-progress__step{position:relative;background:var(--color-neutral-100);border:1px solid var(--line);border-radius:var(--radius-md);padding:8px 5px;text-align:center;color:var(--muted);font:var(--text-meta)}
+  .today-progress__step::before{content:'';display:block;width:22px;height:22px;border-radius:50%;background:#fff;border:2px solid var(--line);margin:0 auto 5px}
+  .today-progress__step.done{background:var(--gl);border-color:#cce9d8;color:var(--green);font-weight:800}
+  .today-progress__step.done::before{content:'✓';background:var(--green);border-color:var(--green);color:#fff;line-height:19px;font-weight:900}
+  .today-progress__step.now{background:#fff;border-color:var(--green);color:var(--green);box-shadow:0 0 0 1px var(--green) inset;font-weight:800}
+  .today-progress__step.now::before{border-color:var(--green);background:var(--gl)}
+  .sparkline{width:86px;height:28px;display:block}
+  .support-drawer{position:absolute;left:14px;right:14px;bottom:84px;background:#fff;border:1px solid var(--line);border-left:5px solid var(--amber);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);z-index:32;padding:14px}
+  .support-drawer__scrim{position:absolute;inset:0;background:rgba(17,24,39,.12);z-index:31}
   .design-card{background:#fff;border:1px solid var(--line);border-left:4px solid var(--color-primary);border-radius:var(--radius-lg);padding:var(--space-4);box-shadow:var(--shadow-sm);margin-bottom:var(--space-4)}
   .status-chip{display:inline-flex;align-items:center;justify-content:center;border-radius:var(--radius-full);padding:4px 9px;font:var(--text-chip);min-height:24px}
   [style*="font-size:7"],[style*="font-size:8"],[style*="font-size:9"],[style*="font-size:10px"],[style*="font-size:10.5px"]{font-size:11px!important;line-height:16px!important}
@@ -408,6 +418,7 @@ let roomMaterials = [];
 let voiceRecognition = null;
 let masteryMap = new Map();
 let allChildMasteryRecords = [];
+let allBktHistoryRecords = [];
 let dssSelectedChild = null;
 let dssResults = {};
 let activityBankCache = null;
@@ -415,7 +426,9 @@ let pendingPromotions = [];
 let recoveryCohort = null;
 let recoveryInsights = {};
 let profileChildId = null;
+let supportDrawerChildId = null;
 const ACTIVITY_CACHE_PREFIX = 'activity-cache::';
+const ACTIVITY_DOMAINS = ['cognitive', 'language', 'motor_physical', 'socio_emotional', 'creative'];
 const DAILY_STATE_KEY = 'dailyWorkflow';
 let dailyState = {
   attendance_confirmed: false,
@@ -700,9 +713,147 @@ function renderActivityBrief(activity, sourceLabel, fragments = {}, fallback = {
   `;
 }
 
+function getChildHistory(childId, domain) {
+  return allBktHistoryRecords
+    .filter((item) => item && item.child_id === childId && (!domain || item.domain === domain))
+    .sort((a, b) => String(a.timestamp || '').localeCompare(String(b.timestamp || '')));
+}
+
+function renderSparkline(history, color = 'var(--green)') {
+  const points = (history || []).slice(-8).map((item, index, arr) => {
+    const p = Number.isFinite(Number(item.p_mastery)) ? Number(item.p_mastery) : (item.is_correct === false ? 0.25 : 0.75);
+    const x = arr.length <= 1 ? 43 : (index / (arr.length - 1)) * 82 + 2;
+    const y = 25 - Math.max(0, Math.min(1, p)) * 22;
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  });
+  if (points.length < 2) {
+    return `<svg class="sparkline" viewBox="0 0 86 28" aria-hidden="true"><path d="M4 20H82" stroke="var(--line)" stroke-width="2" stroke-linecap="round"/></svg>`;
+  }
+  return `<svg class="sparkline" viewBox="0 0 86 28" aria-hidden="true"><path d="M2 25H84" stroke="var(--line)" stroke-width="1"/><polyline points="${points.join(' ')}" fill="none" stroke="${color}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="${points[points.length - 1].split(',')[0]}" cy="${points[points.length - 1].split(',')[1]}" r="2.6" fill="${color}"/></svg>`;
+}
+
+function renderTodayProgress() {
+  const steps = [
+    { id: 'att', label: 'Attendance', done: !!dailyState.attendance_confirmed },
+    { id: 'act', label: 'Activity', done: !!dailyState.activity_completed },
+    { id: 'obs', label: 'Observe', done: !!dailyState.observations_recorded },
+    { id: 'day', label: 'Review', done: !!dailyState.day_closed }
+  ];
+  const firstOpen = steps.findIndex(step => !step.done);
+  return `<div class="today-progress" aria-label="Today progress">${steps.map((step, index) => {
+    const cls = step.done ? 'done' : index === firstOpen ? 'now' : '';
+    return `<div class="today-progress__step ${cls}">${step.label}</div>`;
+  }).join('')}</div>`;
+}
+
+function rankSupportChildren(children) {
+  return (children || []).slice().sort((a, b) => {
+    const rank = { increase_dosage: 0, needs_data: 1, on_track: 2 };
+    const insightA = recoveryInsights[a.childId] || { state: 'needs_data' };
+    const insightB = recoveryInsights[b.childId] || { state: 'needs_data' };
+    const recordA = masteryMap.get(a.childId);
+    const recordB = masteryMap.get(b.childId);
+    const scoreA = (rank[insightA.state] ?? 3) + (recordA && recordA.trajectory_flag === 'mastered' ? 2 : 0);
+    const scoreB = (rank[insightB.state] ?? 3) + (recordB && recordB.trajectory_flag === 'mastered' ? 2 : 0);
+    return scoreA - scoreB;
+  });
+}
+
+function renderNeedsSupportFirst(presentChildren) {
+  const priority = rankSupportChildren(presentChildren)
+    .filter((child) => {
+      const insight = recoveryInsights[child.childId] || {};
+      const record = masteryMap.get(child.childId);
+      return insight.state !== 'on_track' || !(record && record.trajectory_flag === 'mastered');
+    })
+    .slice(0, 5);
+  if (!priority.length) return '';
+  return `
+    <div class="design-card" style="border-left-color:var(--amber);background:linear-gradient(180deg,#fff,#fffaf0);">
+      <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;">
+        <div>
+          <div style="font:var(--text-heading-sm);color:var(--amber);">Needs support first</div>
+          <div style="font:var(--text-meta);color:var(--muted);margin-top:2px;">Start observation with these children today.</div>
+        </div>
+        <span class="status-chip" style="background:var(--al);color:var(--amber);">${priority.length}</span>
+      </div>
+      <div style="display:flex;gap:8px;overflow-x:auto;margin-top:12px;padding-bottom:2px;">
+        ${priority.map((child) => {
+          const insight = recoveryInsights[child.childId] || { state: 'needs_data', label: '' };
+          const label = insight.state === 'increase_dosage' ? 'Increase support' : insight.state === 'needs_data' ? 'Need data' : 'Check once';
+          return `<button onclick="openSupportDrawer('${child.childId}')" style="min-width:92px;border:1px solid var(--line);background:#fff;border-radius:var(--radius-md);padding:9px;cursor:pointer;text-align:left;">
+            <strong style="display:block;font:var(--text-label);color:var(--ink);">${child.name[lang].split(' ')[0]}</strong>
+            <span style="display:block;font:var(--text-meta);color:var(--amber);margin-top:3px;">${label}</span>
+          </button>`;
+        }).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function supportReasonForChild(child) {
+  const insight = recoveryInsights[child.childId] || { state: 'needs_data', points: 0 };
+  const history = getChildHistory(child.childId, currentActivity && currentActivity.targeted_domain).slice(-5);
+  const supportCount = history.filter(item => item.is_correct === false || Number(item.p_mastery || 1) < 0.5).length;
+  const domain = currentActivity ? domainLabel(currentActivity.targeted_domain) : 'current activity';
+  const action = insight.state === 'increase_dosage'
+    ? `Give guided practice in ${domain}, then mark Got it or Support after observing.`
+    : insight.state === 'needs_data'
+      ? `Collect ${Math.max(0, 3 - Number(insight.points || 0))} more observation(s) for a clearer forecast.`
+      : `Check once during the activity to confirm progress is stable.`;
+  return { insight, history, supportCount, domain, action };
+}
+
+function renderSupportDrawer() {
+  if (!supportDrawerChildId) return '';
+  const child = activeChildren.find(c => c.childId === supportDrawerChildId);
+  if (!child) return '';
+  const reason = supportReasonForChild(child);
+  return `
+    <div class="support-drawer__scrim" onclick="closeSupportDrawer()"></div>
+    <div class="support-drawer" role="dialog" aria-label="Child support reason">
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;">
+        <div>
+          <div style="font:var(--text-heading-sm);">${child.name[lang]}</div>
+          <div style="font:var(--text-meta);color:var(--muted);margin-top:2px;">${reason.domain} · ${currentActivity ? currentActivity.milestone_targeted : activeNode}</div>
+        </div>
+        <button onclick="closeSupportDrawer()" style="border:none;background:var(--color-neutral-100);border-radius:50%;width:32px;height:32px;font-weight:900;cursor:pointer;">×</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;">
+        <div class="profile-stat"><strong style="display:block;color:var(--amber);">${reason.supportCount}</strong><span style="font:var(--text-meta);color:var(--muted);">recent support marks</span></div>
+        <div class="profile-stat"><strong style="display:block;color:var(--green);">${reason.insight.label || reason.insight.state || 'data'}</strong><span style="font:var(--text-meta);color:var(--muted);">forecast</span></div>
+      </div>
+      <div style="margin-top:12px;font:var(--text-body-sm);color:var(--ink);line-height:1.55;">${reason.action}</div>
+      <div style="margin-top:10px;">${renderSparkline(reason.history, reason.insight.state === 'increase_dosage' ? 'var(--red)' : 'var(--amber)')}</div>
+      <button class="btn ghost" style="border-color:var(--amber);color:var(--amber);margin-top:12px;" onclick="openChildProfile('${child.childId}')">Open child profile</button>
+    </div>
+  `;
+}
+
+function renderDomainGraph(records, title = 'Five-domain progress') {
+  const rows = ACTIVITY_DOMAINS.map((domain) => {
+    const domainRecords = (records || []).filter(record => record && record.domain === domain);
+    const latest = domainRecords.slice().sort((a, b) => String(b.last_updated || b.timestamp || '').localeCompare(String(a.last_updated || a.timestamp || '')))[0];
+    const pct = latest ? Math.round(Math.max(0, Math.min(1, Number(latest.p_mastery || 0))) * 100) : 0;
+    return `<div class="domain-row"><div style="display:flex;justify-content:space-between;gap:8px;"><span class="status-chip" style="background:var(--color-primary-light);color:var(--color-primary-dark);">${domainLabel(domain)}</span><strong style="font:var(--text-meta);color:var(--muted);">${pct}%</strong></div><div class="bar"><i style="width:${pct}%;background:var(--color-primary);"></i></div></div>`;
+  }).join('');
+  return `<div class="sectionlabel">${title}</div>${rows}`;
+}
+
 function openChildProfile(childId) {
   profileChildId = childId;
+  supportDrawerChildId = null;
   go('child_profile');
+}
+
+function openSupportDrawer(childId) {
+  supportDrawerChildId = childId;
+  render();
+}
+
+function closeSupportDrawer() {
+  supportDrawerChildId = null;
+  render();
 }
 
 function recoveryForecastPanel(presentChildren) {
@@ -934,6 +1085,7 @@ const screens={
         <div class="scroll">
           <div class="body">
             <div class="greet">${lang==='hi' ? 'सुप्रभात' : 'Good morning'}, ${activeWorker ? activeWorker.name : (lang==='hi' ? 'कार्यकर्ता' : 'Worker')}<small>${new Date().toLocaleDateString(lang==='hi'?'hi-IN':'en-IN',{weekday:'long',day:'numeric',month:'long'})}</small></div>
+            ${renderTodayProgress()}
             ${workflowStrip('att')}
             ${activeChildren.length === 0 ? `
               <div class="alert" style="background:var(--rl);border:1px solid var(--red);border-left:4px solid var(--red);border-radius:11px;padding:14px;margin-top:16px;cursor:pointer;" onclick="go('children_manager')">
@@ -1233,6 +1385,7 @@ const screens={
               <span>${lang === 'hi' ? 'बाल दक्षता ट्रैकिंग (BKT)' : 'Child Mastery Grid (BKT)'}</span>
               <span style="font-size:10px;text-transform:none;color:var(--green);font-weight:700;">${masteredCount} / ${presentChildren.length} ${lang === 'hi' ? 'सफल' : 'Mastered'}</span>
             </div>
+            ${renderNeedsSupportFirst(presentChildren)}
             
             <div style="font-size:9.5px;color:var(--muted);margin-bottom:10px;line-height:1.4;">
               ${lang === 'hi' ? 'Activity done करने के बाद Got it या Support चुनें.' : 'Use Got it or Support after marking the activity done.'}
@@ -1274,6 +1427,7 @@ const screens={
           </div>
         </div>
         ${nav('ece')}
+        ${renderSupportDrawer()}
       </div>
     `;
   },
@@ -1503,6 +1657,7 @@ const screens={
             </div>
 
             ${syncStatusHtml}
+            ${renderDomainGraph(allChildMasteryRecords, 'Room five-domain progress')}
 
             <div class="sectionlabel">${lang === 'hi' ? 'प्रोफ़ाइल जानकारी (Identity)' : 'Active Profile Identity'}</div>
             <div class="vcard" style="border-left-color:var(--navy);background:#fff;padding:14px;">
@@ -1538,23 +1693,27 @@ const screens={
       return `<div class="screen active">${statusbar(nowClock())}${header()}<div class="scroll"><div class="body" style="padding-top:6px"><button class="backbtn" style="background:var(--gl);color:var(--green)" onclick="back()">‹ Back</button><div class="design-card"><div style="font:var(--text-heading-md)">No child selected</div><div style="font:var(--text-body-sm);color:var(--muted);margin-top:6px;">Open a child from the activity screen to view progress.</div></div></div></div>${nav('ece')}</div>`;
     }
     const records = allChildMasteryRecords.filter(r => r && r.child_id === child.childId);
-    const domains = ['cognitive', 'language', 'motor_physical', 'socio_emotional', 'creative'];
-    const history = (window.__lastChildHistory || []).filter(item => item.child_id === child.childId).slice(-10).reverse();
+    const domains = ACTIVITY_DOMAINS;
+    const history = getChildHistory(child.childId).slice(-10).reverse();
     const mastered = records.filter(r => r.trajectory_flag === 'mastered' || Number(r.p_mastery || 0) >= 0.85).length;
     const lastSeen = child.present ? 'Today' : 'Not present today';
     const domainRows = domains.map(domain => {
       const domainRecords = records.filter(r => r.domain === domain);
+      const domainHistory = getChildHistory(child.childId, domain);
       const masteredDomain = domainRecords.filter(r => r.trajectory_flag === 'mastered' || Number(r.p_mastery || 0) >= 0.85).length;
       const total = Math.max(domainRecords.length, 1);
       const pct = Math.min(100, Math.round((masteredDomain / total) * 100));
-      return { domain, pct, text: domainRecords.length ? `${masteredDomain} mastered · ${Math.max(total - masteredDomain, 0)} in progress` : 'More observations needed' };
+      return { domain, pct, history: domainHistory, text: domainRecords.length ? `${masteredDomain} mastered - ${Math.max(total - masteredDomain, 0)} in progress` : 'More observations needed' };
     }).sort((a, b) => a.pct - b.pct).map(row => `
       <div class="domain-row">
         <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;">
           <span class="status-chip" style="background:var(--color-primary-light);color:var(--color-primary-dark);">${domainLabel(row.domain)}</span>
           <span style="font:var(--text-meta);color:var(--muted);">${row.text}</span>
         </div>
-        <div class="bar" role="progressbar" aria-valuenow="${row.pct}" aria-valuemin="0" aria-valuemax="100"><i style="width:${row.pct}%;background:var(--color-primary);"></i></div>
+        <div style="display:flex;gap:10px;align-items:center;margin-top:7px;">
+          <div class="bar" role="progressbar" aria-valuenow="${row.pct}" aria-valuemin="0" aria-valuemax="100" style="flex:1;margin-top:0;"><i style="width:${row.pct}%;background:var(--color-primary);"></i></div>
+          ${renderSparkline(row.history, row.pct < 50 ? 'var(--amber)' : 'var(--green)')}
+        </div>
       </div>
     `).join('');
     const insight = recoveryInsights[child.childId] || { state: 'needs_data', label: '' };
@@ -1565,6 +1724,7 @@ const screens={
         : 'Needs more data: attend 2 or more sessions to show a forecast.';
     const insightBg = insight.state === 'on_track' ? 'var(--gl)' : insight.state === 'increase_dosage' ? 'var(--al)' : 'var(--color-neutral-100)';
     const insightColor = insight.state === 'on_track' ? 'var(--green)' : insight.state === 'increase_dosage' ? 'var(--amber)' : 'var(--muted)';
+    const supportReason = supportReasonForChild(child);
     const dss = dssResults[child.childId];
     const dssText = dss ? `${dss.result} · ${new Date(dss.timestamp).toLocaleDateString()}` : 'No screening saved yet';
     return `
@@ -1592,6 +1752,14 @@ const screens={
             <div class="design-card" style="background:${insightBg};border-left-color:${insightColor};">
               <div style="font:var(--text-heading-sm);color:${insightColor};">${insightText}</div>
               <div style="font:var(--text-meta);color:var(--muted);margin-top:8px;">Forecast is advisory only. It does not change activities automatically.</div>
+            </div>
+            <div class="sectionlabel">Why support may be needed</div>
+            <div class="design-card" style="border-left-color:var(--amber);background:#fffaf0;">
+              <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;">
+                <div style="font:var(--text-body-md);color:var(--ink);">${supportReason.action}</div>
+                ${renderSparkline(supportReason.history, supportReason.insight.state === 'increase_dosage' ? 'var(--red)' : 'var(--amber)')}
+              </div>
+              <div style="font:var(--text-meta);color:var(--muted);margin-top:8px;">Based on recent observations in ${supportReason.domain}.</div>
             </div>
             <div class="sectionlabel">Recent sessions</div>
             <div class="design-card">
@@ -1907,6 +2075,9 @@ async function loadMasteryMap() {
   const records = await MasteryStore.getAllByNode(activeNode);
   const allEntries = await Promise.all(activeChildren.map(child => BKTEngine.getAllChildMastery(child.childId)));
   allChildMasteryRecords = allEntries.flat();
+  const historyEntries = await Promise.all(activeChildren.map(child => AURA_DB.getBktHistory(child.childId)));
+  allBktHistoryRecords = historyEntries.flat();
+  window.__lastChildHistory = allBktHistoryRecords;
   masteryMap = new Map();
   for (const child of activeChildren) {
     masteryMap.set(child.childId, null);
@@ -1951,6 +2122,9 @@ async function updateBktStatus(childId, isCorrect) {
       const others = allChildMasteryRecords.filter(item => item && item.child_id !== childId);
       return others.concat(records);
     });
+    const childHistory = await AURA_DB.getBktHistory(childId);
+    allBktHistoryRecords = allBktHistoryRecords.filter(item => item && item.child_id !== childId).concat(childHistory);
+    window.__lastChildHistory = allBktHistoryRecords;
     await refreshPendingPromotions();
     await buildRecoveryInsights(activeChildren.filter(c => c.present));
     await saveDailyState({ observations_recorded: true, reflection_checked: pendingPromotions.length === 0 });
@@ -2896,6 +3070,8 @@ window.openReflectionModal = openReflectionModal;
 window.closeReflectionModal = closeReflectionModal;
 window.confirmPendingPromotions = confirmPendingPromotions;
 window.openChildProfile = openChildProfile;
+window.openSupportDrawer = openSupportDrawer;
+window.closeSupportDrawer = closeSupportDrawer;
 window.loadECEActivity = loadECEActivity;
 window.startActivitySession = startActivitySession;
 window.completeActivitySession = completeActivitySession;
