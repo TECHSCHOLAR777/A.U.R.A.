@@ -132,6 +132,11 @@
   .slot .meta .b{font-size:10.5px;color:var(--muted);margin-top:1px}
   .slot .nowtag{background:var(--green);color:#fff;font-size:9px;font-weight:700;padding:5px 10px;border-radius:11px}
   .slot .stt{margin-left:auto;font-size:9px;font-weight:700;color:var(--muted)}
+  .slot.done{background:#fff;border-color:var(--line);border-left-color:var(--green)}
+  .slot.done .dot{background:var(--green)}
+  .slot.done .meta .a{color:var(--ink)}
+  .slot.done .stt{background:var(--gl);color:var(--green);border-radius:11px;padding:5px 9px}
+  .slot.locked{opacity:.62}
 
   .blockh{display:flex;align-items:center;gap:8px;padding:9px 14px;border-left:6px solid;margin:0 -20px}
   .blockh .num{font-size:12px;font-weight:800}
@@ -897,7 +902,33 @@ const screens={
   },
   shell() {
     const t = T[lang];
-    const slots = t.slots.map(s => `<div class="slot ${s[2] === 'att' ? 'now' : ''}" onclick="go('${s[2]}')"><div class="dot">${SVG[navic[s[2]]]}</div><div class="meta"><div class="a">${s[0]}</div><div class="b">${s[1]}</div></div>${s[2] === 'att' ? `<span class="nowtag">${t.nowtag}</span>` : `<span class="stt">${s[4] ? t.doneShort : t.pendShort}</span>`}</div>`).join('');
+    const planState = {
+      att: {
+        done: !!dailyState.attendance_confirmed,
+        active: !dailyState.attendance_confirmed,
+        locked: false
+      },
+      ece: {
+        done: !!dailyState.activity_completed,
+        active: !!dailyState.attendance_confirmed && !dailyState.activity_completed,
+        locked: !dailyState.attendance_confirmed
+      },
+      audit: {
+        done: !!dailyState.day_closed,
+        active: !!dailyState.activity_completed && !dailyState.day_closed,
+        locked: !dailyState.activity_completed
+      }
+    };
+    const slots = t.slots.map(s => {
+      const state = planState[s[2]] || { done: false, active: false, locked: false };
+      const cls = state.done ? 'done' : state.active ? 'now' : state.locked ? 'locked' : '';
+      const status = state.done
+        ? `<span class="stt">${SVG.check} ${t.doneShort}</span>`
+        : state.active
+          ? `<span class="nowtag">${t.nowtag}</span>`
+          : `<span class="stt">${t.pendShort}</span>`;
+      return `<div class="slot ${cls}" onclick="go('${s[2]}')" aria-label="${s[0]} ${state.done ? t.doneShort : state.active ? t.nowtag : t.pendShort}"><div class="dot">${state.done ? SVG.check : SVG[navic[s[2]]]}</div><div class="meta"><div class="a">${s[0]}</div><div class="b">${s[1]}</div></div>${status}</div>`;
+    }).join('');
     return `
       <div class="screen active">${statusbar(nowClock())}${header()}
         <div class="scroll">
