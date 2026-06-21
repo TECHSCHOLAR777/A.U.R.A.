@@ -299,6 +299,11 @@
   .sparkline{width:86px;height:28px;display:block}
   .support-drawer{position:absolute;left:14px;right:14px;bottom:84px;background:#fff;border:1px solid var(--line);border-left:5px solid var(--amber);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);z-index:32;padding:14px}
   .support-drawer__scrim{position:absolute;inset:0;background:rgba(17,24,39,.12);z-index:31}
+  .play-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:10px 0 12px;position:sticky;top:0;background:var(--bg);z-index:5;padding:6px 0}
+  .play-tab{border:1px solid var(--line);border-radius:var(--radius-md);background:#fff;color:var(--muted);padding:8px 4px;font:var(--text-chip);min-height:40px;cursor:pointer}
+  .play-tab.active{border-color:var(--purple);background:var(--pl);color:var(--purple);box-shadow:0 0 0 1px var(--purple) inset}
+  .play-tab.done{border-color:#cce9d8;background:var(--gl);color:var(--green)}
+  .play-tab.locked{background:var(--color-neutral-100);color:var(--color-neutral-400)}
   .design-card{background:#fff;border:1px solid var(--line);border-left:4px solid var(--color-primary);border-radius:var(--radius-lg);padding:var(--space-4);box-shadow:var(--shadow-sm);margin-bottom:var(--space-4)}
   .status-chip{display:inline-flex;align-items:center;justify-content:center;border-radius:var(--radius-full);padding:4px 9px;font:var(--text-chip);min-height:24px}
   [style*="font-size:7"],[style*="font-size:8"],[style*="font-size:9"],[style*="font-size:10px"],[style*="font-size:10.5px"]{font-size:11px!important;line-height:16px!important}
@@ -427,6 +432,7 @@ let recoveryCohort = null;
 let recoveryInsights = {};
 let profileChildId = null;
 let supportDrawerChildId = null;
+let playTab = 'activity';
 const ACTIVITY_CACHE_PREFIX = 'activity-cache::';
 const ACTIVITY_DOMAINS = ['cognitive', 'language', 'motor_physical', 'socio_emotional', 'creative'];
 const DAILY_STATE_KEY = 'dailyWorkflow';
@@ -469,7 +475,7 @@ function workflowStep(label, done, active, blocked) {
 function workflowStrip(activeStep) {
   const labels = lang === 'hi'
     ? { att:'हाज़िरी', act:'गतिविधि', obs:'अवलोकन', ref:'समीक्षा', dss:'DSS', day:'दिन बंद' }
-    : { att:'Attendance', act:'Activity', obs:'Observe', ref:'Reflect', dss:'DSS', day:'Review' };
+    : { att:'Attendance', act:'Activity', obs:'Observe', ref:'Recover', dss:'DSS', day:'Review' };
   const steps = [
     workflowStep(labels.att, dailyState.attendance_confirmed, activeStep === 'att', false),
     workflowStep(labels.act, dailyState.activity_completed, activeStep === 'act', !dailyState.attendance_confirmed),
@@ -838,6 +844,31 @@ function renderDomainGraph(records, title = 'Five-domain progress') {
     return `<div class="domain-row"><div style="display:flex;justify-content:space-between;gap:8px;"><span class="status-chip" style="background:var(--color-primary-light);color:var(--color-primary-dark);">${domainLabel(domain)}</span><strong style="font:var(--text-meta);color:var(--muted);">${pct}%</strong></div><div class="bar"><i style="width:${pct}%;background:var(--color-primary);"></i></div></div>`;
   }).join('');
   return `<div class="sectionlabel">${title}</div>${rows}`;
+}
+
+function playTabForWorkflow() {
+  if (playTab === 'observe') return 'obs';
+  if (playTab === 'recovery') return 'ref';
+  if (playTab === 'safety') return 'dss';
+  return 'act';
+}
+
+function renderPlayTabs() {
+  const tabs = [
+    { id: 'activity', label: 'Activity', done: !!dailyState.activity_completed, locked: false },
+    { id: 'observe', label: 'Observe', done: !!dailyState.observations_recorded, locked: !dailyState.activity_completed },
+    { id: 'recovery', label: 'Recovery', done: pendingPromotions.length === 0 && !!dailyState.reflection_checked, locked: false },
+    { id: 'safety', label: 'Safety', done: !!dailyState.dss_completed, locked: false }
+  ];
+  return `<div class="play-tabs" role="tablist" aria-label="Play workflow">${tabs.map((tab) => {
+    const cls = tab.id === playTab ? 'active' : tab.done ? 'done' : tab.locked ? 'locked' : '';
+    return `<button class="play-tab ${cls}" role="tab" aria-selected="${tab.id === playTab ? 'true' : 'false'}" onclick="setPlayTab('${tab.id}')">${tab.done ? '✓ ' : tab.locked ? '○ ' : ''}${tab.label}</button>`;
+  }).join('')}</div>`;
+}
+
+function setPlayTab(tabId) {
+  playTab = tabId || 'activity';
+  render();
 }
 
 function openChildProfile(childId) {
@@ -1362,25 +1393,27 @@ const screens={
           <div class="body">
             ${kw(t.eceKw,'--purple')}
             <div class="sub">${t.eceSub}</div>
-            ${workflowStrip(dailyState.activity_completed ? 'obs' : 'act')}
+            ${workflowStrip(playTabForWorkflow())}
+            ${renderPlayTabs()}
+            <div style="${playTab === 'activity' ? '' : 'display:none'}">
             ${attendanceGateHtml}
             ${activityActionHtml}
             ${renderActivityFocusStrip(currentActivity, t.eceDesc)}
             ${renderActivityBrief(
               currentActivity,
               sourceLabel,
-              { guardrailHtml, offlineNoteHtml },
+              {},
               { title: t.eceGame, age: t.eceAge, desc: t.eceDesc, pick: t.ecePick }
             )}
             <button class="btn ghost" style="border-color:var(--green);color:var(--green);margin:0 0 12px;" onclick="loadECEActivity()" id="btn-load-activity">
               🎯 ${lang === 'hi' ? 'कमरे के अनुसार गतिविधि बदलें' : 'Adapt activity for this room'}
             </button>
-            ${duoPathHtml}
-            
             <button class="btn ghost" style="border-color:var(--purple);color:var(--purple);margin-top:6px;" onclick="go('dss')">
               ${SVG.clip} ${lang === 'hi' ? 'चिंता दिखे तो DSS चलाएं' : 'Run DSS if concern is noticed'}
             </button>
+            </div>
             
+            <div style="${playTab === 'observe' ? '' : 'display:none'}">
             <div class="sectionlabel" style="display:flex;justify-content:space-between;align-items:center;margin-top:24px;">
               <span>${lang === 'hi' ? 'बाल दक्षता ट्रैकिंग (BKT)' : 'Child Mastery Grid (BKT)'}</span>
               <span style="font-size:10px;text-transform:none;color:var(--green);font-weight:700;">${masteredCount} / ${presentChildren.length} ${lang === 'hi' ? 'सफल' : 'Mastered'}</span>
@@ -1394,6 +1427,10 @@ const screens={
             <div class="bkt-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:18px;">
               ${kidsGridHtml}
             </div>
+            </div>
+
+            <div style="${playTab === 'recovery' ? '' : 'display:none'}">
+            ${duoPathHtml}
             <div class="vcard" style="background:var(--al);border-left-color:var(--amber);margin-bottom:16px;">
               <div style="display:flex;justify-content:space-between;align-items:center">
                 <span style="font-size:13px;font-weight:700">${lang === 'hi' ? 'रिकवरी और ध्यान सूची' : 'Recovery and watch list'}</span>
@@ -1416,6 +1453,9 @@ const screens={
             ${recoveryForecastPanel(presentChildren)}
             <button class="btn outline" style="margin-bottom:12px;" onclick="openReflectionModal()">${pendingPromotions.length ? `Session review (${pendingPromotions.length})` : 'Reflection check'}</button>
             <div style="background:var(--al);border:1px solid var(--amber);border-radius:10px;padding:9px 11px;margin-bottom:12px;font-size:10px;font-weight:800;color:var(--amber);">${recoveryReasonText(presentChildren)}</div>
+            </div>
+
+            <div style="${playTab === 'safety' ? '' : 'display:none'}">
             <div class="sectionlabel">${t.eceFocus}</div>
             <div class="vcard" style="background:var(--al);border-left-color:var(--amber)">
               <div style="display:flex;justify-content:space-between;align-items:center">
@@ -1424,7 +1464,11 @@ const screens={
               </div>
               <div style="font-size:10px;margin-top:6px;line-height:1.5">${lang === 'hi' ? 'उदाहरण: गैर-मौखिक बच्चे के लिए इशारों से जवाब का रास्ता। (वास्तविक बच्चा नहीं - चित्रण मात्र)' : 'Example: a non-verbal response path (gestures) for an inclusion need. (Illustrative - not a real child.)'}</div>
             </div>
+            <div class="sectionlabel">Guardrails</div>
+            ${guardrailHtml || `<div class="design-card" style="border-left-color:var(--green);background:var(--gl);"><div style="font:var(--text-heading-sm);color:var(--green);">Safety checks clear</div><div style="font:var(--text-meta);color:var(--muted);margin-top:4px;">No active safety or inclusion guardrail flags for this activity.</div></div>`}
+            ${offlineNoteHtml}
           </div>
+        </div>
         </div>
         ${nav('ece')}
         ${renderSupportDrawer()}
@@ -2331,6 +2375,7 @@ async function submitAttendanceRoster() {
   await saveDailyState({ attendance_confirmed: true });
   
   showBktToast(lang==='hi' ? 'उपस्थिति दर्ज ✓' : 'Attendance submitted ✓');
+  playTab = 'activity';
   jump('ece');
 }
 
@@ -2372,6 +2417,7 @@ async function loadECEActivity() {
     rememberDomain(currentActivity.targeted_domain);
     await buildRecoveryInsights(present);
     await saveDailyState({ activity_ready: true, activity_started: false, activity_completed: false, observations_recorded: false, reflection_checked: pendingPromotions.length === 0 });
+    playTab = 'activity';
     render();
   } catch (err) {
     console.warn('[Activity retrieval failed -> offline fallback]', err);
@@ -2384,6 +2430,7 @@ async function loadECEActivity() {
     rememberDomain(currentActivity.targeted_domain);
     await buildRecoveryInsights(present);
     await saveDailyState({ activity_ready: true, activity_started: false, activity_completed: false, observations_recorded: false, reflection_checked: pendingPromotions.length === 0 });
+    playTab = 'activity';
     render();
   }
   if (btn) { btn.disabled = false; btn.textContent = lang === 'hi' ? '🎯 गतिविधि अनुकूलित करें (Adapt)' : '🎯 Adapt Activity for Room'; }
@@ -2411,6 +2458,7 @@ async function completeActivitySession() {
     await saveDailyState({ activity_started: true });
   }
   await saveDailyState({ activity_completed: true });
+  playTab = 'observe';
   showBktToast(lang==='hi' ? 'Activity marked done. Record observations now.' : 'Activity marked done. Record observations now.');
   render();
 }
@@ -3028,13 +3076,6 @@ function render(){
   };
   document.getElementById('hint').textContent=hints[lang];
   document.querySelector('.phone').className='phone '+(lang==='hi'?'hindi':'');
-  if (id === 'ece') {
-    document.querySelectorAll('.vcard').forEach((card) => {
-      if (card.textContent.includes('Illustrative - not a real child.') || card.textContent.includes('Inclusion adaptation (example)')) {
-        card.remove();
-      }
-    });
-  }
 }
 
 function refreshDeviceTimes() {
@@ -3072,6 +3113,7 @@ window.confirmPendingPromotions = confirmPendingPromotions;
 window.openChildProfile = openChildProfile;
 window.openSupportDrawer = openSupportDrawer;
 window.closeSupportDrawer = closeSupportDrawer;
+window.setPlayTab = setPlayTab;
 window.loadECEActivity = loadECEActivity;
 window.startActivitySession = startActivitySession;
 window.completeActivitySession = completeActivitySession;
