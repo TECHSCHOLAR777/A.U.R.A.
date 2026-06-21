@@ -183,6 +183,30 @@
   .vcard{border:1px solid var(--line);border-left:4px solid;border-radius:11px;padding:12px;margin-bottom:9px}
   .vcard .mh{display:flex;gap:8px;align-items:center;margin-bottom:6px}
   .vcard .mh svg{width:18px;height:18px}
+  .activity-brief{border:1px solid var(--line);border-left:4px solid var(--purple);border-radius:var(--radius-lg);padding:14px;background:linear-gradient(180deg,#fff,#fdfcff);box-shadow:var(--shadow-sm);position:relative;margin-bottom:12px}
+  .activity-brief__top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+  .activity-brief__label{font:var(--text-meta);font-weight:800;color:var(--purple);text-transform:uppercase;letter-spacing:.45px;margin-bottom:5px}
+  .activity-brief__title{font:var(--text-heading-md);color:var(--ink);padding-right:4px}
+  .activity-brief__source{font:var(--text-meta);font-weight:800;color:#fff;background:var(--purple);border-radius:var(--radius-full);padding:5px 9px;white-space:nowrap;max-width:150px;overflow:hidden;text-overflow:ellipsis}
+  .activity-brief__chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .activity-chip{display:inline-flex;align-items:center;gap:5px;border-radius:var(--radius-full);background:var(--pl);color:var(--purple);border:1px solid #dfd5ef;padding:5px 9px;font:var(--text-chip)}
+  .activity-chip__icon{width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;color:var(--purple)}
+  .activity-chip__icon svg{width:14px;height:14px}
+  .activity-focus-strip{display:flex;gap:9px;align-items:flex-start;border:1px solid #d7ebdf;background:linear-gradient(180deg,#f4fbf7,#fff);border-radius:var(--radius-md);padding:10px 11px;margin-bottom:10px;color:var(--green);font:var(--text-body-sm)}
+  .activity-focus-strip svg{width:18px;height:18px;flex-shrink:0;margin-top:1px}
+  .activity-focus-strip strong{display:block;font:var(--text-meta);text-transform:uppercase;letter-spacing:.35px;color:var(--green)}
+  .activity-focus{margin-top:12px;border-radius:var(--radius-md);background:var(--color-neutral-50);border:1px solid var(--line);padding:10px 11px;font:var(--text-body-sm);color:var(--color-neutral-700)}
+  .activity-focus strong{display:block;color:var(--forest);font:var(--text-meta);text-transform:uppercase;letter-spacing:.35px;margin-bottom:3px}
+  .activity-steps{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+  .activity-step{display:grid;grid-template-columns:28px 1fr;gap:9px;align-items:start;border:1px solid var(--line);border-radius:var(--radius-md);background:#fff;padding:9px}
+  .activity-step__num{width:28px;height:28px;border-radius:50%;background:var(--forest);color:#fff;display:flex;align-items:center;justify-content:center;font:var(--text-chip)}
+  .activity-step__text{font:var(--text-body-sm);color:var(--ink)}
+  .activity-panels{display:grid;grid-template-columns:1fr;gap:8px;margin-top:12px}
+  .activity-panel{border-radius:var(--radius-md);padding:10px 11px;border:1px solid var(--line);font:var(--text-body-sm)}
+  .activity-panel strong{display:flex;align-items:center;gap:6px;font:var(--text-meta);text-transform:uppercase;letter-spacing:.35px;margin-bottom:4px}
+  .activity-panel strong svg{width:15px;height:15px}
+  .activity-panel--milestone{background:var(--gl);border-color:#cce9d8;color:var(--green)}
+  .activity-panel--inclusion{background:var(--color-info-light);border-color:#d4e3f6;color:var(--navy)}
   .item{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-left:4px solid;border-radius:10px;padding:11px 12px;margin-bottom:8px;min-height:44px}
   .item .b{width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#fff;flex-shrink:0}
   .item .x{font-size:10.5px;line-height:1.4}
@@ -538,6 +562,137 @@ function domainLabel(domain) {
     creative: 'Creative'
   };
   return labels[domain] || String(domain || 'Activity area').replace(/_/g, ' ');
+}
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function normalizeActivitySteps(activity, fallbackText) {
+  const rawSteps = Array.isArray(activity && activity.step_by_step_instructions)
+    ? activity.step_by_step_instructions
+    : (activity && typeof activity.step_by_step_instructions === 'string'
+      ? activity.step_by_step_instructions.split(/\n+/)
+      : []);
+  const steps = rawSteps
+    .flatMap((step) => String(step || '').split(/\n+/))
+    .map((step) => step.replace(/^\s*(?:\d+[\).:-]?|[-*])\s*/, '').trim())
+    .filter(Boolean);
+  if (steps.length) return steps.slice(0, 6);
+  return [fallbackText || (lang === 'hi' ? 'गतिविधि निर्देश उपलब्ध नहीं हैं।' : 'Activity instructions are not available.')];
+}
+
+function getActivityInclusionText(activity) {
+  const mods = activity ? activity.inclusion_modifications : null;
+  if (!mods) return '';
+  if (!Array.isArray(mods) && typeof mods === 'object') return mods.instruction_override || '';
+  if (Array.isArray(mods)) return mods.filter(Boolean).join(' ');
+  return String(mods || '');
+}
+
+function activityIcon(name) {
+  const icons = {
+    age: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="10" cy="6" r="3"/><path d="M4 18C4.8 14.8 7 13 10 13S15.2 14.8 16 18" stroke-linecap="round"/></svg>',
+    domain: SVG.book,
+    navchetana: SVG.clip,
+    materials: SVG.grid,
+    milestone: SVG.check,
+    inclusion: SVG.heart
+  };
+  return icons[name] || SVG.check;
+}
+
+function activityFocusSummary(activity, fallbackText) {
+  if (!activity) return fallbackText || '';
+  const domain = domainLabel(activity.targeted_domain).toLowerCase();
+  const title = String(activity.adapted_title || '').trim();
+  return lang === 'hi'
+    ? `${domainLabel(activity.targeted_domain)} अभ्यास को बच्चों की भागीदारी से पूरा करें।`
+    : `${domain.charAt(0).toUpperCase() + domain.slice(1)} practice through ${title ? title.toLowerCase() : "today's activity"}.`;
+}
+
+function renderActivityFocusStrip(activity, fallbackText) {
+  const summary = activityFocusSummary(activity, fallbackText);
+  if (!summary) return '';
+  return `
+    <div class="activity-focus-strip">
+      ${activityIcon('milestone')}
+      <div>
+        <strong>${lang === 'hi' ? 'आज का फोकस' : "Today's focus"}</strong>
+        <span>${escapeHtml(summary)}</span>
+      </div>
+    </div>
+  `;
+}
+
+function renderActivityBrief(activity, sourceLabel, fragments = {}, fallback = {}) {
+  const title = activity ? activity.adapted_title : fallback.title;
+  const domain = activity ? domainLabel(activity.targeted_domain) : '';
+  const age = activity && activity.age_band_months ? `${activity.age_band_months} months` : (fallback.age || '');
+  const milestone = activity ? activity.milestone_targeted : fallback.pick;
+  const steps = normalizeActivitySteps(activity, fallback.desc);
+  const inclusionText = getActivityInclusionText(activity);
+  const focusText = activity
+    ? (lang === 'hi'
+      ? `${domain || 'गतिविधि'} अभ्यास को कमरे में मौजूद बच्चों के स्तर के अनुसार चलाएं।`
+      : `Use this as a guided ${domain || 'activity'} practice for the children present today.`)
+    : (fallback.desc || '');
+  const cleanSource = String(sourceLabel || '').replace(/^Source:\s*/i, '');
+  const chips = [
+    age ? { icon: activityIcon('age'), text: age } : null,
+    domain ? { icon: activityIcon('domain'), text: domain } : null,
+    activity ? { icon: activityIcon('navchetana'), text: 'Navchetana' } : null,
+    activity && activity.required_materials && activity.required_materials.length
+      ? { icon: activityIcon('materials'), text: activity.required_materials.slice(0, 3).join(', ') }
+      : null
+  ].filter(Boolean);
+
+  return `
+    <div class="activity-brief">
+      <div class="activity-brief__top">
+        <div>
+          <div class="activity-brief__label">${lang === 'hi' ? 'आज की गतिविधि' : 'Activity brief'}</div>
+          <div class="activity-brief__title">${escapeHtml(title || '')}</div>
+        </div>
+        <div class="activity-brief__source" title="${escapeHtml(sourceLabel || '')}">${escapeHtml(cleanSource || 'Ready')}</div>
+      </div>
+      <div class="activity-brief__chips">
+        ${chips.map((chip) => `<span class="activity-chip"><span class="activity-chip__icon">${chip.icon}</span>${escapeHtml(chip.text)}</span>`).join('')}
+      </div>
+      <div class="activity-focus">
+        <strong>${lang === 'hi' ? 'AWW के लिए संकेत' : 'AWW cue'}</strong>
+        ${escapeHtml(focusText)}
+      </div>
+      <div class="activity-steps" aria-label="${lang === 'hi' ? 'गतिविधि के चरण' : 'Activity steps'}">
+        ${steps.map((step, index) => `
+          <div class="activity-step">
+            <span class="activity-step__num">${index + 1}</span>
+            <span class="activity-step__text">${escapeHtml(step)}</span>
+          </div>
+        `).join('')}
+      </div>
+      <div class="activity-panels">
+        ${milestone ? `
+          <div class="activity-panel activity-panel--milestone">
+            <strong>${activityIcon('milestone')}${lang === 'hi' ? 'लक्ष्य माइलस्टोन' : 'Milestone target'}</strong>
+            <span>${escapeHtml(milestone)}</span>
+          </div>
+        ` : ''}
+        ${inclusionText ? `
+          <div class="activity-panel activity-panel--inclusion">
+            <strong>${activityIcon('inclusion')}${lang === 'hi' ? 'समावेश सहायता' : 'Inclusion support'}</strong>
+            <span>${escapeHtml(inclusionText)}</span>
+          </div>
+        ` : ''}
+      </div>
+      ${fragments.guardrailHtml || ''}${fragments.offlineNoteHtml || ''}
+    </div>
+  `;
 }
 
 function openChildProfile(childId) {
@@ -896,6 +1051,11 @@ const screens={
         <button class="btn ghost" style="border-color:var(--green);color:var(--green);" onclick="startActivitySession()">${dailyState.activity_started ? 'Activity started' : 'Start activity'}</button>
         <button class="btn green" onclick="completeActivitySession()">${dailyState.activity_completed ? 'Activity done' : 'Mark activity done'}</button>
       </div>
+      <div style="background:var(--gl);border:1px solid #cce9d8;border-radius:var(--radius-md);padding:9px 11px;margin:-4px 0 12px;font:var(--text-body-sm);color:var(--green);">
+        ${lang === 'hi'
+          ? 'पहले गतिविधि शुरू करें। बच्चों की भागीदारी के बाद Activity done दबाएं, फिर Got it या Support दर्ज करें।'
+          : 'Start the activity first. Mark done after children participate, then record Got it or Support.'}
+      </div>
     ` : '';
     
     const sourceLabel = online 
@@ -960,19 +1120,6 @@ const screens={
 
     const rulesMap = new Map(GuardrailEngine.getRules().map(r => [r.rule_id, r]));
 
-    const inclHtml = (() => {
-      const _im = currentActivity ? currentActivity.inclusion_modifications : null;
-      if (!_im) return '';
-      let _imText = '';
-      if (!Array.isArray(_im) && typeof _im === 'object' && _im.instruction_override) {
-        _imText = _im.instruction_override;
-      } else if (Array.isArray(_im) && _im.length) {
-        _imText = _im.join('<br>');
-      }
-      if (!_imText) return '';
-      return `<div style="margin-top:8px;font-size:9.5px;color:var(--navy);line-height:1.4;"><strong style="font-size:8px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:2px;">${lang==='hi'?'समावेश संशोधन':'Inclusion modifications'}</strong>${_imText}</div>`;
-    })();
-
     const offlineNoteHtml = (currentActivity && currentActivity.provenance && currentActivity.provenance.generated_offline && firedRules.length === 0)
       ? `<div style="margin-top:10px;font-size:9px;color:var(--amber);font-weight:600;">⚠ ${lang==='hi'?'ऑफ़लाइन टेम्पलेट — गार्डरेल मूल्यांकन नहीं हुआ':'Offline template — guardrail not evaluated'}</div>`
       : '';
@@ -1034,27 +1181,21 @@ const screens={
             <div class="sub">${t.eceSub}</div>
             ${workflowStrip(dailyState.activity_completed ? 'obs' : 'act')}
             ${attendanceGateHtml}
-            
-            <button class="btn green" style="margin-bottom:12px" onclick="loadECEActivity()" id="btn-load-activity">
-              🎯 ${lang === 'hi' ? 'गतिविधि अनुकूलित करें (Adapt)' : 'Adapt Activity for Room'}
-            </button>
-
             ${activityActionHtml}
-            <div class="vcard" style="border-left-color:var(--purple);background:#fff;position:relative;">
-              <div style="position:absolute;top:10px;right:12px;font-size:8px;font-weight:800;color:#fff;background:var(--purple);padding:3px 8px;border-radius:8px;">
-                ${sourceLabel}
-              </div>
-              <div style="font-size:16px;font-weight:800;margin-top:6px;max-width:80%;">${currentActivity ? currentActivity.adapted_title : t.eceGame}</div>
-              <div style="font-size:9.5px;color:var(--muted);margin-top:4px">${currentActivity ? (currentActivity.age_band_months + ' months · ' + domainLabel(currentActivity.targeted_domain)) : t.eceAge}</div>
-              <div style="font-size:10.5px;line-height:1.55;margin-top:8px">${currentActivity ? currentActivity.step_by_step_instructions.join('<br>') : t.eceDesc}</div>
-              <div style="font-size:8px;color:var(--muted);margin-top:8px">${currentActivity ? ('milestone: ' + currentActivity.milestone_targeted) : t.ecePick}</div>
-              ${inclHtml}
-              ${guardrailHtml}${offlineNoteHtml}
-            </div>
+            ${renderActivityFocusStrip(currentActivity, t.eceDesc)}
+            ${renderActivityBrief(
+              currentActivity,
+              sourceLabel,
+              { guardrailHtml, offlineNoteHtml },
+              { title: t.eceGame, age: t.eceAge, desc: t.eceDesc, pick: t.ecePick }
+            )}
+            <button class="btn ghost" style="border-color:var(--green);color:var(--green);margin:0 0 12px;" onclick="loadECEActivity()" id="btn-load-activity">
+              🎯 ${lang === 'hi' ? 'कमरे के अनुसार गतिविधि बदलें' : 'Adapt activity for this room'}
+            </button>
             ${duoPathHtml}
             
             <button class="btn ghost" style="border-color:var(--purple);color:var(--purple);margin-top:6px;" onclick="go('dss')">
-              ${SVG.clip} ${t.eceScreen}
+              ${SVG.clip} ${lang === 'hi' ? 'चिंता दिखे तो DSS चलाएं' : 'Run DSS if concern is noticed'}
             </button>
             
             <div class="sectionlabel" style="display:flex;justify-content:space-between;align-items:center;margin-top:24px;">
